@@ -84,6 +84,7 @@ main.container {
 }
 
 .main-box {
+    resize: both;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     border: solid 1px #d0d0d0;
