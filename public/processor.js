@@ -84,7 +84,7 @@ function construct_processor_dot(dispatch_width, num_ports, retire_width, usage=
     // --- DISPATCH ---
     dot_code += `
     node [fontsize=8, fontname="Arial"];
-    Fetch[style=invis,shape=box,height=0.6,fixedsize=true]
+    Fetch[style=invis,shape=box,height=0.6,width=0.1,fixedsize=true]
     `
     if (usage !== null) {
         let dispatch_color = color[Math.floor(usage.dispatch / 10)];
@@ -133,7 +133,7 @@ function construct_processor_dot(dispatch_width, num_ports, retire_width, usage=
     }
 
     dot_code += `
-    Ret[style=invis,shape=box,height=0.6,fixedsize=true]
+    Ret[style=invis,shape=box,height=1.5,width=0.1,fixedsize=true]
     `
     for (let i = 0; i < num_ports; i++) {
         dot_code += `WriteBack:e${i} -> Retire:w${i}\n`

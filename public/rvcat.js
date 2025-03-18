@@ -52,11 +52,6 @@ const handlers = {
         // get svg element
         let callback = () => {
             return;
-            // Not implement panning of the svg yet
-            let item = document.getElementById('simulation-output');
-            let svgelem = item.getElementsByTagName('svg')[0];
-            // make it zoomable
-            let panZoomTiger = svgPanZoom(svgelem);
         }
         createGraphVizGraph(data, item, callback);
         selectButton(document.getElementById('dependencies-output'));
@@ -151,7 +146,7 @@ const handlers = {
     }
 }
 
-const worker = new Worker('./src/js/worker.js');
+const worker = new Worker('./worker.js');
 worker.onmessage = function(message) {
     console.log('Message received from worker', message);
     if (message.data.action === 'initialized') {

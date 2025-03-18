@@ -2,12 +2,9 @@
   <div class="pipeline-display">
     <div class="pipeline-header">
       <h3>Processor Pipeline</h3>
-      <div>
-        <label for="processors-list">Processor: </label>
-        <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
-          <!-- <option value="model1">Model 1</option> -->
-        </select>
-      </div>
+      <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
+        <!-- <option value="model1">Model 1</option> -->
+      </select>
     </div>
 
     <div class="processor-info">
@@ -25,11 +22,6 @@
 
     <div class="scale-container">
       <div class="color-scale"></div>
-      <div class="scale-labels">
-        <span>Underutilized</span>
-        <span></span>
-        <span>Saturated</span>
-      </div>
     </div>
   </div>
 </template>
@@ -39,7 +31,7 @@
   height: 100%;
   width: 100%;
   background: white;
-  overflow: hidden;
+  overflow: auto;
   padding: 5px;
   border-radius: 10px;
   position: relative;
@@ -59,5 +51,16 @@ h3 {
 
 table{
   display:none;
+}
+.scale-container {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+}
+.color-scale {
+    width: 30%;
+    height: 10px;
+    background: linear-gradient(to right, #00FF00, #FFFF00, #FF0000);
+    border-radius: 5px;
+    position: relative;
 }
 </style>
