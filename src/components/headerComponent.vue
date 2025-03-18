@@ -1,7 +1,7 @@
 <template>
   <div id="top">
     <div>
-      <h1>RVCAT-WEB</h1>
+      <h1>RVCAT-Web</h1>
     </div>
     <nav>
       <ul>

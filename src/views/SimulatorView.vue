@@ -3,7 +3,7 @@
   import loadingComponent from '@/components/loadingComponent.vue';
   import processorComponent from '@/components/processorComponent.vue';
   import programComponent from '@/components/programComponent.vue';
-  import mainComponent from '@/components/mainComponent.vue';
+  import mainWindowComponent from '@/components/mainWindowComponent.vue';
   import { onMounted, nextTick } from "vue";
 
   onMounted(() => {
@@ -39,7 +39,7 @@
               <programComponent />
            </div>
            <div class="grid-item results">
-              <mainComponent />
+              <mainWindowComponent />
            </div>
 
       </main>
