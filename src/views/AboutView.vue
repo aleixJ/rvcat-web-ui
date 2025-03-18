@@ -1,27 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RVCAT Web</title>
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/article.css">
-</head>
-<body>
+<script setup>
+  import headerComponent from '@/components/headerComponent.vue';
+</script>
+
+<template>
+  <body>
     <header>
-        <div>
-            <a href="/" style="text-decoration: none;"><h1>RVCAT</h1></a>
-            <h2>Web edition</h2>
-        </div>
-
-        <nav class="menu">
-            <ul>
-                <li><a href="index.html">Simulator</a></li>
-                <li><a href="about.html">About</a></li>
-            </ul>
-        </nav>
+      <headerComponent />
     </header>
-
     <main>
         <article>
             <h1>About</h1>
@@ -44,6 +29,13 @@
 
         </article>
     </main>
+  </body>
+</template>
 
-</body>
-</html>
+<style scoped>
+article {
+    margin: 0 auto;
+    max-width: 650px;
+    padding: 1em;
+}
+</style>

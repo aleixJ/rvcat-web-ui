@@ -5,13 +5,13 @@ async function initialize() {
     if (self.pyodide === undefined) {
         self.pyodide = await loadPyodide();
         await loadPackage('numpy')
-        await loadPackage('https://quim0.github.io/rvcat-web-ui/rvcat-0.1-py3-none-any.whl')
+        await loadPackage('https://bern02.github.io/rvcat-web-ui/rvcat-0.1-py3-none-any.whl')
         //await loadPackage('http://0.0.0.0:8000/rvcat-0.1-py3-none-any.whl')
     }
 }
 
-async function loadPackage(package) {
-    await self.pyodide.loadPackage(package);
+async function loadPackage(pkg) {
+    await self.pyodide.loadPackage(pkg);
 }
 
 self.onmessage = async function(message) {

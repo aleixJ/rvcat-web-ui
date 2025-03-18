@@ -83,13 +83,14 @@ function construct_processor_dot(dispatch_width, num_ports, retire_width, usage=
 
     // --- DISPATCH ---
     dot_code += `
-    Fetch[style=invis,shape=box,height=1]
+    node [fontsize=8, fontname="Arial"];
+    Fetch[style=invis,shape=box,height=0.6,fixedsize=true]
     `
     if (usage !== null) {
         let dispatch_color = color[Math.floor(usage.dispatch / 10)];
-        dot_code += `Dispatch[shape=box,height=1.5,width=1.5,label="Dispatch\nw=${dispatch_width}\n", style=filled, fillcolor="${dispatch_color}", tooltip="Usage: ${usage.dispatch.toFixed(1)}%"]\n`
+        dot_code += `Dispatch[shape=box,height=0.6,width=0.6,fixedsize=true,label="D\nw=${dispatch_width}\n", style=filled, fillcolor="${dispatch_color}", tooltip="Usage: ${usage.dispatch.toFixed(1)}%"]\n`
     } else {
-        dot_code += `Dispatch[shape=box,height=1.5,width=1.5,label="Dispatch\nw=${dispatch_width}"]\n`
+        dot_code += `Dispatch[shape=box,height=0.6,width=0.6,fixedsize=true,label="D\nw=${dispatch_width}"]\n`
     }
     for (let i = 0; i < dispatch_width; i++) {
         dot_code += `Fetch:e${i} -> Dispatch:w${i}\n`
@@ -102,9 +103,9 @@ function construct_processor_dot(dispatch_width, num_ports, retire_width, usage=
     for (let i = 0; i < num_ports; i++) {
         if (usage !== null) {
             let execute_color = color[Math.floor(usage.ports[i] / 10)];
-            dot_code += `P${i} [shape=box3d,height=0.15, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
+            dot_code += `P${i} [shape=box3d,height=0.2,width=0.4,fixedsize=true, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
         } else {
-            dot_code += `P${i} [shape=box3d,height=0.15];\n`
+            dot_code += `P${i} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
         }
     }
 
@@ -117,7 +118,7 @@ function construct_processor_dot(dispatch_width, num_ports, retire_width, usage=
 
     // --- WRITEBACK ---
     dot_code += `
-    WriteBack[shape=box,height=1.5,width=1.5,label="Write Back\nw=${num_ports}"]
+    WriteBack[shape=box,height=0.6,width=0.6,fixedsize=true,label="WB\nw=${num_ports}"]
     `
     for (let i = 0; i < num_ports; i++) {
         dot_code += `P${i}:e -> WriteBack:w${i}\n`
@@ -126,13 +127,13 @@ function construct_processor_dot(dispatch_width, num_ports, retire_width, usage=
     // --- RETIRE ---
     if (usage !== null) {
         let retire_color = color[Math.floor(usage.retire / 10)];
-        dot_code += `Retire[shape=box,height=1.5,width=1.5,label="Retire\nw=${retire_width}", style=filled, fillcolor="${retire_color}", tooltip="Usage: ${usage.retire.toFixed(1)}%"]`
+        dot_code += `Retire[shape=box,height=0.6,width=0.6,fixedsize=true,label="RET\nw=${retire_width}", style=filled, fillcolor="${retire_color}", tooltip="Usage: ${usage.retire.toFixed(1)}%"]`
     } else {
-        dot_code += `Retire[shape=box,height=1.5,width=1.5,label="Retire\nw=${retire_width}"]`
+        dot_code += `Retire[shape=box,height=0.6,width=0.6,fixedsize=true,label="RET\nw=${retire_width}"]`
     }
 
     dot_code += `
-    Ret[style=invis,shape=box,height=1.5]
+    Ret[style=invis,shape=box,height=0.6,fixedsize=true]
     `
     for (let i = 0; i < num_ports; i++) {
         dot_code += `WriteBack:e${i} -> Retire:w${i}\n`

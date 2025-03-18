@@ -151,7 +151,7 @@ const handlers = {
     }
 }
 
-const worker = new Worker('js/worker.js');
+const worker = new Worker('./src/js/worker.js');
 worker.onmessage = function(message) {
     console.log('Message received from worker', message);
     if (message.data.action === 'initialized') {
@@ -289,8 +289,8 @@ async function executeCode(code, id=undefined){
 
 // UI stuff
 function openLoadingOverlay() {
-    document.getElementById('loading-overlay').style.display = 'block';
-    document.getElementById('blur-overlay-item').style.display = 'block';
+  document.getElementById('loading-overlay').style.display = 'block';
+  document.getElementById('blur-overlay-item').style.display = 'block';
 }
 
 function closeLoadingOverlay() {
@@ -330,6 +330,12 @@ function createGraphVizGraph(dotCode, targetElement, callback=null) {
                 // Remove any existing SVG elements
                 targetElement.innerHTML = '';
                 targetElement.appendChild(element);
+
+                //Testing interactivity of rendered SVG elements
+                document.getElementById('node2').onclick = function(){
+                    alert('clicked');
+                }
+
                 if (callback !== null) {
                     callback();
                 }
