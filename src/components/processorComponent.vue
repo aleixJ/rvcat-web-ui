@@ -57,10 +57,10 @@ table{
   justify-content: center; /* Center horizontally */
 }
 .color-scale {
-    width: 30%;
-    height: 10px;
-    background: linear-gradient(to right, #00FF00, #FFFF00, #FF0000);
-    border-radius: 5px;
-    position: relative;
+  width: 30%;
+  height: 10px;
+  background: linear-gradient(to right, #00FF00, #FFFF00, #FF0000);
+  border-radius: 5px;
+  position: relative;
 }
 </style>

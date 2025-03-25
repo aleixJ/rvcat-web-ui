@@ -3,8 +3,24 @@
   import loadingComponent from '@/components/loadingComponent.vue';
   import processorComponent from '@/components/processorComponent.vue';
   import programComponent from '@/components/programComponent.vue';
-  import mainWindowComponent from '@/components/mainWindowComponent.vue';
-  import { onMounted, nextTick } from "vue";
+  import timelineComponent from '@/components/timelineComponent.vue';
+  import aboutComponent from '@/components/aboutComponent.vue';
+  import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
+
+  import { shallowRef, onMounted, nextTick } from "vue";
+
+  const components = {
+  timelineComponent,
+  staticAnalysisComponent,
+  aboutComponent
+};
+
+  const currentComponent = shallowRef(timelineComponent);
+
+  // Function to switch components
+  const switchComponent = (component) => {
+    currentComponent.value = components[component];
+  };
 
   onMounted(() => {
     nextTick(() => {
@@ -26,7 +42,7 @@
 <template>
   <body>
       <header>
-          <headerComponent />
+          <headerComponent @switchComponent="switchComponent" />
       </header>
       <loadingComponent />
 
@@ -39,7 +55,7 @@
               <programComponent />
            </div>
            <div class="grid-item results">
-              <mainWindowComponent />
+            <component :is="currentComponent" />
            </div>
 
       </main>
@@ -66,6 +82,7 @@
   grid-gap:2vh;
   background:#e3e3e3;
   overflow:hidden;
+  box-sizing: border-box;
 }
 .grid_item{
   background: white;

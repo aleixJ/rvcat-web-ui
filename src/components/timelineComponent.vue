@@ -1,11 +1,19 @@
+<script setup>
+  import { onMounted, nextTick } from "vue";
+  onMounted(() => {
+    nextTick(() => {
+      if (typeof getTimeline === "function") {
+        getTimeline();
+      } else {
+        console.error("simulation-output element not found.");
+      }
+    });
+  });
+</script>
+
 <template>
   <div class="main">
-    <h3>Simulation Results</h3>
-        <div class="tabs">
-            <button class="tab-button" id="dependencies-output" onclick="showDependenciesGraph();">Dependencies</button>
-            <button class="tab-button" id="critical-paths-output" onclick="showCriticalPathsGraph();">Recurrent paths</button>
-            <button class="tab-button" id="timeline-output" onclick="getTimeline();">Timeline</button>
-        </div>
+    <h3>Timeline</h3>
 
         <div class="output-block-wrapper" id="simulation-output-container">
             <section class="simulation-results-controls" id="dependencies-controls">
@@ -21,6 +29,7 @@
         </div>
   </div>
 </template>
+
 <style scoped>
   .main{
     height:100%;
@@ -31,3 +40,4 @@
     border-radius: 10px;
   }
 </style>
+
