@@ -34,7 +34,6 @@ rvcat/examples/polyH-native.s
 rvcat/examples/polyH.s
 rvcat/examples/polyU2.s
 rvcat/examples/polyU4.s
-rvcat/examples/provaaaaa.s
 rvcat/examples/rec.s
 rvcat/examples/rec2.s
 rvcat/examples/rec_avx.s

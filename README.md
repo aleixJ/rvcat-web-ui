@@ -3,8 +3,11 @@
 1. **Clone the repository**
 
 2. **Install dependencies**
+
    - **Python**
+
      - **Without env**
+
        ```bash
        # Ensure pip is up to date
        pip install --upgrade pip
@@ -12,7 +15,9 @@
        # Install dependencies from requirements.txt
        pip install -r requirements.txt
        ```
+
      - **With env**
+
        ```bash
        # Create a virtual environment named rvcat
        python -m venv rvcat
@@ -27,8 +32,11 @@
        pip install --upgrade pip
        pip install -r requirements.txt
        ```
+
    - **Anaconda**
+
      - **Without env**
+
        ```bash
        # Make sure conda is updated
        conda update -n base -c defaults conda
@@ -37,7 +45,9 @@
        pip install --upgrade pip
        pip install -r requirements.txt
        ```
+
      - **With env**
+
        ```bash
        conda create -n rvcat python=3.11.9
        conda activate rvcat
@@ -50,7 +60,7 @@
 3. **Make the module rvcat** (if modified)
 
    ```bash
-   python setup.py bdist_wheel
+   python setup.py bdist_wheel --dist-dir .
    ```
 
 4. **Run**
