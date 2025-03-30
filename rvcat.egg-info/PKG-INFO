@@ -1,6 +1,0 @@
-Metadata-Version: 2.2
-Name: rvcat
-Version: 0.1
-Requires-Dist: cmd2
-Requires-Dist: numpy
-Dynamic: requires-dist
