@@ -1,0 +1,2 @@
+[console_scripts]
+rvcat = rvcat.rvcat:main
