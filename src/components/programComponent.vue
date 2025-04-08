@@ -37,7 +37,7 @@
               <div id="run-simulation-text">Run simulation</div></button>
       </form>
     <section class="main-box code-block">
-      <h3>Program and performance annotations</h3>
+      <h3>Program</h3>
         <pre>
           <code id="rvcat-asm-code">LOADING</code>
         </pre>

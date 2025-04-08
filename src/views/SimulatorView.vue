@@ -64,16 +64,11 @@ onMounted(() => {
         <component :is="currentComponent" ref="componentRef" />
       </div>
     </main>
-
-    <footer>
-      <p>The RVCAT developers © 2024</p>
-    </footer>
   </body>
 </template>
 
 <style scoped>
 .container {
-  margin: 0.5vh;
   display: grid;
   grid-template-columns: 1.5fr 2fr;
   grid-auto-rows: 50%;
@@ -86,6 +81,7 @@ onMounted(() => {
 }
 .grid-item {
   background: white;
+  border-radius: 50px;
 }
 .processor {
   grid-column: 1;

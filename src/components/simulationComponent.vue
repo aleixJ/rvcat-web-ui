@@ -7,6 +7,12 @@
       } else {
         console.error("simulation-graph element not found.");
       }
+      if (typeof programShowPerfAnnotations === "function") {
+        programShowPerfAnnotations();
+      } else {
+        console.error("performace-annotations element not found.");
+      }
+
     });
   });
 </script>
@@ -15,9 +21,8 @@
   <div class="main">
     <h3>Simulation</h3>
 
-    <div id="simulation-graph">
-
-    </div>
+    <div id="simulation-graph"></div>
+    <code id="performace-annotations"></code>
 
   </div>
 
@@ -35,5 +40,10 @@
   }
   h3 {
   margin: 0;
+  }
+  .simulation-graph{
+    display:block;
+    width:70%;
+    margin:auto;
   }
 </style>

@@ -32,13 +32,21 @@ const handlers = {
         closeLoadingOverlay();
     },
     'prog_show': (data) => {
-        let prog = data;
+        let array = data.split("Through");
+        let prog=array[0];
         let item = document.getElementById('rvcat-asm-code');
         item.innerHTML = prog;
 
         if (lastExecutedCommand !== null) {
             lastExecutedCommand();
         }
+    },
+    'prog_show_annotations': (data) => {
+
+      let array=data.split("Through");
+      let annotations = "Through"+array[1];
+      let item = document.getElementById('performace-annotations');
+      item.innerHTML = annotations;
     },
     'save_processor_info': (data) => {
         let procinfo = JSON.parse(data);
@@ -224,6 +232,13 @@ function programShow() {
         'prog_show'
     )
 
+}
+
+function programShowPerfAnnotations() {
+  executeCode(
+    RVCAT_HEADER() + PROG_SHOW_EXECUTION,
+    'prog_show_annotations'
+  )
 }
 
 function programShowDependencies() {
