@@ -1,3 +1,15 @@
+<script setup>
+  import { onMounted, nextTick } from "vue";
+  onMounted(() => {
+    nextTick(() => {
+      if (typeof showFullProcessor === "function") {
+        showFullProcessor();
+      } else {
+        console.error("simulation-graph element not found.");
+      }
+    });
+  });
+</script>
 
 <template>
   <div class="main">

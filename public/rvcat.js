@@ -271,7 +271,6 @@ function initPyodide() {
     worker.postMessage({action: 'initialize'});
 }
 
-
 async function executeCode(code, id=undefined){
     // TODO: Remove
     console.log('Executing code:\n', code);
@@ -325,17 +324,24 @@ function createGraphVizGraph(dotCode, targetElement, callback=null) {
             });
 }
 
-function createProcessorGraph(dispatch, execute, retire, usage=null) {
+function createProcessorGraph(dispatch, execute, retire) {
     // Define your Graphviz DOT code
     const dotCode = construct_reduced_processor_dot(dispatch, execute, retire);
     createGraphVizGraph(dotCode, document.getElementById('pipeline-graph'));
 }
 
+let fullGraphDotCode;
+
 function createProcessorSimulationGraph(dispatch, execute, retire, usage=null) {
   // Define your Graphviz DOT code
-  const dotCode = construct_full_processor_dot(dispatch, execute, retire, usage);
-  createGraphVizGraph(dotCode, document.getElementById('simulation-graph'));
+  fullGraphDotCode = construct_full_processor_dot(dispatch, execute, retire, usage);
+  createGraphVizGraph(fullGraphDotCode, document.getElementById('simulation-graph'));
 }
+
+function showFullProcessor(){
+  createGraphVizGraph(fullGraphDotCode, document.getElementById('simulation-graph'));
+}
+
 
 function showProcessor() {
     if (processorInfo === null) {
