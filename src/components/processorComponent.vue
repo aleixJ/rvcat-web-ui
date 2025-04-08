@@ -2,9 +2,13 @@
   <div class="pipeline-display">
     <div class="pipeline-header">
       <h3>Processor Pipeline</h3>
-      <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
+      <div id="settings-div">
+        <img src="/img/settings.png" width="20" @click="$emit('openProcSettings');">
+        <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
         <!-- <option value="model1">Model 1</option> -->
-      </select>
+        </select>
+      </div>
+
     </div>
 
     <div class="processor-info">
@@ -19,10 +23,6 @@
         <tbody id="processor-info-table-body"></tbody>
       </table>
     </div>
-
-    <div class="scale-container">
-      <div class="color-scale"></div>
-    </div>
   </div>
 </template>
 
@@ -31,7 +31,7 @@
   height: 100%;
   width: 100%;
   background: white;
-  overflow: auto;
+  overflow: hidden;
   padding: 5px;
   border-radius: 10px;
   position: relative;
@@ -62,5 +62,13 @@ table{
   background: linear-gradient(to right, #00FF00, #FFFF00, #FF0000);
   border-radius: 5px;
   position: relative;
+}
+img{
+  margin-right:10px;
+}
+#settings-div{
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

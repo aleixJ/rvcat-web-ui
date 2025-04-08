@@ -6,13 +6,18 @@
   import timelineComponent from '@/components/timelineComponent.vue';
   import aboutComponent from '@/components/aboutComponent.vue';
   import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
+  import procSettingsComponent from '@/components/procSettingsComponent.vue';
+  import simulationComponent from '@/components/simulationComponent.vue';
 
   import { shallowRef, onMounted, nextTick } from "vue";
+
 
   const components = {
   timelineComponent,
   staticAnalysisComponent,
-  aboutComponent
+  aboutComponent,
+  simulationComponent,
+  procSettingsComponent
 };
 
   const currentComponent = shallowRef(timelineComponent);

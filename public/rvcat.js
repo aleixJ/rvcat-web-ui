@@ -54,14 +54,12 @@ const handlers = {
             return;
         }
         createGraphVizGraph(data, item, callback);
-        selectButton(document.getElementById('dependencies-output'));
 
     },
     'generate_critical_paths_graph': (data) => {
         let item = document.getElementById('simulation-output');
         item.innerHTML = '';
         createGraphVizGraph(data, item);
-        selectButton(document.getElementById('critical-paths-output'));
 
     },
     'generate_scheduler_analysis': (data) => {
@@ -103,7 +101,7 @@ const handlers = {
             usage.ports[i] = d.ports[key];
             i++;
         }
-        createProcessorGraph(processorInfo.stages.dispatch, Object.keys(processorInfo.ports).length, processorInfo.stages.retire, usage);
+        createProcessorSimulationGraph(processorInfo.stages.dispatch, Object.keys(processorInfo.ports).length, processorInfo.stages.retire, usage);
         document.getElementById('run-simulation-spinner').style.display = 'none';
         document.getElementById('run-simulation-text').style.display = 'block';
         document.getElementById('run-simulation-button').disabled = false;
@@ -137,8 +135,6 @@ const handlers = {
             pre.appendChild(code);
             codeItem.appendChild(pre);
             item.appendChild(codeItem);
-
-            selectButton(document.getElementById('timeline-output'));
     },
     'print_output': (data) => {
         let out = data.replace(/\n/g, '<br>');
@@ -297,18 +293,6 @@ function setLoadingOverlayMessage(message) {
     document.getElementById('loading-overlay-message').innerHTML = message;
 }
 
-function selectButton(item) {
-    // add tab-item-selected class
-    item.classList.add('tab-button-selected');
-    // remove tab-item-selected from all siblings
-    let siblings = item.parentElement.children;
-    for (let s of siblings) {
-        if (s !== item) {
-            s.classList.remove('tab-button-selected');
-        }
-    }
-}
-
 function reloadRvcat() {
     programShow();
     getProcessorInformation();
@@ -343,8 +327,14 @@ function createGraphVizGraph(dotCode, targetElement, callback=null) {
 
 function createProcessorGraph(dispatch, execute, retire, usage=null) {
     // Define your Graphviz DOT code
-    const dotCode = construct_processor_dot(dispatch, execute, retire, usage);
+    const dotCode = construct_reduced_processor_dot(dispatch, execute, retire);
     createGraphVizGraph(dotCode, document.getElementById('pipeline-graph'));
+}
+
+function createProcessorSimulationGraph(dispatch, execute, retire, usage=null) {
+  // Define your Graphviz DOT code
+  const dotCode = construct_full_processor_dot(dispatch, execute, retire, usage);
+  createGraphVizGraph(dotCode, document.getElementById('simulation-graph'));
 }
 
 function showProcessor() {

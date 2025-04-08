@@ -22,13 +22,16 @@
 </template>
 
 <style scoped>
-.main{
-  height: 100%;
-  width: 100%;
-  background: white;
-  overflow: auto;
-  padding: 5px;
-  border-radius: 10px;
-  position: relative;
-}
+  .main{
+    height: 100%;
+    width: 100%;
+    background: white;
+    overflow: auto;
+    padding: 5px;
+    border-radius: 10px;
+    position: relative;
+  }
+  h3 {
+  margin: 0;
+  }
 </style>

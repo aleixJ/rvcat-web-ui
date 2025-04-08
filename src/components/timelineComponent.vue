@@ -39,5 +39,8 @@
     padding:5px;
     border-radius: 10px;
   }
+  h3 {
+  margin: 0;
+  }
 </style>
 
