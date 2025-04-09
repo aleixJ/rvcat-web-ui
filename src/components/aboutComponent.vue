@@ -1,6 +1,8 @@
 <template>
   <div class='main'>
+    <div class="header">
       <h3>About</h3>
+    </div>
 
       <p>
           RVCAT (RISC-V Code Analysis Tool) is a simulation tool for the performance analysis of small programs from a computer architecture educational standpoint.
@@ -30,6 +32,12 @@
     padding: 5px;
     border-radius: 10px;
     position: relative;
+  }
+  .header{
+    position:sticky;
+    top:-5px;
+    background:white;
+    width:100%;
   }
   h3 {
   margin: 0;
