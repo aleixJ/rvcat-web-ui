@@ -54,14 +54,18 @@ onMounted(() => {
       <!-- Processor Pipeline -->
       <div class="grid-item processor">
         <!-- Listen to changeProcessor event from processorComponent -->
-        <processorComponent/>
+        <processorComponent @switchComponent="switchComponent"/>
       </div>
       <div class="grid-item program">
         <programComponent />
       </div>
       <div class="grid-item results">
         <!-- Attach ref to dynamic component -->
-        <component :is="currentComponent" ref="componentRef" />
+        <component
+          :is="currentComponent"
+          v-if="currentComponent"
+        />
+        <div v-else>Component not found</div>
       </div>
     </main>
   </body>
@@ -80,8 +84,9 @@ onMounted(() => {
   box-sizing: border-box;
 }
 .grid-item {
+  position:relative;
   background: white;
-  border-radius: 50px;
+  border-radius: 10px;
 }
 .processor {
   grid-column: 1;
@@ -94,5 +99,7 @@ onMounted(() => {
 .results {
   grid-column: 2;
   grid-row: 1 / 3; /* Span both rows */
+  width:99%;
+  max-width:99%;
 }
 </style>

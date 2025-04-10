@@ -1,13 +1,37 @@
 <script setup>
-  import { onMounted, nextTick } from "vue";
+  import { onMounted, nextTick, onUnmounted} from "vue";
+
+  let processorsListHandler;
+
   onMounted(() => {
     nextTick(() => {
+      const processorsList = document.getElementById("processors-list");
+      if (processorsList) {
+        processorsListHandler = () => {
+          setTimeout(() => {
+            programShowPerfAnnotations();
+          }, 100); // 100 ms delay
+        };
+        processorsList.addEventListener("change", processorsListHandler);
+      }
       if (typeof showCriticalPathsGraph === "function") {
         showCriticalPathsGraph();
       } else {
         console.error("simulation-output element not found.");
       }
+      if (typeof programShowPerfAnnotations === "function") {
+        programShowPerfAnnotations();
+      } else {
+        console.error("performace-annotations element not found.");
+      }
     });
+  });
+
+  onUnmounted(() => {
+    const processorsList = document.getElementById("processors-list");
+    if (processorsList && processorsListHandler) {
+      processorsList.removeEventListener("change", processorsListHandler);
+    }
   });
 </script>
 
@@ -16,6 +40,7 @@
     <div class="header">
       <h3>Static Analysis</h3>
     </div>
+      <code id="performace-annotations"></code>
         <div class="output-block-wrapper" id="simulation-output-container">
             <section class="simulation-results-controls" id="dependencies-controls">
                 <div class="simulation-results-controls-item">

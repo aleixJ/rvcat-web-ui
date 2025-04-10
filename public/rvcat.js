@@ -48,6 +48,9 @@ const handlers = {
       let item = document.getElementById('performace-annotations');
       item.innerHTML = annotations;
     },
+    'get_proc_settings': (data) => {
+        processorInfo = JSON.parse(data);
+    },
     'save_processor_info': (data) => {
         let procinfo = JSON.parse(data);
         processorInfo = procinfo;
@@ -87,7 +90,7 @@ const handlers = {
         if (d['data_type'] === 'error') {
             alert('Error running simulation');
             document.getElementById('run-simulation-spinner').style.display = 'none';
-            document.getElementById('run-simulation-text').style.display = 'block';
+            document.getElementById('run-button').style.display = 'block';
             document.getElementById('run-simulation-button').disabled = false;
             return;
         }
@@ -111,7 +114,7 @@ const handlers = {
         }
         createProcessorSimulationGraph(processorInfo.stages.dispatch, Object.keys(processorInfo.ports).length, processorInfo.stages.retire, usage);
         document.getElementById('run-simulation-spinner').style.display = 'none';
-        document.getElementById('run-simulation-text').style.display = 'block';
+        document.getElementById('run-button').style.display = 'block';
         document.getElementById('run-simulation-button').disabled = false;
 
     },
@@ -284,6 +287,14 @@ function programShowAnalysis() {
     lastExecutedCommand = programShowAnalysis;
 }
 
+async function getProcessorJSON() {
+  await executeCode(
+    RVCAT_HEADER() + SHOW_PROCESSOR,
+    'get_proc_settings'
+  )
+  return processorInfo;
+}
+
 function getProcessorInformation() {
     executeCode(
         RVCAT_HEADER() + SHOW_PROCESSOR,
@@ -321,7 +332,7 @@ function setLoadingOverlayMessage(message) {
 function reloadRvcat() {
     programShow();
     getProcessorInformation();
-    programShowPerfAnnotations();
+
 }
 
 function createGraphVizGraph(dotCode, targetElement, callback=null) {
@@ -409,6 +420,7 @@ function showProcessor() {
 }
 
 function showDependenciesGraph() {
+    programShowPerfAnnotations();
     let controls = document.getElementById('dependencies-controls');
     controls.style.display = 'block';
     let num_iters = document.getElementById('dependencies-num-iters').value;
@@ -445,7 +457,7 @@ function getSchedulerAnalysis() {
     document.getElementById('cycles-per-iteration-output').innerHTML = '?';
 
     document.getElementById('run-simulation-spinner').style.display = 'block';
-    document.getElementById('run-simulation-text').style.display = 'none';
+    document.getElementById('run-button').style.display = 'none';
     document.getElementById('run-simulation-button').disabled = true;
     executeCode(
         RVCAT_HEADER() + RUN_PROGRAM_ANALYSIS,

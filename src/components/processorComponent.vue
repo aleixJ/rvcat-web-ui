@@ -3,7 +3,10 @@
     <div class="pipeline-header">
       <h3>Processor Pipeline</h3>
       <div id="settings-div">
-        <img src="/img/settings.png" width="20" @click="$emit('openProcSettings');">
+        <div id="settings-button" @click="$emit('switchComponent','procSettingsComponent');">
+          <img src="/img/settings.png" width="20">
+        </div>
+
         <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
         <!-- <option value="model1">Model 1</option> -->
         </select>
@@ -72,5 +75,8 @@ img{
   display: flex;
   justify-content: center;
   align-items: center;
+}
+#settings-button{
+  cursor:pointer;
 }
 </style>
