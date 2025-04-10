@@ -2,15 +2,15 @@
   import { onMounted, nextTick } from "vue";
   onMounted(() => {
     nextTick(() => {
-      if (typeof showFullProcessor === "function") {
-        showFullProcessor();
-      } else {
-        console.error("simulation-graph element not found.");
-      }
       if (typeof programShowPerfAnnotations === "function") {
         programShowPerfAnnotations();
       } else {
         console.error("performace-annotations element not found.");
+      }
+      if (typeof reloadRvcat === "function") {
+        reloadRvcat();
+      } else {
+        console.error("simulation-graph element not found.");
       }
 
     });
@@ -81,4 +81,22 @@
     width:70%;
     margin:auto;
   }
+  .spinner-small {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #868686;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
 </style>

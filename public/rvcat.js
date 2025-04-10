@@ -202,8 +202,8 @@ function currentProcessor() {
 }
 
 function currentIterations() {
-  return 5;
-    /*let elem = document.getElementById('num-iters');
+  if (document.getElementById("num-iters")){
+    let elem = document.getElementById('num-iters');
     let i = elem.value;
     if (i === '') {
         elem.value = 100;
@@ -211,12 +211,16 @@ function currentIterations() {
     if (i > MAX_PROGRAM_ITERATIONS) {
         elem.value = MAX_PROGRAM_ITERATIONS;
     }
-    return elem.value;*/
+    return elem.value;
+  }
+  else {
+    return 200;
+  }
 }
 
 function currentROBSize() {
-  return 100;
-  /*let elem = document.getElementById('rob-size');
+  if (document.getElementById("rob-size")){
+    let elem = document.getElementById('rob-size');
     let rs = elem.value;
     if (rs === '') {
         elem.value = rs;
@@ -224,7 +228,12 @@ function currentROBSize() {
     if (rs > MAX_ROB_SIZE) {
         elem.value = rs;
     }
-    return elem.value;*/
+    return elem.value;
+  }
+  else {
+    return 100;
+  }
+
 }
 
 // Commands
