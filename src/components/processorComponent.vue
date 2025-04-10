@@ -7,6 +7,8 @@
         <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
         <!-- <option value="model1">Model 1</option> -->
         </select>
+        <label for="rob-size"> ROB Size:</label>
+        <input type="number" id="rob-size" name="rob-size" min="1" max="1000" value="100" >
       </div>
 
     </div>

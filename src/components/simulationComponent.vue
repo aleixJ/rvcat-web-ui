@@ -26,9 +26,6 @@
     <form id="simulator-form">
           <label for="iterations">Number of Iterations:</label>
           <input type="number" id="num-iters" name="iterations" min="1" max="3000" value="200" >
-
-          <label for="rob-size">ROB Size:</label>
-          <input type="number" id="rob-size" name="rob-size" min="1" max="1000" value="100" >
           <div class="simulation-inline-output">
               <div class="simulation-inline-item">
                   <label for="instructions">Instructions:</label>
