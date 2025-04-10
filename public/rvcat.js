@@ -321,6 +321,7 @@ function setLoadingOverlayMessage(message) {
 function reloadRvcat() {
     programShow();
     getProcessorInformation();
+    programShowPerfAnnotations();
 }
 
 function createGraphVizGraph(dotCode, targetElement, callback=null) {
