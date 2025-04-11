@@ -92,7 +92,9 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
       }
     }
 
-    dot_code += `label = "Execute";
+    dot_code += `label = "Execute";\n
+    fontname="Arial";
+    fontsize=12;
     }\n`
 
     for (let i in shown_ports) {
@@ -171,7 +173,9 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
       }
   }
 
-  dot_code += `label = "Execute";
+  dot_code += `label = "Execute";\n
+  fontname="Arial";
+  fontsize=12;
   }\n`
 
   for (let i=0; i<num_ports; i++) {

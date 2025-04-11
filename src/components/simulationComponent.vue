@@ -24,7 +24,7 @@
         </div>
 
         <div id="run-simulation-button">
-          <button id="run-button" class="run-button" onclick="getSchedulerAnalysis();">Run</button>
+          <button id="run-button" class="run-button" onclick="getSchedulerAnalysis();"><img src="/img/run.png"></button>
           <div id="run-simulation-spinner" class="spinner-small" style="display: none;"></div>
         </div>
       </div>
@@ -34,19 +34,19 @@
       <div id="simulation-results-info">
         <div class="simulation-inline-output">
             <div class="simulation-inline-item">
-                <label for="instructions"><b>Instructions:</b></label>
+                <label for="instructions"><b>Instructions: </b></label>
                 <span id="instructions-output">?</span>
             </div>
             <div class="simulation-inline-item">
-                <label for="cycles"><b>Cycles:</b></label>
+                <label for="cycles"><b>Cycles: </b></label>
                 <span id="cycles-output">?</span>
             </div>
             <div class="simulation-inline-item">
-                <label for="IPC"><b>IPC:</b></label>
+                <label for="IPC"><b>IPC: </b></label>
                 <span id="IPC-output">?</span>
             </div>
             <div class="simulation-inline-item">
-                <label for="cycles-per-iteration"><b>Cycles per iteration:</b></label>
+                <label for="cycles-per-iteration"><b>Cycles per iteration: </b></label>
                 <span id="cycles-per-iteration-output">?</span>
             </div>
         </div>

@@ -44,9 +44,11 @@ const handlers = {
     'prog_show_annotations': (data) => {
 
       let array=data.split("Through");
+      console.log(array[1]);
       let annotations = "Through"+array[1];
+      console.log(annotations);
       let item = document.getElementById('performace-annotations');
-      item.innerHTML = annotations;
+      item.innerHTML = array[1];
     },
     'get_proc_settings': (data) => {
         processorInfo = JSON.parse(data);
@@ -397,21 +399,6 @@ function showProcessor() {
     "5"]}, "cache": null, "nBlocks": 0, "blkSize": 8, "mPenalty": 16,
     "mIssueTime": 8}
     */
-
-    let tableobj = document.getElementById('processor-info-table-body');
-    tableobj.innerHTML = '';
-    let idx=0
-    for (let [key, value] of Object.entries(processorInfo.ports)) {
-        let tr = document.createElement('tr');
-        let td1 = document.createElement('td');
-        td1.innerHTML = "P" + idx;
-        tr.appendChild(td1);
-        let td2 = document.createElement('td');
-        td2.innerHTML = value.join(', ');
-        tr.appendChild(td2);
-        tableobj.appendChild(tr);
-        idx++;
-    }
 
     let dispatch_width = processorInfo.stages.dispatch;
     let num_ports = Object.keys(processorInfo.ports).length;

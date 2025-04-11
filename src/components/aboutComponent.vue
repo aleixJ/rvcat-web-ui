@@ -11,7 +11,7 @@
           RVCAT and its web interface (RVCAT-Web) have been developed on
           the Computer Architecture and Operating Systems Department of
           the Universitat Autònoma de Barcelona (UAB) by Saul Adserias,
-          Quim Aguado Puig, and Juan C. Moure.
+          Quim Aguado Puig, Bern Vich Susanna, and Juan C. Moure.
       </p>
       <p>
           The simulator and web interface are still under active

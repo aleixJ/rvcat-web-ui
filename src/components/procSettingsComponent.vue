@@ -4,6 +4,7 @@
   const dispatch = ref(0);
   const retire = ref(0);
   const latencies = ref(null);
+  const name = ref("");
 
   let processorsListHandler;
 
@@ -38,6 +39,7 @@
       dispatch.value = processorSettings.stages.dispatch;
       retire.value = processorSettings.stages.retire;
       latencies.value = processorSettings.resources;
+      name.value = processorSettings.name;
     }
   }
 
@@ -47,9 +49,10 @@
 <template>
   <div class="main">
     <div class="header">
-      <h3>Processor Settings</h3>
-      <button class="save-button">Save</button>
+      <h3>Processor Settings - {{name}}</h3>
+      <button class="save-button"><img src="/img/save.png"></button>
     </div>
+  <br/>
     <div >
       <label class="switch">
         <input type="checkbox" checked>
@@ -57,14 +60,14 @@
 
       </label> Use advanced scheduler
       <div class="widths">
-        <h4>Set widths</h4>
+        <h4>Set Widths</h4>
         <label for="dispatch-width"> Dispatch: </label>
         <input type="number" id="dispatch" name="dispatch-width" min="1" max="100" v-model="dispatch">
         <label for="retire-width"> Retire: </label>
         <input type="number" id="retire" name="retire-width" min="1" max="100" v-model="retire">
       </div>
 
-      <h4>Set instruction latencies</h4>
+      <h4>Set Instruction Latencies</h4>
       <div v-if="latencies" class="latencies-grid">
         <div v-for="(value, key) in latencies" :key="key" class="latency-item">
           <label :for="key">{{ key }}</label>
@@ -72,7 +75,7 @@
         </div>
       </div>
 
-      <h4>Configure ports</h4>
+      <h4>Configure Ports</h4>
     </div>
 
   </div>
@@ -89,7 +92,7 @@
     position: relative;
   }
   h3 {
-    margin: 5px;
+    margin: 0;
   }
   .header{
     position:sticky;
