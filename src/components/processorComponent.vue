@@ -11,7 +11,7 @@
         <!-- <option value="model1">Model 1</option> -->
         </select>
         <div>
-          <label for="rob-size"> ROB Size:</label>
+          <label for="rob-size"> ROB: </label>
           <input type="number" id="rob-size" name="rob-size" min="1" max="1000" value="100" >
         </div>
       </div>

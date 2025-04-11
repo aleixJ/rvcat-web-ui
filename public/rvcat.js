@@ -44,11 +44,9 @@ const handlers = {
     'prog_show_annotations': (data) => {
 
       let array=data.split("Through");
-      console.log(array[1]);
       let annotations = "Through"+array[1];
-      console.log(annotations);
       let item = document.getElementById('performace-annotations');
-      item.innerHTML = array[1];
+      item.innerHTML = annotations;
     },
     'get_proc_settings': (data) => {
         processorInfo = JSON.parse(data);
