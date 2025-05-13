@@ -199,6 +199,17 @@
     reader.readAsText(file);
   }
 
+  function increaseLatency(key) {
+    if (resources[key] < 100) {
+      resources[key]++;
+    }
+  }
+
+  function decreaseLatency(key) {
+    if (resources[key] > 1) {
+      resources[key]--;
+    }
+  }
 
 
 </script>
@@ -235,8 +246,16 @@
       <h4>Set Instruction Latencies</h4>
       <div v-if="resources" class="resources-grid">
         <div v-for="(value, key) in resources" :key="key" class="latency-item">
-          <label :for="key">{{ key }}</label>
-          <input type="number" :id="key" min="1" max="100" v-model="resources[key]">
+          <label :for="key"><b>{{ key }}</b></label>
+          <div class="input-group">
+            <button @click="decreaseLatency(key)" class="arrow-button">
+              <img src="/img/minus.png" width="10px"/>
+            </button>
+            <input type="number" :id="key" min="1" max="100" v-model="resources[key]">
+            <button @click="increaseLatency(key)"  class="arrow-button">
+              <img src="/img/plus.png" width="10px"/>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -250,6 +269,7 @@
                 :src="portDropdownOpen[portNum] ? 'img/hide.png' : 'img/show.png'"
                 alt="toggle"
                 class="toggle-icon"
+                width="10px"
               />
             </button>
           </div>
@@ -436,21 +456,28 @@
   }
 
   .ports-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 10px;
-}
-.port-item {
-  background-color: white;
-  border: 3px solid #e3e3e3;
-  border-radius: 8px;
-  padding: 10px;
-  text-align: left;
-}
-.port-item ul {
-  margin: 5px 0 0 0;
-  padding-left: 20px;
-}
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .port-item {
+    background-color: white;
+    border: 3px solid #e3e3e3;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .port-item ul {
+    margin: 5px 0 0 0;
+    padding-left: 20px;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
 
 </style>
