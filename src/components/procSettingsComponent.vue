@@ -147,8 +147,8 @@
   }
 
   function downloadProcessorConfig() {
-    const data = getCurrentProcessorJSON(); // Your existing function
-    const jsonStr = JSON.stringify(data, null, 2); // pretty-print
+    const data = getCurrentProcessorJSON();
+    const jsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
@@ -225,14 +225,14 @@
 
       </label> Use advanced scheduler
       <div class="widths">
-        <h4>Set Widths</h4>
+        <h4>Set Stage Widths</h4>
         <label for="dispatch-width"> Dispatch: </label>
         <input type="number" id="dispatch" name="dispatch-width" min="1" max="100" v-model="dispatch">
         <label for="retire-width"> Retire: </label>
         <input type="number" id="retire" name="retire-width" min="1" max="100" v-model="retire">
       </div>
 
-      <h4>Set Instruction resources</h4>
+      <h4>Set Instruction Latencies</h4>
       <div v-if="resources" class="resources-grid">
         <div v-for="(value, key) in resources" :key="key" class="latency-item">
           <label :for="key">{{ key }}</label>
@@ -243,12 +243,18 @@
       <h4>Configure Ports</h4>
       <div v-if="ports" class="ports-grid">
         <div v-for="(units, portNum) in ports" :key="portNum" class="port-item">
-          <label><b>Port {{ portNum }}</b></label>
-          <div>
-            <button @click="toggleDropdown(portNum)" class="dropdown-toggle">
-              {{ portDropdownOpen[portNum] ? 'Hide' : 'Configure' }} Port {{ portNum }}
+          <div class="port-header">
+            <label><b>Port {{ portNum }}</b></label>
+            <button @click="toggleDropdown(portNum)" class="arrow-button">
+              <img
+                :src="portDropdownOpen[portNum] ? 'img/hide.png' : 'img/show.png'"
+                alt="toggle"
+                class="toggle-icon"
+              />
             </button>
+          </div>
 
+          <div>
             <div v-if="portDropdownOpen[portNum]" class="dropdown-panel">
               <div
                 v-for="instruction in availableInstructions"
@@ -266,7 +272,7 @@
               </div>
             </div>
 
-            <p><strong>Selected:</strong> {{ ports[portNum]?.join(', ') || 'None' }}</p>
+            <p v-if="!portDropdownOpen[portNum]"><strong>Selected:</strong> {{ ports[portNum]?.join(', ') || 'None' }}</p>
           </div>
 
         </div>
@@ -294,6 +300,11 @@
     top:-5px;
     background:white;
     width:100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .port-header{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -402,6 +413,26 @@
     outline: none;
     background: #003f73;
     color: white;
+  }
+
+  .arrow-button {
+    background: #c5c5c5;
+    border: none;
+    padding: 4px 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    margin-right: 5px;
+  }
+
+  .arrow-button:hover {
+    background: #b1b1b1;
+  }
+
+  .arrow-button:active {
+    outline: none;
+    background: #8d8c8c;
   }
 
   .ports-grid {
