@@ -1,6 +1,7 @@
 // Save the last executed command to be able to re-run it when the selected program change
 var lastExecutedCommand = null;
 var processorInfo = null;
+var processorModified = true;
 
 const MAX_PROGRAM_ITERATIONS = 3000;
 const MAX_ROB_SIZE = 500;

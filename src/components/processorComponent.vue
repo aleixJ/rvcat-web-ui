@@ -3,9 +3,7 @@
     <div class="pipeline-header">
       <h3>Processor Pipeline</h3>
       <div id="settings-div">
-        <button id="download-button" class="processor-button"><img src="/img/down.png"></button>
-        <button id="upload-button" class="processor-button"><img src="/img/up.png"></button>
-        <button id="settings-button" class="processor-button" @click="$emit('switchComponent','procSettingsComponent');"><img src="/img/settings.png"></button>
+
 
         <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
         <!-- <option value="model1">Model 1</option> -->

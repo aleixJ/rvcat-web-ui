@@ -54,7 +54,7 @@ onMounted(() => {
       <!-- Processor Pipeline -->
       <div class="grid-item processor">
         <!-- Listen to changeProcessor event from processorComponent -->
-        <processorComponent @switchComponent="switchComponent"/>
+        <processorComponent/>
       </div>
       <div class="grid-item program">
         <programComponent />
@@ -74,7 +74,7 @@ onMounted(() => {
 <style scoped>
 .container {
   display: grid;
-  grid-template-columns: 1.5fr 2fr;
+  grid-template-columns: 1fr 2fr;
   grid-auto-rows: 50%;
   width: 100vw;
   height: 95vh;

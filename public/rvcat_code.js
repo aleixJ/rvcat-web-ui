@@ -39,12 +39,29 @@ const RUN_PROGRAM_TIMELINE = 'rvcat._scheduler.format_timeline()'
 const RUN_PROGRAM_ANALYSIS = 'rvcat._scheduler.format_analysis_json()'
 const RUN_PROGRAM_MEMTRACE = 'rvcat._scheduler.format_memtrace()'
 
+let processorIsModified=false;
+let processorJSON={};
+
+function resetProcessor(){
+  processorIsModified=false;
+}
+
+function setModifiedProcessor(json){
+  processorJSON=json;
+  processorIsModified=true;
+}
+
 const RVCAT_HEADER = function() {
     let proc = currentProcessor();
     let prog = currentProgram();
     let res = `import rvcat\n`;
     if (proc !== undefined) {
+      if(processorIsModified) {
+        res += `rvcat._processor.load_processor_json('${processorJSON}')\n`
+      } else {
         res += `rvcat._processor.load_processor('${currentProcessor()}')\n`
+      }
+
     }
     if (prog !== undefined) {
     res += `rvcat._program.load_program('${currentProgram()}')\n`

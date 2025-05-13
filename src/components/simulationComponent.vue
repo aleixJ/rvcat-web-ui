@@ -52,6 +52,20 @@
         </div>
       </div>
     </div>
+    <div class="scale-container">
+          <!-- Color scale bar -->
+          <div class="color-scale">
+              <!-- Example pointer (optional) -->
+              <!-- <div class="pointer"></div> -->
+          </div>
+
+          <!-- Optional scale labels -->
+          <div class="scale-labels">
+              <span>Underutilized</span>
+              <span></span>
+              <span>Saturated</span>
+          </div>
+    </div>
   </div>
 
 </template>
@@ -94,7 +108,7 @@
   }
   .content{
     display: flex;
-    justify-content: left;
+    justify-content: center;
     align-items: center;
   }
   .simulation-graph{
@@ -141,5 +155,31 @@
     outline: none;
     background: #003f73;
     color: white;
+  }
+  .scale-container {
+    width: 30%;
+    margin: 0 auto;
+    margin-top: 2%;
+    text-align: center;
+    display:block;
+  }
+
+
+  .color-scale {
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(to right, #00FF00, #FFFF00, #FF0000);
+    border-radius: 5px;
+    position: relative;
+  }
+
+/* Optional labels for the scale */
+  .scale-labels {
+    width:100%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
   }
 </style>

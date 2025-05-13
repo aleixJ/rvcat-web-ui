@@ -1,12 +1,21 @@
 <script setup>
-  import { ref, onMounted, onUnmounted, nextTick } from "vue";
+  import { ref, reactive, onMounted, onUnmounted, nextTick, computed } from "vue";
 
-  const dispatch = ref(0);
-  const retire = ref(0);
-  const latencies = ref(null);
-  const name = ref("");
+  let dispatch = ref(0);
+  let retire = ref(0);
+  let latencies = reactive({});
+  let name = ref("");
+  let ports = ref({});
 
   let processorsListHandler;
+
+  let originalSettings = reactive({
+    dispatch: 0,
+    retire: 0,
+    latencies: {},
+    name: "",
+  });
+
 
   onMounted(() => {
     nextTick(() => {
@@ -15,11 +24,17 @@
         processorsListHandler = () => {
           setTimeout(() => {
             updateProcessorSettings();
+            if (typeof resetProcessor === "function") {
+              resetProcessor();
+            }
           }, 100); // 100 ms delay
         };
         processorsList.addEventListener("change", processorsListHandler);
       }
       updateProcessorSettings();
+      if (typeof resetProcessor === "function") {
+        resetProcessor();
+      }
 
     });
   });
@@ -31,18 +46,85 @@
     }
   });
 
-  const updateProcessorSettings = async () =>{
-
+  const updateProcessorSettings = async () => {
     if (typeof getProcessorJSON === "function") {
-      let processorSettings = await getProcessorJSON();
-      // Set the reactive values using .value
+      const processorSettings = await getProcessorJSON();
+
       dispatch.value = processorSettings.stages.dispatch;
       retire.value = processorSettings.stages.retire;
-      latencies.value = processorSettings.resources;
       name.value = processorSettings.name;
+      ports.value = processorSettings.ports;
+      Object.keys(latencies).forEach(k => delete latencies[k]);
+      Object.entries(processorSettings.resources).forEach(([k, v]) => {
+        latencies[k] = v;
+      });
+
+      // Store a deep copy of the original latencies
+      originalSettings.dispatch = processorSettings.stages.dispatch;
+      originalSettings.retire = processorSettings.stages.retire;
+      originalSettings.name = processorSettings.name;
+      originalSettings.latencies = JSON.parse(JSON.stringify(processorSettings.resources));
+      originalSettings.ports = JSON.parse(JSON.stringify(processorSettings.ports));
     }
+  };
+
+  function getCurrentProcessorJSON() {
+    return {
+      name: name.value,
+      stages: {
+        dispatch: dispatch.value,
+        retire: retire.value,
+        execute: originalSettings.dispatch, // assuming `execute` isn't editable
+      },
+      resources: { latencies },
+      ports: ports.value,
+      rports: originalSettings.rports, // assuming unchanged
+      cache: null,
+      nBlocks: 0,
+      blkSize: 8,
+      mPenalty: 16,
+      mIssueTime: 8
+    };
   }
 
+  const checkModifiedProcessor = computed(() => {
+    if (
+      dispatch.value !== originalSettings.dispatch ||
+      retire.value !== originalSettings.retire ||
+      name.value !== originalSettings.name
+    ) {
+      if (typeof setModifiedProcessor === "function") {
+        setModifiedProcessor(getCurrentProcessorJSON())
+      }
+    }
+
+    const currentKeys = Object.keys(latencies);
+    const originalKeys = Object.keys(originalSettings.latencies);
+    if (currentKeys.length !== originalKeys.length){
+      if (typeof setModifiedProcessor === "function") {
+        setModifiedProcessor(getCurrentProcessorJSON());
+      }
+    }
+
+    for (let key of currentKeys) {
+      if (latencies[key] !== originalSettings.latencies[key]) {
+        if (typeof setModifiedProcessor === "function") {
+          setModifiedProcessor(getCurrentProcessorJSON());
+        }
+      }
+    }
+
+    return false;
+  });
+
+  import { watchEffect } from "vue";
+
+  watchEffect(() => {
+    if (checkModifiedProcessor.value) {
+      console.log("Processor settings have been modified.");
+      // You can also trigger UI updates or enable Save buttons here
+    }
+  });
 
 </script>
 
@@ -50,6 +132,7 @@
   <div class="main">
     <div class="header">
       <h3>Processor Settings - {{name}}</h3>
+
       <button class="save-button"><img src="/img/save.png"></button>
     </div>
   <br/>
@@ -76,6 +159,14 @@
       </div>
 
       <h4>Configure Ports</h4>
+      <div v-if="ports" class="ports-grid">
+        <div v-for="(units, portNum) in ports" :key="portNum" class="port-item">
+          <label>Port {{ portNum }}</label>
+          <ul>
+            <li v-for="unit in units" :key="unit">{{ unit }}</li>
+          </ul>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -208,5 +299,23 @@
     background: #003f73;
     color: white;
   }
+
+  .ports-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+.port-item {
+  background-color: white;
+  border: 3px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: left;
+}
+.port-item ul {
+  margin: 5px 0 0 0;
+  padding-left: 20px;
+}
 
 </style>

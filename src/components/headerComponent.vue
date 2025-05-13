@@ -17,19 +17,18 @@ const switchComponent = (component) => {
     <nav>
       <ul>
         <li>
-          <button
-            class="tab-button"
-            :class="{ active: activeComponent === 'staticAnalysisComponent' }"
-            @click="$emit('switchComponent', 'staticAnalysisComponent'); switchComponent('staticAnalysisComponent');">
-            Static Analysis
+          <button class="tab-button"
+          :class="{ active: activeComponent === 'procSettingsComponent' }"
+          @click="$emit('switchComponent','procSettingsComponent'); switchComponent('procSettingsComponent');">
+          Settings
           </button>
         </li>
         <li>
           <button
             class="tab-button"
-            :class="{ active: activeComponent === 'timelineComponent' }"
-            @click="$emit('switchComponent', 'timelineComponent'); switchComponent('timelineComponent');">
-            Timeline
+            :class="{ active: activeComponent === 'staticAnalysisComponent' }"
+            @click="$emit('switchComponent', 'staticAnalysisComponent'); switchComponent('staticAnalysisComponent');">
+            Static Analysis
           </button>
         </li>
         <li>
@@ -43,11 +42,20 @@ const switchComponent = (component) => {
         <li>
           <button
             class="tab-button"
+            :class="{ active: activeComponent === 'timelineComponent' }"
+            @click="$emit('switchComponent', 'timelineComponent'); switchComponent('timelineComponent');">
+            Timeline
+          </button>
+        </li>
+        <li>
+          <button
+            class="tab-button"
             :class="{ active: activeComponent === 'aboutComponent' }"
             @click="$emit('switchComponent', 'aboutComponent'); switchComponent('aboutComponent');">
             About
           </button>
         </li>
+
       </ul>
     </nav>
   </div>

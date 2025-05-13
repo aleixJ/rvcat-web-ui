@@ -36,11 +36,11 @@
 }
 .main-box{
   overflow:auto;
-  max-height:80%;
+  max-height:70%;
   margin-top:5px;
   background:#e3e3e3;
   border-radius:10px;
-  width:max-content;
+  padding:5px;
 }
 
 h3 {
