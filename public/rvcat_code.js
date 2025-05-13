@@ -46,8 +46,8 @@ function resetProcessor(){
   processorIsModified=false;
 }
 
-function setModifiedProcessor(json){
-  processorJSON=json;
+function setModifiedProcessor(processor_config_json){
+  processorJSON=JSON.stringify(processor_config_json);
   processorIsModified=true;
 }
 
