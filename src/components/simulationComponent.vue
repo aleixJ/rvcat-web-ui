@@ -30,7 +30,10 @@
       </div>
     </div>
     <div class="content">
-      <div id="simulation-graph"></div>
+      <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
+      <div id="simulation-graph" style="display: none">
+
+      </div>
       <div id="simulation-results-info">
         <div class="simulation-inline-output">
             <div class="simulation-inline-item">
@@ -110,6 +113,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 10px;
   }
   .simulation-graph{
     display:block;

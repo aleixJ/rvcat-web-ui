@@ -33,21 +33,47 @@ const handlers = {
         closeLoadingOverlay();
     },
     'prog_show': (data) => {
-        let array = data.split("Through");
-        let prog=array[0];
-        let item = document.getElementById('rvcat-asm-code');
-        item.innerHTML = prog;
+      let array = data.split("Through");
+      let prog = array[0];
 
-        if (lastExecutedCommand !== null) {
-            lastExecutedCommand();
-        }
+      // Split into lines
+      let lines = prog.split("\n");
+
+      // Remove leading/trailing empty lines
+      while (lines.length && lines[0].trim() === "") lines.shift();
+      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
+
+      // Detect common leading indentation (tabs or spaces)
+      const nonEmptyLines = lines.filter(line => line.trim() !== "");
+      const leadingIndents = nonEmptyLines.map(line => {
+        const match = line.match(/^(\s*)/);
+        return match ? match[1] : "";
+      });
+
+      // Get the smallest shared indent
+      const minIndentLength = Math.min(...leadingIndents.map(indent => indent.length));
+      const cleanedLines = lines.map(line =>
+        line.startsWith(" ") || line.startsWith("\t")
+          ? line.slice(minIndentLength)
+          : line
+      );
+
+      // Join cleaned lines
+      const cleanedProg = cleanedLines.join("\n");
+
+      const item = document.getElementById('rvcat-asm-code');
+      item.textContent = cleanedProg;
+
+      if (lastExecutedCommand !== null) {
+        lastExecutedCommand();
+      }
     },
     'prog_show_annotations': (data) => {
 
       let array=data.split("Through");
       let annotations = "Through"+array[1];
-      let item = document.getElementById('performace-annotations');
-      item.innerHTML = annotations;
+      let item = document.getElementById('performance-annotations');
+      item.textContent = annotations;
     },
     'get_proc_settings': (data) => {
         processorInfo = JSON.parse(data);
@@ -91,6 +117,8 @@ const handlers = {
         if (d['data_type'] === 'error') {
             alert('Error running simulation');
             document.getElementById('run-simulation-spinner').style.display = 'none';
+            document.getElementById('simulation-running').style.display = 'none';
+            document.getElementById('simulation-graph').style.display = 'block';
             document.getElementById('run-button').style.display = 'block';
             document.getElementById('run-simulation-button').disabled = false;
             return;
@@ -115,6 +143,8 @@ const handlers = {
         }
         createProcessorSimulationGraph(processorInfo.stages.dispatch, Object.keys(processorInfo.ports).length, processorInfo.stages.retire, usage);
         document.getElementById('run-simulation-spinner').style.display = 'none';
+        document.getElementById('simulation-running').style.display = 'none';
+        document.getElementById('simulation-graph').style.display = 'block';
         document.getElementById('run-button').style.display = 'block';
         document.getElementById('run-simulation-button').disabled = false;
 
@@ -425,8 +455,6 @@ function showDependenciesGraph() {
 }
 
 function showCriticalPathsGraph() {
-    let controls = document.getElementById('dependencies-controls');
-    controls.style.display = 'none';
     executeCode(
         RVCAT_HEADER() + PROG_SHOW_CRITICAL_PATHS_GRAPHVIZ,
         'generate_critical_paths_graph'
@@ -443,6 +471,8 @@ function getSchedulerAnalysis() {
     document.getElementById('cycles-per-iteration-output').innerHTML = '?';
 
     document.getElementById('run-simulation-spinner').style.display = 'block';
+    document.getElementById('simulation-running').style.display = 'block';
+    document.getElementById('simulation-graph').style.display = 'none';
     document.getElementById('run-button').style.display = 'none';
     document.getElementById('run-simulation-button').disabled = true;
     executeCode(

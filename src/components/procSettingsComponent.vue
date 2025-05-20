@@ -292,7 +292,7 @@
               </div>
             </div>
 
-            <p v-if="!portDropdownOpen[portNum]"><strong>Selected:</strong> {{ ports[portNum]?.join(', ') || 'None' }}</p>
+            <p v-if="!portDropdownOpen[portNum]">{{ ports[portNum]?.join(', ') || 'None' }}</p>
           </div>
 
         </div>
