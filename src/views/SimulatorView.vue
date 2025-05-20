@@ -20,7 +20,7 @@ const components = {
 };
 
 // Initially show timelineComponent.
-const currentComponent = shallowRef(timelineComponent);
+const currentComponent = shallowRef(simulationComponent);
 
 // Function to switch components from header
 const switchComponent = (component) => {
@@ -74,7 +74,7 @@ onMounted(() => {
 <style scoped>
 .container {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 40% 59%;
   grid-auto-rows: 50%;
   width: 100vw;
   height: 95vh;
@@ -101,5 +101,6 @@ onMounted(() => {
   grid-row: 1 / 3; /* Span both rows */
   width:99%;
   max-width:99%;
+  padding-bottom: 25px;
 }
 </style>

@@ -2,6 +2,7 @@
 var lastExecutedCommand = null;
 var processorInfo = null;
 var processorModified = true;
+var timelineData = null;
 
 const MAX_PROGRAM_ITERATIONS = 3000;
 const MAX_ROB_SIZE = 500;
@@ -150,33 +151,7 @@ const handlers = {
 
     },
     'format_timeline': (data) => {
-            let tmpitem = document.getElementById('simulation-output');
-            tmpitem.innerHTML = '';
-
-            let item = document.getElementById('simulation-output');
-            // new div with class code-block
-            let codeItem = document.createElement('div');
-            codeItem.classList.add('code-block');
-
-            let pre = document.createElement('pre');
-
-            // \033[91m
-            // \033[0m
-            // replace all \033[91m with <span style="color: red">
-            // replace all \033[0m with </span>
-            data = data.replace(/\033\[91m/g, '<span style="color: red">');
-            data = data.replace(/\033\[0m/g, '</span>');
-
-            // new <code> with ID timeline-output
-            let code = document.createElement('code');
-            code.id = 'timeline-output';
-            code.classList.add('large-code-output');
-            code.innerHTML = data;
-
-            // append code to codeItem
-            pre.appendChild(code);
-            codeItem.appendChild(pre);
-            item.appendChild(codeItem);
+      timelineData = data;
     },
     'print_output': (data) => {
         let out = data.replace(/\n/g, '<br>');
@@ -378,11 +353,6 @@ function createGraphVizGraph(dotCode, targetElement, callback=null) {
                 targetElement.innerHTML = '';
                 targetElement.appendChild(element);
 
-                //Testing interactivity of rendered SVG elements
-                document.getElementById('node2').onclick = function(){
-                    alert('clicked');
-                }
-
                 if (callback !== null) {
                     callback();
                 }
@@ -481,7 +451,7 @@ function getSchedulerAnalysis() {
     );
 }
 
-function getTimeline() {
+async function getTimeline() {
     let controls = document.getElementById('dependencies-controls');
     controls.style.display = 'block';
     let num_iters = document.getElementById('dependencies-num-iters').value;
@@ -493,9 +463,10 @@ function getTimeline() {
         document.getElementById('dependencies-num-iters').value = 50;
     }
 
-    executeCode(
+    await executeCode(
         RVCAT_HEADER() + show_timeline(num_iters),
         'format_timeline'
     )
     lastExecutedCommand = getTimeline;
+    return timelineData;
 }

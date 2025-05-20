@@ -68,7 +68,7 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     Fetch[style=invis,shape=box,height=0.6,width=0.1,fixedsize=true]
     `
     dot_code += `Dispatch[shape=box,height=0.6,width=0.6,fixedsize=true,label="D\nw=${dispatch_width}"]\n`
-    dot_code += `Fetch -> Dispatch\n`
+    dot_code += `Fetch -> Dispatch [label="${dispatch_width}", fontsize=10];\n`
 
     // --- EXECUTE ---
     dot_code += `subgraph cluster_execute {
@@ -116,9 +116,9 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     Ret[style=invis,shape=box,height=1.5,width=0.1,fixedsize=true]
     `
 
-    dot_code += `WriteBack -> Retire\n`
+    dot_code += `WriteBack -> Retire [label="${num_ports}", fontsize=10];\n`
 
-    dot_code += `Retire -> Ret\n`
+    dot_code += `Retire -> Ret [label="${retire_width}", fontsize=10];\n`
 
     return dot_code + `}`
 }

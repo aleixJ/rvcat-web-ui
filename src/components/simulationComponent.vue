@@ -19,7 +19,7 @@
       <h3>Simulation</h3>
       <div class="iters-run">
         <div class="iterations-config">
-          <label for="iterations"> Iterations:</label>
+          <label for="iterations"> Iterations: </label>
           <input type="number" id="num-iters" name="iterations" min="1" max="3000" value="200" >
         </div>
 

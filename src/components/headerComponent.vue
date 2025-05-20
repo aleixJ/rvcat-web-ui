@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 
-const activeComponent = ref("timelineComponent");
+const activeComponent = ref("simulationComponent");
 
 const switchComponent = (component) => {
   activeComponent.value = component;
