@@ -20,6 +20,7 @@ const handlers = {
     },
     'get_processors': (data) => {
         let processors = JSON.parse(data);
+        document.getElementById('processors-list').innerHTML='';
         // TODO: Check for errors ?
         for (let processor of processors) {
             let option = document.createElement('option');
@@ -27,6 +28,7 @@ const handlers = {
             option.innerHTML = processor;
             document.getElementById('processors-list').appendChild(option);
         }
+
 
         // Once the processors and programs are loaded show the program in the UI
         programShow();
@@ -156,6 +158,9 @@ const handlers = {
     'print_output': (data) => {
         let out = data.replace(/\n/g, '<br>');
         console.log(out);
+    },
+    'save_modified_processor': (data) => {
+      alert("processor saved");
     }
 }
 
@@ -469,4 +474,12 @@ async function getTimeline() {
     )
     lastExecutedCommand = getTimeline;
     return timelineData;
+}
+
+async function saveModifiedProcessor(config) {
+  await executeCode(
+    RVCAT_HEADER() + addModifiedProcessor(config),
+    'save_modified_processor'
+  );
+  await executeCode(GET_AVAIL_PROCESSORS, 'get_processors');
 }

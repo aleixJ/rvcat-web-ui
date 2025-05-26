@@ -42,6 +42,11 @@ const RUN_PROGRAM_MEMTRACE = 'rvcat._scheduler.format_memtrace()'
 let processorIsModified=false;
 let processorJSON={};
 
+function addModifiedProcessor(config){
+  let res = `rvcat._processor.import_processor_json(${config.name},${JSON.stringify(config)})`;
+  return res;
+}
+
 function resetProcessor(){
   processorIsModified=false;
 }

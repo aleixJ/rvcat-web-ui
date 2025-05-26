@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, reactive, onMounted, onUnmounted, nextTick, computed } from "vue";
+  import { ref, reactive, onMounted, onUnmounted, nextTick } from "vue";
 
   let dispatch = ref(0);
   let retire = ref(0);
@@ -26,18 +26,11 @@
         processorsListHandler = () => {
           setTimeout(() => {
             updateProcessorSettings();
-            if (typeof resetProcessor === "function") {
-              resetProcessor();
-            }
           }, 100); // 100 ms delay
         };
         processorsList.addEventListener("change", processorsListHandler);
       }
       updateProcessorSettings();
-      if (typeof resetProcessor === "function") {
-        resetProcessor();
-      }
-
     });
   });
 
@@ -73,7 +66,7 @@
 
   function getCurrentProcessorJSON() {
     return {
-      name: name.value,
+      name: 'test',
       stages: {
         dispatch: dispatch.value,
         retire: retire.value,
@@ -82,7 +75,7 @@
       resources: resources,
       ports: ports.value,
       rports: originalSettings.rports,
-      cache: null,
+      cache: originalSettings.cache,
       nBlocks: 0,
       blkSize: 8,
       mPenalty: 16,
@@ -90,44 +83,26 @@
     };
   }
 
-  const checkModifiedProcessor = computed(() => {
-    if (
-      dispatch.value !== originalSettings.dispatch ||
-      retire.value !== originalSettings.retire ||
-      name.value !== originalSettings.name
-    ) {
-      if (typeof setModifiedProcessor === "function") {
-        setModifiedProcessor(getCurrentProcessorJSON())
-      }
+  function saveProcessorSettings() {
+    const name=getCurrentProcessorJSON().name;
+    saveModifiedProcessor(getCurrentProcessorJSON());
+
+    const processorsList = document.getElementById("processors-list");
+    if (processorsList && processorsListHandler) {
+      processorsList.removeEventListener("change", processorsListHandler);
     }
 
-    const currentKeys = Object.keys(resources);
-    const originalKeys = Object.keys(originalSettings.resources);
-    if (currentKeys.length !== originalKeys.length){
-      if (typeof setModifiedProcessor === "function") {
-        setModifiedProcessor(getCurrentProcessorJSON());
-      }
+    if (processorsList) {
+      processorsListHandler = () => {
+        setTimeout(() => {
+          updateProcessorSettings();
+        }, 100); // 100 ms delay
+      };
+      processorsList.addEventListener("change", processorsListHandler);
     }
+    processorsList.value=name;
 
-    for (let key of currentKeys) {
-      if (resources[key] !== originalSettings.resources[key]) {
-        if (typeof setModifiedProcessor === "function") {
-          setModifiedProcessor(getCurrentProcessorJSON());
-        }
-      }
-    }
-
-    return false;
-  });
-
-  import { watchEffect } from "vue";
-
-  watchEffect(() => {
-    if (checkModifiedProcessor.value) {
-      console.log("Processor settings have been modified.");
-      // You can also trigger UI updates or enable Save buttons here
-    }
-  });
+  }
 
   function togglePortInstruction(portNum, instruction, isChecked) {
     if (!ports.value[portNum]) {
@@ -219,6 +194,9 @@
     <div class="header">
       <h3>Processor Settings - {{name}}</h3>
       <div>
+        <label class="save-button" style="cursor:pointer;" @click="saveProcessorSettings">
+          Apply
+        </label>
         <label class="save-button" style="cursor:pointer;">
           Upload
           <input type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;">
