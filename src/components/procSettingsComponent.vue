@@ -163,7 +163,7 @@
     const list = document.getElementById("processors-list");
     if (list) {
       for (const opt of list.options) {
-        if (opt.value === modalName.value && opt.value !== name.value) {
+        if (opt.value === modalName.value) {
           nameError.value = "Name already exists. Please choose another one.";
           return;
         }
@@ -310,10 +310,9 @@
       <h3>Processor Settings - {{ name }}</h3>
       <div>
         <button class="save-button" @click="openModal" :disabled="!isModified">
-          Apply changes
+          Apply Changes
         </button>
-        <label class="save-button" style="cursor:pointer;">
-          Upload
+        <label class="save-button">Upload
           <input type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;"/>
         </label>
       </div>
@@ -524,8 +523,7 @@
   .port-checkbox {
     margin-right: 5px;
   }
-  .save-button,
-  .arrow-button {
+  .save-button {
     background: #0085dd;
     color: white;
     border: none;
@@ -535,15 +533,10 @@
     cursor: pointer;
     transition: all 0.3s ease-in-out;
     margin-right: 5px;
-  }
-  .arrow-button {
-    background: #c5c5c5;
+    text-align:center;
   }
   .save-button:hover {
     background: #006fb9;
-  }
-  .arrow-button:hover {
-    background: #b1b1b1;
   }
   /* Modal Styles */
   .modal-overlay {

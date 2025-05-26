@@ -1,6 +1,9 @@
 <script setup>
 
   import {onMounted, onUnmounted, nextTick } from "vue";
+
+  let processorsListHandler=null;
+
   onMounted(() => {
     nextTick(() => {
       const list = document.getElementById("processors-list");
@@ -18,6 +21,36 @@
     }
   });
 
+  async function downloadProgram(){
+    let data= await getProgramJSON();
+    const jsonText = JSON.stringify(data, null, 2);
+    // force a Save As... dialog if API is supported
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${document.getElementById('programs-list').value}.json`,
+        types: [{
+          description: 'JSON files',
+          accept: { 'application/json': ['.json'] }
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(jsonText);
+      await writable.close();
+    } else {
+      // fallback: traditional anchor download
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `${document.getElementById('programs-list').value}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+  }
+
 </script>
 
 <template>
@@ -25,7 +58,7 @@
     <div class="program-header">
       <h3>Program</h3>
       <div id="settings-div">
-        <button id="download-button" class="program-button"><img src="/img/down.png"></button>
+        <button id="download-button" class="program-button" @click="downloadProgram"><img src="/img/down.png"></button>
         <button id="upload-button" class="program-button"><img src="/img/up.png"></button>
         <select id="programs-list" name="assembly-code" onchange="reloadRvcat();">
         </select>

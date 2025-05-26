@@ -27,6 +27,8 @@ function show_timeline(num_iters) {
 // SHOW processor
 const SHOW_PROCESSOR = 'rvcat._processor.json()'
 
+const GET_PROGRAM_JSON = 'rvcat._program.json()'
+
 // SHOW isa
 const SHOW_ISA = 'str(rvcat._isa)'
 

@@ -1,8 +1,8 @@
 // Save the last executed command to be able to re-run it when the selected program change
 var lastExecutedCommand = null;
 var processorInfo = null;
-var processorModified = true;
 var timelineData = null;
+var programData = null;
 
 const MAX_PROGRAM_ITERATIONS = 3000;
 const MAX_ROB_SIZE = 500;
@@ -178,14 +178,18 @@ const handlers = {
       pre.appendChild(code);
       codeItem.appendChild(pre);
       item.appendChild(codeItem);
-      //timelineData = data;
+
+      //timelineData = data; //TODO: canvas Timeline
     },
     'print_output': (data) => {
         let out = data.replace(/\n/g, '<br>');
         console.log(out);
     },
     'save_modified_processor': (data) => {
-      //alert("processor saved");
+      console.log("Processor settings saved");
+    },
+    'get_program_json': async (data) => {
+      programData = JSON.parse(data);
     }
 }
 
@@ -508,4 +512,12 @@ async function saveModifiedProcessor(config) {
     'save_modified_processor'
   );
   await executeCode(GET_AVAIL_PROCESSORS, 'get_processors');
+}
+
+async function getProgramJSON(){
+  await executeCode(
+    RVCAT_HEADER() + GET_PROGRAM_JSON,
+    'get_program_json'
+  );
+  return programData;
 }
