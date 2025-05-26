@@ -255,6 +255,19 @@
       }
     });
   });
+
+  function changeIterations(delta) {
+    const input = document.getElementById("dependencies-num-iters");
+    // parse current value, fallback to 1
+    let val = parseInt(input.value, 10) || 1;
+    // clamp between min/max
+    const min = parseInt(input.min, 10) || 1;
+    const max = parseInt(input.max, 10) || Infinity;
+    val = Math.min(Math.max(val + delta, min), max);
+    input.value = val;
+    // fire your existing handler
+    lastExecutedCommand();
+  }
 </script>
 
 <template>
@@ -264,12 +277,16 @@
     </div>
         <div class="output-block-wrapper" id="simulation-output-container">
             <section class="simulation-results-controls" id="dependencies-controls">
-                <div class="simulation-results-controls-item">
-                    <label for="dependencies-num-iters" style="margin-right: 10px;">Iterations:</label>
-                    <input class="input-simulation-result" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" onchange="lastExecutedCommand();" >
+              <div class="simulation-results-controls-item">
+                <label for="dependencies-num-iters" style="margin-right: 10px;">
+                  Iterations:
+                </label>
+                <div class="iterations-group">
+                  <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
+                  <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" onchange="lastExecutedCommand();"/>
+                  <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
                 </div>
-                <div>
-                </div>
+              </div>
             </section>
             <div class="output-block" id="simulation-output">
             </div>
@@ -295,5 +312,40 @@
   h3 {
   margin: 0;
   }
+  .iterations-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .iterations-input {
+    width: 3ch;
+    padding: 2px;
+    text-align: center;
+    /* hide native number spinners */
+    -moz-appearance: textfield;
+  }
+  .iterations-input::-webkit-outer-spin-button,
+  .iterations-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .iterations-btn {
+    background: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+    text-align: center;
+    font-size: 1.2em;
+    cursor: pointer;
+    user-select: none;
+  }
+  .iterations-btn:hover {
+    background: #d0d0d0;
+  }
+
 </style>
 

@@ -1,100 +1,3 @@
-<template>
-  <div class="main">
-    <div class="header">
-      <h3>Processor Settings - {{ name }}</h3>
-      <div>
-        <button class="save-button" @click="openModal" :disabled="!isModified">
-          Apply
-        </button>
-        <label class="save-button" style="cursor:pointer;">
-          Upload
-          <input type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;"/>
-        </label>
-      </div>
-    </div>
-    <br/>
-    <div>
-
-      <div class="widths">
-        <h4>Set Stage Widths</h4>
-        <label for="dispatch-width"> Dispatch: </label>
-        <input type="number" id="dispatch" name="dispatch-width" min="1" max="100" v-model="dispatch"/>
-        <label for="retire-width"> Retire: </label>
-        <input type="number" id="retire" name="retire-width" min="1" max="100" v-model="retire"/>
-      </div>
-
-      <h4>Instruction Latencies & Execution Ports</h4>
-
-      <!-- Ports toolbar: show existing ports and add/delete -->
-      <div class="ports-toolbar">
-        <span v-for="port in portList" :key="port" class="port-tag">
-          P.{{ port }}
-          <button class="delete-port" @click="removePort(port)" :title="`Remove P.${port}`">
-            x
-          </button>
-        </span>
-        <button v-if="portList.length < 10" class="add-port" @click="addPort">
-          + Add Port
-        </button>
-      </div>
-
-      <table class="instr-table" v-if="availableInstructions.length">
-        <thead>
-          <tr>
-            <th>TYPE</th>
-            <th>LATENCY</th>
-            <th>EXECUTION PORTS</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="instr in availableInstructions" :key="instr">
-            <td>{{ instr }}</td>
-            <td>
-              <div class="latency-group">
-                <button type="button" class="latency-btn" @click="decreaseLatency(instr)">−</button>
-                <input type="number" v-model.number="resources[instr]" class="latency-input" min="1"/>
-                <button type="button" class="latency-btn" @click="increaseLatency(instr)">+</button>
-              </div>
-            </td>
-            <td>
-              <span v-for="port in portList" :key="port" class="port-checkbox">
-                <label>
-                  <input type="checkbox" :checked="ports[port]?.includes(instr)" @change="togglePortInstruction(port, instr, $event.target.checked)"/>
-                  P.{{ port }}
-                </label>
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Modal Dialog -->
-  <div v-if="showModal" class="modal-overlay">
-    <div class="modal">
-      <h4>Save Configuration As</h4>
-      <label for="config-name">Name:</label>
-      <input
-        id="config-name"
-        type="text"
-        v-model="modalName"
-      />
-      <div v-if="nameError" class="error">{{ nameError }}</div>
-
-      <label class="download-checkbox">
-        <input type="checkbox" v-model="modalDownload" />
-        Download JSON
-      </label>
-
-      <div class="modal-actions">
-        <button class="save-button" @click="confirmModal">Apply</button>
-        <button class="save-button" @click="closeModal">Cancel</button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from "vue";
 
@@ -104,7 +7,6 @@
   const resources = reactive({});
   const name = ref("");
   const ports = ref({});
-  const portDropdownOpen = reactive({});
   let processorsListHandler;
   let lastRequestId = 0;
 
@@ -127,7 +29,8 @@
   const portList = computed(() => Object.keys(ports.value));
 
   // --- modal state ---
-  const showModal = ref(false);
+  const showModalDown = ref(false);
+  const showModalUp = ref(false);
   const modalName = ref("");
   const modalDownload = ref(true);
   const nameError = ref("");
@@ -247,11 +150,12 @@
     modalName.value = name.value + "*";
     modalDownload.value = true;
     nameError.value = "";
-    showModal.value = true;
+    showModalDown.value = true;
   }
 
   function closeModal() {
-    showModal.value = false;
+    showModalDown.value = false;
+    showModalUp.value = false;
   }
 
   function confirmModal() {
@@ -266,6 +170,8 @@
     }
     const data = getCurrentProcessorJSON();
     saveModifiedProcessor(data);
+
+    //download JSON file
     if (modalDownload.value) {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -277,9 +183,9 @@
       URL.revokeObjectURL(url);
     }
     name.value = modalName.value;
-    showModal.value = false;
-    //updateProcessorSettings();
-    list.value=name.value;
+    showModalDown.value = false;
+    showModalUp.value = false;
+    setTimeout(()=>{list.value=name.value;},100);
   }
 
   // --- port add/delete ---
@@ -291,22 +197,19 @@
   }
   function removePort(port) {
     const idx = Number(port);
-    // 1) delete the chosen port
     delete ports.value[idx];
 
-    // 2) collect and sort the leftover ports
+    //sort and reindex other ports
     const leftover = Object.entries(ports.value)
       .map(([k,v]) => [Number(k), v])
       .sort((a,b) => a[0] - b[0]);
 
-    // 3) clear and re-populate ports.value with new 0..N-1 indexes
     Object.keys(ports.value).forEach(k => delete ports.value[k]);
     leftover.forEach(([oldIdx, portArr], newIdx) => {
       ports.value[newIdx] = portArr;
     });
   }
 
-  // --- existing functions ---
   function togglePortInstruction(portNum, instruction, isChecked) {
     if (!ports.value[portNum]) ports.value[portNum] = [];
     if (isChecked) {
@@ -320,30 +223,48 @@
   function uploadProcessorConfig(event) {
     const file = event.target.files[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = e => {
       try {
+
         const data = JSON.parse(e.target.result);
+        // === apply JSON to your reactive state ===
         dispatch.value = data.stages?.dispatch ?? dispatch.value;
-        retire.value = data.stages?.retire ?? retire.value;
-        name.value = data.name ?? name.value;
+        retire.value   = data.stages?.retire   ?? retire.value;
+        name.value     = data.name             ?? name.value;
+
+        // update resources
         Object.keys(resources).forEach(k => delete resources[k]);
-        Object.entries(data.resources || {}).forEach(([k,v]) => resources[k] = v);
+        Object.entries(data.resources || {}).forEach(([k,v]) => {
+          resources[k] = v;
+        });
+
+        // update ports
         ports.value = data.ports || {};
+
+        // stash originalSettings if needed...
         Object.assign(originalSettings, {
           dispatch: data.stages?.dispatch ?? 0,
-          retire: data.stages?.retire ?? 0,
-          name: data.name ?? "",
-          resources: JSON.parse(JSON.stringify(data.resources || {})),
-          ports: JSON.parse(JSON.stringify(data.ports || {})),
-          rports: JSON.parse(JSON.stringify(data.rports || {})),
-          cache: data.cache,
-          nBlocks: data.nBlocks,
-          blkSize: data.blkSize,
-          mPenalty: data.mPenalty,
-          mIssueTime: data.mIssueTime,
+          retire:   data.stages?.retire   ?? 0,
+          name:     data.name             ?? "",
+          resources: JSON.parse(JSON.stringify(data.resources||{})),
+          ports:     JSON.parse(JSON.stringify(data.ports||{})),
+          rports:    JSON.parse(JSON.stringify(data.rports||{})),
+          cache:     data.cache,
+          nBlocks:   data.nBlocks,
+          blkSize:   data.blkSize,
+          mPenalty:  data.mPenalty,
+          mIssueTime:data.mIssueTime,
         });
-        availableInstructions.value = Object.keys(resources);
+
+        // === now pop up the Save‐As dialog ===
+        // strip extension from filename for default
+        modalName.value = file.name.replace(/\.[^.]+$/, "");
+        modalDownload.value = false;
+        nameError.value = "";
+        showModalUp.value = true;
+
       } catch (err) {
         console.error("Invalid JSON:", err);
         alert("Failed to load processor config. Please check the file.");
@@ -351,6 +272,7 @@
     };
     reader.readAsText(file);
   }
+
   function decreaseLatency(key) {
     resources[key] = Math.max(1, resources[key] - 1);
   }
@@ -360,6 +282,122 @@
   }
 
 </script>
+
+<template>
+  <div class="main">
+    <div class="header">
+      <h3>Processor Settings - {{ name }}</h3>
+      <div>
+        <button class="save-button" @click="openModal" :disabled="!isModified">
+          Apply
+        </button>
+        <label class="save-button" style="cursor:pointer;">
+          Upload
+          <input type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;"/>
+        </label>
+      </div>
+    </div>
+    <br/>
+    <div>
+
+      <div class="widths">
+
+        <div class="width-group">
+          <span><strong> Dispatch width: </strong></span>
+          <button type="button" class="latency-btn" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
+          <input type="number" id="dispatch-width" name="dispatch-width" min="1" v-model.number="dispatch" class="latency-input"/>
+          <button type="button" class="latency-btn" @click="dispatch = (dispatch + 1)%100">+</button>
+        </div>
+
+        <div class="width-group">
+          <span><b> Retire width: </b></span>
+          <button type="button" class="latency-btn" @click="retire = Math.max(1, retire - 1)" >−</button>
+          <input type="number" id="retire-width" name="retire-width" min="1" v-model.number="retire" class="latency-input"/>
+          <button type="button" class="latency-btn" @click="retire = (retire + 1)%100">+</button>
+        </div>
+      </div>
+
+      <br>
+      <h4>Instruction Latencies & Execution Ports</h4>
+
+      <!-- Ports toolbar: show existing ports and add/delete -->
+      <div class="ports-toolbar">
+        <span v-for="port in portList" :key="port" class="port-tag">
+          P.{{ port }}
+          <button class="delete-port" @click="removePort(port)" :title="`Remove P.${port}`">
+            x
+          </button>
+        </span>
+        <button v-if="portList.length < 10" class="add-port" @click="addPort">
+          + Add Port
+        </button>
+      </div>
+
+      <table class="instr-table" v-if="availableInstructions.length">
+        <thead>
+          <tr>
+            <th>TYPE</th>
+            <th>LATENCY</th>
+            <th>EXECUTION PORTS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="instr in availableInstructions" :key="instr">
+            <td>{{ instr }}</td>
+            <td>
+              <div class="latency-group">
+                <button type="button" class="latency-btn" @click="decreaseLatency(instr)">−</button>
+                <input type="number" v-model.number="resources[instr]" class="latency-input" min="1"/>
+                <button type="button" class="latency-btn" @click="increaseLatency(instr)">+</button>
+              </div>
+            </td>
+            <td>
+              <span v-for="port in portList" :key="port" class="port-checkbox">
+                <label>
+                  <input type="checkbox" :checked="ports[port]?.includes(instr)" @change="togglePortInstruction(port, instr, $event.target.checked)"/>
+                  P.{{ port }}
+                </label>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Dialog -->
+  <div v-if="showModalDown" class="modal-overlay">
+    <div class="modal">
+      <h4>Save Configuration As</h4>
+      <label for="config-name">Name:</label>
+      <input id="config-name" type="text" v-model="modalName"/>
+      <div v-if="nameError" class="error">{{ nameError }}</div>
+
+      <label class="download-checkbox">
+        <input type="checkbox" v-model="modalDownload" />
+        Download JSON
+      </label>
+
+      <div class="modal-actions">
+        <button class="save-button" @click="confirmModal">Apply</button>
+        <button class="save-button" @click="closeModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showModalUp" class="modal-overlay">
+    <div class="modal">
+      <h4>Save Configuration As</h4>
+      <label for="config-name">Name:</label>
+      <input id="config-name" type="text" v-model="modalName"/>
+      <div v-if="nameError" class="error">{{ nameError }}</div>
+      <div class="modal-actions">
+        <button class="save-button" @click="confirmModal">Apply</button>
+        <button class="save-button" @click="closeModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
   .main {
@@ -425,13 +463,12 @@
     background: #e3e3e3;
     border-radius: 4px;
     padding: 2px 6px;
-    margin-right: 6px;
+    margin-right: 5px;
     font-size: 0.9em;
   }
   .delete-port {
     background: none;
     border: none;
-    margin-left: 4px;
     cursor: pointer;
     font-weight: bold;
   }
@@ -520,6 +557,7 @@
   }
   h4{
     margin:5px;
+    margin-left:0;
   }
   h3{
     margin:0;
@@ -560,6 +598,19 @@
     background: #d0d0d0;
   }
 
+  .width-row {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+
+  .width-group {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+
+
   /* Chrome, Safari, Edge, Opera */
   input[type=number]::-webkit-outer-spin-button,
   input[type=number]::-webkit-inner-spin-button {
@@ -570,6 +621,9 @@
   /* Firefox */
   input[type=number] {
     -moz-appearance: textfield;
+  }
+  strong{
+    margin:0;
   }
 
 </style>
