@@ -55,6 +55,7 @@
   align-items: center;
   width: 100%;
   position:sticky;
+  left:0;
 }
 .main-box{
   overflow:auto;

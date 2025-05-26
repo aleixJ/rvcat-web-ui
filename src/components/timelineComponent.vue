@@ -306,6 +306,7 @@
   .header{
     position:sticky;
     top:-5px;
+    left:0;
     background:white;
     width:100%;
   }

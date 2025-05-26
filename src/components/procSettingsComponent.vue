@@ -158,7 +158,8 @@
     showModalUp.value = false;
   }
 
-  function confirmModal() {
+
+  async function confirmModal() {
     const list = document.getElementById("processors-list");
     if (list) {
       for (const opt of list.options) {
@@ -169,18 +170,36 @@
       }
     }
     const data = getCurrentProcessorJSON();
-    saveModifiedProcessor(data);
+    await saveModifiedProcessor(data);
 
     //download JSON file
     if (modalDownload.value) {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = `${modalName.value}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const jsonText = JSON.stringify(data, null, 2);
+
+      // force a Save As... dialog if API is supported
+      if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `${modalName.value}.json`,
+          types: [{
+            description: 'JSON files',
+            accept: { 'application/json': ['.json'] }
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(jsonText);
+        await writable.close();
+      } else {
+        // fallback: traditional anchor download
+        const blob = new Blob([jsonText], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = `${modalName.value}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     }
     name.value = modalName.value;
     showModalDown.value = false;
@@ -291,7 +310,7 @@
       <h3>Processor Settings - {{ name }}</h3>
       <div>
         <button class="save-button" @click="openModal" :disabled="!isModified">
-          Apply
+          Apply changes
         </button>
         <label class="save-button" style="cursor:pointer;">
           Upload
@@ -377,8 +396,15 @@
 
       <label class="download-checkbox">
         <input type="checkbox" v-model="modalDownload" />
-        Download JSON
+        Download JSON file
+        <span class="warning-wrapper" aria-label="Info">
+          ⚠️
+          <div class="tooltip-text">
+            Saving a local copy is recommended as modified settings will not persist in your next session.
+          </div>
+        </span>
       </label>
+
 
       <div class="modal-actions">
         <button class="save-button" @click="confirmModal">Apply</button>
@@ -394,7 +420,7 @@
       <input id="config-name" type="text" v-model="modalName"/>
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
-        <button class="save-button" @click="confirmModal">Apply</button>
+        <button class="save-button" @click="confirmModal">Save</button>
         <button class="save-button" @click="closeModal">Cancel</button>
       </div>
     </div>
@@ -414,6 +440,7 @@
   .header {
     position: sticky;
     top: -5px;
+    left:0;
     background: white;
     width: 100%;
     display: flex;
@@ -627,5 +654,35 @@
   strong{
     margin:0;
   }
+  .warning-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: default;
+  }
+
+  .tooltip-text {
+    visibility: hidden;
+    width: 240px;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    text-align: left;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 0.85em;
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translate(8px, -50%);
+    white-space: normal;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .warning-wrapper:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+
 
 </style>
