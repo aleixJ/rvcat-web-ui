@@ -39,21 +39,9 @@ const RUN_PROGRAM_TIMELINE = 'rvcat._scheduler.format_timeline()'
 const RUN_PROGRAM_ANALYSIS = 'rvcat._scheduler.format_analysis_json()'
 const RUN_PROGRAM_MEMTRACE = 'rvcat._scheduler.format_memtrace()'
 
-let processorIsModified=false;
-let processorJSON={};
-
 function addModifiedProcessor(config){
-  let res = `rvcat._processor.import_processor_json(${config.name},${JSON.stringify(config)})`;
+  let res = `rvcat._processor.import_processor_json(${JSON.stringify(config)})`;
   return res;
-}
-
-function resetProcessor(){
-  processorIsModified=false;
-}
-
-function setModifiedProcessor(processor_config_json){
-  processorJSON=JSON.stringify(processor_config_json);
-  processorIsModified=true;
 }
 
 const RVCAT_HEADER = function() {
@@ -61,11 +49,7 @@ const RVCAT_HEADER = function() {
     let prog = currentProgram();
     let res = `import rvcat\n`;
     if (proc !== undefined) {
-      if(processorIsModified) {
-        res += `rvcat._processor.load_processor_json('${processorJSON}')\n`
-      } else {
-        res += `rvcat._processor.load_processor('${currentProcessor()}')\n`
-      }
+      res += `rvcat._processor.load_processor('${currentProcessor()}')\n`
 
     }
     if (prog !== undefined) {

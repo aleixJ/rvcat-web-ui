@@ -1,3 +1,4 @@
+<!--
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted} from 'vue';
 
@@ -241,9 +242,7 @@
     justify-content: space-between;
     align-items: center;
   }
-</style>
-
-<!--OLD VERSION
+</style>-->
 
 <script setup>
   import { onMounted, nextTick } from "vue";
@@ -297,4 +296,4 @@
   margin: 0;
   }
 </style>
--->
+
