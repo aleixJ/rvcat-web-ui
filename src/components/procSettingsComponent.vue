@@ -185,7 +185,9 @@
     name.value = modalName.value;
     showModalDown.value = false;
     showModalUp.value = false;
-    setTimeout(()=>{list.value=name.value;},100);
+    setTimeout(()=>{list.value=name.value;
+      reloadRvcat();
+    },100);
   }
 
   // --- port add/delete ---

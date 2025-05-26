@@ -1,3 +1,25 @@
+<script setup>
+
+  import {onMounted, onUnmounted, nextTick } from "vue";
+  onMounted(() => {
+    nextTick(() => {
+      const list = document.getElementById("processors-list");
+      if (list) {
+        processorsListHandler = () => setTimeout( ()=> { updateProcessorSettings();},100);
+        list.addEventListener("change", processorsListHandler);
+      }
+      reloadRvcat();
+    });
+  });
+  onUnmounted(() => {
+    const list = document.getElementById("processors-list");
+    if (list && processorsListHandler) {
+      list.removeEventListener("change", processorsListHandler);
+    }
+  });
+
+</script>
+
 <template>
   <div class="program_info">
     <div class="program-header">
