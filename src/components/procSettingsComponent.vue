@@ -410,8 +410,8 @@
       <!-- Ports toolbar: show existing ports and add/delete -->
       <div class="ports-toolbar">
         <span v-for="port in portList" :key="port" class="port-tag">
-          P.{{ port }}
-          <button class="delete-port" @click="removePort(port)" :title="`Remove P.${port}`">
+          P{{ port }}
+          <button class="delete-port" @click="removePort(port)" :title="`Remove P${port}`">
             <img src="/img/delete.png" class="delete-icon"/>
           </button>
         </span>
@@ -426,7 +426,7 @@
             <th>TYPE</th>
             <th>LATENCY</th>
             <!-- one TH per port -->
-            <th v-for="port in portList" :key="port">P.{{ port }}</th>
+            <th v-for="port in portList" :key="port">P{{ port }}</th>
           </tr>
         </thead>
         <tbody>
