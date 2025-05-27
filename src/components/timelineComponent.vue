@@ -35,6 +35,17 @@
     });
   });
 
+   function changeIterations(delta) {
+    const input = document.getElementById("dependencies-num-iters");
+    let val = parseInt(input.value, 10) || 1;
+    const min = parseInt(input.min, 10) || 1;
+    const max = parseInt(input.max, 10) || Infinity;
+    val = Math.min(Math.max(val + delta, min), max);
+    input.value = val;
+
+    lastExecutedCommand();
+  }
+
   function toggleInstructions() {
     showInstructions.value = !showInstructions.value;
     if (timelineData.value) {
@@ -163,9 +174,15 @@
     <div class="output-block-wrapper" id="simulation-output-container">
       <section class="simulation-results-controls" id="dependencies-controls">
         <div class="simulation-results-controls-item">
-            <label for="dependencies-num-iters" style="margin-right: 10px;">Iterations:</label>
-            <input class="input-simulation-result" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" @change="onIterationChange" >
-        </div>
+                <label for="dependencies-num-iters" style="margin-right: 10px;">
+                  Iterations:
+                </label>
+                <div class="iterations-group">
+                  <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
+                  <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" onchange="lastExecutedCommand();"/>
+                  <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
+                </div>
+              </div>
         <div>
         </div>
       </section>
@@ -192,6 +209,7 @@
   }
   .header{
     position:sticky;
+    padding-top:2px;
     top:-5px;
     background:white;
     width:100%;
@@ -258,14 +276,12 @@
 
   function changeIterations(delta) {
     const input = document.getElementById("dependencies-num-iters");
-    // parse current value, fallback to 1
     let val = parseInt(input.value, 10) || 1;
-    // clamp between min/max
     const min = parseInt(input.min, 10) || 1;
     const max = parseInt(input.max, 10) || Infinity;
     val = Math.min(Math.max(val + delta, min), max);
     input.value = val;
-    // fire your existing handler
+
     lastExecutedCommand();
   }
 </script>
@@ -305,6 +321,7 @@
   }
   .header{
     position:sticky;
+    padding-top:2px;
     top:-5px;
     left:0;
     background:white;

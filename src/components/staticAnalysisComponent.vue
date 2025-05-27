@@ -102,6 +102,7 @@
   }
   .header {
     position: sticky;
+    padding-top:2px;
     top: -5px;
     left:0;
     background: white;

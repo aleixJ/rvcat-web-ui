@@ -24,7 +24,7 @@
         </div>
 
         <div id="run-simulation-button">
-          <button id="run-button" class="run-button" onclick="getSchedulerAnalysis();"><img src="/img/run.png"></button>
+          <button id="run-button" class="run-button" onclick="getSchedulerAnalysis();">Run</button>
           <div id="run-simulation-spinner" class="spinner-small" style="display: none;"></div>
         </div>
       </div>
@@ -93,6 +93,7 @@
   }
   .header{
     position:sticky;
+    padding-top:2px;
     top:-5px;
     left:0;
     background:white;

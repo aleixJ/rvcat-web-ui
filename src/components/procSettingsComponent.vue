@@ -7,6 +7,10 @@
   const resources = reactive({});
   const name = ref("");
   const ports = ref({});
+  const nBlocks = ref(0);
+  const blkSize = ref(0);
+  const mPenalty = ref(0);
+  const mIssueTime = ref(0);
   let processorsListHandler;
   let lastRequestId = 0;
 
@@ -47,6 +51,10 @@
       retire.value = cfg.stages.retire;
       name.value = cfg.name;
       ports.value = cfg.ports || {};
+      nBlocks.value = cfg.nBlocks;
+      blkSize.value = cfg.blkSize;
+      mIssueTime.value = cfg.mIssueTime;
+      mPenalty.value = cfg.mPenalty;
 
       // refresh resources
       Object.keys(resources).forEach(k => delete resources[k]);
@@ -114,6 +122,10 @@
   const isModified = computed(() => {
     if (dispatch.value !== originalSettings.dispatch) return true;
     if (retire.value   !== originalSettings.retire)   return true;
+    if (nBlocks.value   !== originalSettings.nBlocks)   return true;
+    if (blkSize.value   !== originalSettings.blkSize)   return true;
+    if (mPenalty.value   !== originalSettings.mPenalty)   return true;
+    if (mIssueTime.value   !== originalSettings.mIssueTime)   return true;
     if (!shallowEq(resources, originalSettings.resources)) return true;
     if (!portsEq(ports.value, originalSettings.ports)) return true;
     return false;
@@ -132,17 +144,17 @@
       name: modalName.value,
       stages: {
         dispatch: dispatch.value,
+        execute:Object.keys(ports.value).length,
         retire: retire.value,
-        execute: originalSettings.dispatch,
       },
       resources: { ...resources },
       ports: ports.value,
       rports: rports,
       cache: originalSettings.cache,
-      nBlocks: originalSettings.nBlocks,
-      blkSize: originalSettings.blkSize,
-      mPenalty: originalSettings.mPenalty,
-      mIssueTime: originalSettings.mIssueTime,
+      nBlocks: nBlocks.value,
+      blkSize: blkSize.value,
+      mPenalty: mPenalty.value,
+      mIssueTime: mIssueTime.value,
     };
   }
 
@@ -254,6 +266,10 @@
         dispatch.value = data.stages?.dispatch ?? dispatch.value;
         retire.value   = data.stages?.retire   ?? retire.value;
         name.value     = data.name             ?? name.value;
+        nBlocks.value = data.nBlocks;
+        blkSize.value = data.blkSize;
+        mIssueTime.value = data.mIssueTime;
+        mPenalty.value = data.mPenalty;
 
         // update resources
         Object.keys(resources).forEach(k => delete resources[k]);
@@ -382,6 +398,35 @@
           </tr>
         </tbody>
       </table>
+      <h4>Cache settings (work in progress)</h4>
+      <div class="cache">
+        <div class="cache-setting">
+          <span> Number of Blocks: </span>
+          <button type="button" class="latency-btn" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
+          <input type="number" id="nBlocks" name="nBlocks" min="1" v-model.number="nBlocks" class="latency-input"/>
+          <button type="button" class="latency-btn" @click="nBlocks = (nBlocks + 1)%100">+</button>
+        </div>
+        <div class="cache-setting">
+          <span> Block Size: </span>
+          <button type="button" class="latency-btn" @click="blkSize = Math.max(1, blkSize - 1)">−</button>
+          <input type="number" id="blkSize" name="blkSize" min="1" v-model.number="blkSize" class="latency-input"/>
+          <button type="button" class="latency-btn" @click="blkSize = (blkSize + 1)%100">+</button>
+        </div>
+        <div class="cache-setting">
+          <span> Miss Penalty: </span>
+          <button type="button" class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
+          <input type="number" id="mPenalty" name="mPenalty" min="1" v-model.number="mPenalty" class="latency-input"/>
+          <button type="button" class="latency-btn" @click="mPenalty = (mPenalty + 1)%100">+</button>
+        </div>
+        <div class="cache-setting">
+          <span> Miss Issue Time: </span>
+          <button type="button" class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
+          <input type="number" id="mIssueTime" name="mIssueTime" min="1" v-model.number="mIssueTime" class="latency-input"/>
+          <button type="button" class="latency-btn" @click="mIssueTime = (mIssueTime + 1)%100">+</button>
+        </div>
+      </div>
+
+
     </div>
   </div>
 
@@ -438,6 +483,7 @@
   }
   .header {
     position: sticky;
+    padding-top:2px;
     top: -5px;
     left:0;
     background: white;
@@ -620,13 +666,13 @@
     background: #d0d0d0;
   }
 
-  .width-row {
-    margin-bottom: 8px;
-    display: flex;
+  .width-group {
+    display: inline-flex;
     align-items: center;
+    margin-right: 8px;
   }
 
-  .width-group {
+  .cache-setting {
     display: inline-flex;
     align-items: center;
     margin-right: 8px;

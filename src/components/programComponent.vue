@@ -36,6 +36,7 @@
       const writable = await handle.createWritable();
       await writable.write(jsonText);
       await writable.close();
+
     } else {
       // fallback: traditional anchor download
       const blob = new Blob([jsonText], { type: 'application/json' });
@@ -58,8 +59,8 @@
     <div class="program-header">
       <h3>Program</h3>
       <div id="settings-div">
-        <button id="download-button" class="program-button" @click="downloadProgram"><img src="/img/down.png"></button>
-        <button id="upload-button" class="program-button"><img src="/img/up.png"></button>
+        <button id="download-button" class="program-button" @click="downloadProgram">Download</button>
+        <button id="upload-button" class="program-button">Upload</button>
         <select id="programs-list" name="assembly-code" onchange="reloadRvcat();">
         </select>
       </div>

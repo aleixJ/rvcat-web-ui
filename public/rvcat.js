@@ -188,8 +188,9 @@ const handlers = {
     'save_modified_processor': (data) => {
       console.log("Processor settings saved");
     },
-    'get_program_json': async (data) => {
+    'get_program_json': (data) => {
       programData = JSON.parse(data);
+
     }
 }
 
@@ -515,9 +516,24 @@ async function saveModifiedProcessor(config) {
 }
 
 async function getProgramJSON(){
-  await executeCode(
-    RVCAT_HEADER() + GET_PROGRAM_JSON,
-    'get_program_json'
-  );
-  return programData;
+  return new Promise((resolve, reject) => {
+    // Temporarily override the handler for this one request:
+    const original = handlers['get_program_json'];
+
+    handlers['get_program_json'] = (data) => {
+      try {
+        const obj = JSON.parse(data);
+        programData = obj;
+        resolve(obj);
+      } catch (err) {
+        reject(err);
+      } finally {
+        // restore the old handler
+        handlers['get_program_json'] = original;
+      }
+    };
+
+    // fire off the code to the worker
+    executeCode(GET_PROGRAM_JSON, 'get_program_json');
+  });
 }
