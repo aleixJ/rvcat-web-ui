@@ -4,6 +4,24 @@
   let processorsListHandler;
   let programsListHandler;
   const showAnnotations = ref(false);
+  const showFullScreen = ref(false);
+
+  function openFullScreen() {
+    showFullScreen.value = true;
+    // after DOM updates, clone the existing SVG into the popup
+    nextTick(() => {
+      const src = document.getElementById("simulation-output");
+      const dst = document.getElementById("simulation-output-full");
+      if (src && dst) {
+        dst.innerHTML = "";
+        dst.appendChild(src.querySelector("svg").cloneNode(true));
+      }
+    });
+  }
+
+  function closeFullScreen() {
+    showFullScreen.value = false;
+  }
 
   function toggleAnnotations() {
     showAnnotations.value = !showAnnotations.value;
@@ -78,15 +96,26 @@
       </div>
 
       <Transition name="fold" appear>
-        <pre
-          v-show="showAnnotations"
-          id="performance-annotations"
-          class="annotations-box"
-        ></pre>
+        <pre v-show="showAnnotations" id="performance-annotations" class="annotations-box"></pre>
       </Transition>
     </div>
     <div class="output-block-wrapper" id="simulation-output-container">
+      <div class="graph-header">
+        <button class="fullscreen-button" @click="openFullScreen">
+          <img src="/img/fullscreen.png">
+        </button>
+        <h4>Recurrent Paths Graph</h4>
+      </div>
       <div class="output-block" id="simulation-output"></div>
+    </div>
+  </div>
+  <div v-if="showFullScreen" class="fullscreen-overlay">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <h3>Recurrent Paths Graph</h3>
+        <button class="close-btn" @click="closeFullScreen">×</button>
+      </div>
+      <div class="output-block" id="simulation-output-full"></div>
     </div>
   </div>
 </template>
@@ -150,5 +179,103 @@
     max-height: 500px;
     opacity: 1;
   }
+
+  .fullscreen-button {
+    background: #0085dd;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    margin-right: 5px;
+    text-align:center;
+  }
+  .fullscreen-button:hover {
+    background: #006fb9;
+  }
+  .fullscreen-button:active {
+    outline: none;
+    background: #003f73;
+    color: white;
+  }
+
+  /* The full-screen overlay */
+  .fullscreen-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .fullscreen-content {
+    background: white;
+    margin: 10px;                   /* space from viewport edges */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 90%;
+    height: 90%;
+
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+
+  .fullscreen-content .close-btn {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .fullscreen-content .output-block {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .fullscreen-content .output-block svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .graph-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em; /* space between button and title */
+  }
+
+  .graph-header h4{
+    margin-top:20px;
+  }
+  .fullscreen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .fullscreen-title {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 500;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+
 
 </style>

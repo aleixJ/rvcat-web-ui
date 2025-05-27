@@ -290,20 +290,20 @@
   <div class="main">
     <div class="header">
       <h3>Timeline</h3>
+      <section class="simulation-results-controls" id="dependencies-controls">
+        <div class="simulation-results-controls-item">
+          <label for="dependencies-num-iters" style="margin-right: 10px;">
+            Iterations:
+          </label>
+          <div class="iterations-group">
+            <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
+            <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" onchange="lastExecutedCommand();"/>
+            <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
+          </div>
+        </div>
+      </section>
     </div>
         <div class="output-block-wrapper" id="simulation-output-container">
-            <section class="simulation-results-controls" id="dependencies-controls">
-              <div class="simulation-results-controls-item">
-                <label for="dependencies-num-iters" style="margin-right: 10px;">
-                  Iterations:
-                </label>
-                <div class="iterations-group">
-                  <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
-                  <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" onchange="lastExecutedCommand();"/>
-                  <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
-                </div>
-              </div>
-            </section>
             <div class="output-block" id="simulation-output">
             </div>
         </div>
@@ -326,6 +326,9 @@
     left:0;
     background:white;
     width:100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   h3 {
   margin: 0;

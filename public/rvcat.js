@@ -10,6 +10,7 @@ const MAX_ROB_SIZE = 500;
 const handlers = {
     'get_programs': (data) => {
         let programs = JSON.parse(data);
+        document.getElementById('programs-list').innerHTML="";
         // TODO: Check for errors ?
         for (let program of programs) {
             let option = document.createElement('option');
@@ -190,7 +191,9 @@ const handlers = {
     },
     'get_program_json': (data) => {
       programData = JSON.parse(data);
-
+    },
+    'add_new_program': (data) => {
+      console.log("New program saved");
     }
 }
 
@@ -536,4 +539,13 @@ async function getProgramJSON(){
     // fire off the code to the worker
     executeCode(GET_PROGRAM_JSON, 'get_program_json');
   });
+}
+
+async function saveNewProgram(config) {
+
+  await executeCode(
+    RVCAT_HEADER() + addNewProgram(config),
+    'add_new_program'
+  );
+  await executeCode(GET_AVAIL_PROGRAMS, 'get_programs');
 }

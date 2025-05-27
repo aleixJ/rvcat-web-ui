@@ -336,20 +336,71 @@
     <br/>
     <div>
 
-      <div class="widths">
+      <div class="settings-sections">
+        <!-- Stage Widths Group -->
+        <div class="settings-group">
+          <h4 class="section-title">Stage Width Settings</h4>
+          <div class="widths">
+            <div class="width-group">
+              <span>Dispatch:</span>
+              <div class="latency-group">
+                <button class="latency-btn" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
+                <input type="number" v-model.number="dispatch" min="1" class="latency-input"/>
+                <button class="latency-btn" @click="dispatch = (dispatch + 1)%100">+</button>
+              </div>
+            </div>
 
-        <div class="width-group">
-          <span><strong> Dispatch width: </strong></span>
-          <button type="button" class="latency-btn" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
-          <input type="number" id="dispatch-width" name="dispatch-width" min="1" v-model.number="dispatch" class="latency-input"/>
-          <button type="button" class="latency-btn" @click="dispatch = (dispatch + 1)%100">+</button>
+            <div class="width-group">
+              <span>Retire:</span>
+              <div class="latency-group">
+                <button class="latency-btn" @click="retire = Math.max(1, retire - 1)">−</button>
+                <input type="number" v-model.number="retire" min="1" class="latency-input"/>
+                <button class="latency-btn" @click="retire = (retire + 1)%100">+</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="width-group">
-          <span><b> Retire width: </b></span>
-          <button type="button" class="latency-btn" @click="retire = Math.max(1, retire - 1)" >−</button>
-          <input type="number" id="retire-width" name="retire-width" min="1" v-model.number="retire" class="latency-input"/>
-          <button type="button" class="latency-btn" @click="retire = (retire + 1)%100">+</button>
+        <!-- Cache Settings Group -->
+        <div class="settings-group">
+          <h4 class="section-title">Cache Settings</h4>
+          <div class="widths">
+            <div class="width-group">
+              <span>Number of Blocks:</span>
+              <div class="latency-group">
+                <button class="latency-btn" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
+                <input type="number" v-model.number="nBlocks" min="0" class="latency-input"/>
+                <button class="latency-btn" @click="nBlocks = (nBlocks + 1)%100">+</button>
+              </div>
+            </div>
+
+            <div class="width-group">
+              <span>Block Size:</span>
+              <div class="latency-group">
+                <button class="latency-btn" @click="blkSize = Math.max(1, blkSize - 1)">−</button>
+                <input type="number" v-model.number="blkSize" min="1" class="latency-input"/>
+                <button class="latency-btn" @click="blkSize = (blkSize + 1)%100">+</button>
+              </div>
+            </div>
+
+            <div class="width-group">
+              <span>Miss Penalty:</span>
+              <div class="latency-group">
+                <button class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
+                <input type="number" v-model.number="mPenalty" min="1" class="latency-input"/>
+                <button class="latency-btn" @click="mPenalty = (mPenalty + 1)%100">+</button>
+              </div>
+            </div>
+
+            <div class="width-group">
+              <span>Miss Issue Time:</span>
+              <div class="latency-group">
+                <button class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
+                <input type="number" v-model.number="mIssueTime" min="1" class="latency-input"/>
+                <button class="latency-btn" @click="mIssueTime = (mIssueTime + 1)%100">+</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -361,7 +412,7 @@
         <span v-for="port in portList" :key="port" class="port-tag">
           P.{{ port }}
           <button class="delete-port" @click="removePort(port)" :title="`Remove P.${port}`">
-            x
+            <img src="/img/delete.png" class="delete-icon"/>
           </button>
         </span>
         <button v-if="portList.length < 10" class="add-port" @click="addPort">
@@ -374,7 +425,8 @@
           <tr>
             <th>TYPE</th>
             <th>LATENCY</th>
-            <th>EXECUTION PORTS</th>
+            <!-- one TH per port -->
+            <th v-for="port in portList" :key="port">P.{{ port }}</th>
           </tr>
         </thead>
         <tbody>
@@ -383,50 +435,17 @@
             <td>
               <div class="latency-group">
                 <button type="button" class="latency-btn" @click="decreaseLatency(instr)">−</button>
-                <input type="number" v-model.number="resources[instr]" class="latency-input" min="1"/>
+                <input type="number" v-model.number="resources[instr]" class="latency-input" min="1" max="99"/>
                 <button type="button" class="latency-btn" @click="increaseLatency(instr)">+</button>
               </div>
             </td>
-            <td>
-              <span v-for="port in portList" :key="port" class="port-checkbox">
-                <label>
-                  <input type="checkbox" :checked="ports[port]?.includes(instr)" @change="togglePortInstruction(port, instr, $event.target.checked)"/>
-                  P.{{ port }}
-                </label>
-              </span>
+            <!-- one TD per port, just the checkbox -->
+            <td v-for="port in portList" :key="port" class="port-checkbox">
+              <input type="checkbox" :checked="ports[port]?.includes(instr)" @change="togglePortInstruction(port, instr, $event.target.checked)"/>
             </td>
           </tr>
         </tbody>
       </table>
-      <h4>Cache settings (work in progress)</h4>
-      <div class="cache">
-        <div class="cache-setting">
-          <span> Number of Blocks: </span>
-          <button type="button" class="latency-btn" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
-          <input type="number" id="nBlocks" name="nBlocks" min="1" v-model.number="nBlocks" class="latency-input"/>
-          <button type="button" class="latency-btn" @click="nBlocks = (nBlocks + 1)%100">+</button>
-        </div>
-        <div class="cache-setting">
-          <span> Block Size: </span>
-          <button type="button" class="latency-btn" @click="blkSize = Math.max(1, blkSize - 1)">−</button>
-          <input type="number" id="blkSize" name="blkSize" min="1" v-model.number="blkSize" class="latency-input"/>
-          <button type="button" class="latency-btn" @click="blkSize = (blkSize + 1)%100">+</button>
-        </div>
-        <div class="cache-setting">
-          <span> Miss Penalty: </span>
-          <button type="button" class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
-          <input type="number" id="mPenalty" name="mPenalty" min="1" v-model.number="mPenalty" class="latency-input"/>
-          <button type="button" class="latency-btn" @click="mPenalty = (mPenalty + 1)%100">+</button>
-        </div>
-        <div class="cache-setting">
-          <span> Miss Issue Time: </span>
-          <button type="button" class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
-          <input type="number" id="mIssueTime" name="mIssueTime" min="1" v-model.number="mIssueTime" class="latency-input"/>
-          <button type="button" class="latency-btn" @click="mIssueTime = (mIssueTime + 1)%100">+</button>
-        </div>
-      </div>
-
-
     </div>
   </div>
 
@@ -465,7 +484,6 @@
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
         <button class="save-button" @click="confirmModal">Save</button>
-        <button class="save-button" @click="closeModal">Cancel</button>
       </div>
     </div>
   </div>
@@ -538,6 +556,7 @@
     border-radius: 4px;
     padding: 2px 6px;
     margin-right: 5px;
+    margin-bottom: 5px;
     font-size: 0.9em;
   }
   .delete-port {
@@ -563,11 +582,8 @@
   .instr-table th,
   .instr-table td {
     border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-  }
-  .port-checkbox {
-    margin-right: 5px;
+    padding: 5px;
+    text-align: center;
   }
   .save-button {
     background: #0085dd;
@@ -583,6 +599,11 @@
   }
   .save-button:hover {
     background: #006fb9;
+  }
+  .save-button:active {
+    outline: none;
+    background: #003f73;
+    color: white;
   }
   /* Modal Styles */
   .modal-overlay {
@@ -600,6 +621,8 @@
     width: 300px;
     position: relative;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
   }
   .modal-close {
     position: absolute;
@@ -666,10 +689,27 @@
     background: #d0d0d0;
   }
 
+  .widths {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    align-items: flex-end;
+  }
+
+  .width-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .width-group span {
+    margin-bottom: 2px;
+  }
+
   .width-group {
     display: inline-flex;
     align-items: center;
-    margin-right: 8px;
+    gap: 0.5rem;
   }
 
   .cache-setting {
@@ -723,5 +763,22 @@
     opacity: 1;
   }
 
+  .settings-sections {
+    display: flex;
+    justify-content: left;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .settings-group {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .section-title {
+    text-align: center;
+    margin-bottom: 5px;
+  }
 
 </style>

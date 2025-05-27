@@ -46,6 +46,11 @@ function addModifiedProcessor(config){
   return res;
 }
 
+function addNewProgram(config){
+  let res = `rvcat._program.import_program_json(${config})`;
+  return res;
+}
+
 const RVCAT_HEADER = function() {
     let proc = currentProcessor();
     let prog = currentProgram();

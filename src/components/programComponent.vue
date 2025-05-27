@@ -51,6 +51,29 @@
     }
 
   }
+  //TODO: SHOW MODAL AND ASK FOR NAME (CHECK IF IT'S NOT REPEATED)
+  function uploadProgram() {
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.style.display = "none";
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        saveNewProgram(text);
+      } catch (err) {
+        console.error("Failed to read JSON file:", err);
+        alert("Could not load program file.");
+      }
+    };
+    document.body.appendChild(input);
+    input.click();
+    // clean up
+    input.remove();
+  }
 
 </script>
 
@@ -60,7 +83,7 @@
       <h3>Program</h3>
       <div id="settings-div">
         <button id="download-button" class="program-button" @click="downloadProgram">Download</button>
-        <button id="upload-button" class="program-button">Upload</button>
+        <button id="upload-button" class="program-button" @click="uploadProgram">Upload</button>
         <select id="programs-list" name="assembly-code" onchange="reloadRvcat();">
         </select>
       </div>
