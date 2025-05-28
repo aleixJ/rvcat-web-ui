@@ -45,23 +45,8 @@ const handlers = {
       while (lines.length && lines[0].trim() === "") lines.shift();
       while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
 
-      // Detect common leading indentation (tabs or spaces)
-      const nonEmptyLines = lines.filter(line => line.trim() !== "");
-      const leadingIndents = nonEmptyLines.map(line => {
-        const match = line.match(/^(\s*)/);
-        return match ? match[1] : "";
-      });
-
-      // Get the smallest shared indent
-      const minIndentLength = Math.min(...leadingIndents.map(indent => indent.length));
-      const cleanedLines = lines.map(line =>
-        line.startsWith(" ") || line.startsWith("\t")
-          ? line.slice(minIndentLength)
-          : line
-      );
-
       // Join cleaned lines
-      const cleanedProg = cleanedLines.join("\n");
+      const cleanedProg = lines.join("\n");
 
       const item = document.getElementById('rvcat-asm-code');
       item.textContent = cleanedProg;

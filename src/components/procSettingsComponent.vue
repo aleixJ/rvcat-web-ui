@@ -345,7 +345,7 @@
               <span>Dispatch:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
-                <input type="number" v-model.number="dispatch" min="1" class="latency-input"/>
+                <input type="number" v-model.number="dispatch" min="1" max="99" class="latency-input"/>
                 <button class="latency-btn" @click="dispatch = (dispatch + 1)%100">+</button>
               </div>
             </div>
@@ -354,7 +354,7 @@
               <span>Retire:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="retire = Math.max(1, retire - 1)">−</button>
-                <input type="number" v-model.number="retire" min="1" class="latency-input"/>
+                <input type="number" v-model.number="retire" min="1" max="99" class="latency-input"/>
                 <button class="latency-btn" @click="retire = (retire + 1)%100">+</button>
               </div>
             </div>
@@ -369,7 +369,7 @@
               <span>Number of Blocks:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
-                <input type="number" v-model.number="nBlocks" min="0" class="latency-input"/>
+                <input type="number" v-model.number="nBlocks" min="0" max="99" class="latency-input"/>
                 <button class="latency-btn" @click="nBlocks = (nBlocks + 1)%100">+</button>
               </div>
             </div>
@@ -378,7 +378,7 @@
               <span>Block Size:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="blkSize = Math.max(1, blkSize - 1)">−</button>
-                <input type="number" v-model.number="blkSize" min="1" class="latency-input"/>
+                <input type="number" v-model.number="blkSize" min="1" max="99" class="latency-input"/>
                 <button class="latency-btn" @click="blkSize = (blkSize + 1)%100">+</button>
               </div>
             </div>
@@ -387,7 +387,7 @@
               <span>Miss Penalty:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
-                <input type="number" v-model.number="mPenalty" min="1" class="latency-input"/>
+                <input type="number" v-model.number="mPenalty" min="1" max="99" class="latency-input"/>
                 <button class="latency-btn" @click="mPenalty = (mPenalty + 1)%100">+</button>
               </div>
             </div>
@@ -396,7 +396,7 @@
               <span>Miss Issue Time:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
-                <input type="number" v-model.number="mIssueTime" min="1" class="latency-input"/>
+                <input type="number" v-model.number="mIssueTime" min="1" max="99" class="latency-input"/>
                 <button class="latency-btn" @click="mIssueTime = (mIssueTime + 1)%100">+</button>
               </div>
             </div>
@@ -412,7 +412,7 @@
         <span v-for="port in portList" :key="port" class="port-tag">
           P{{ port }}
           <button class="delete-port" @click="removePort(port)" :title="`Remove P${port}`">
-            <img src="/img/delete.png" class="delete-icon"/>
+            <img src="/img/delete.png" class="delete-icon" width="16px">
           </button>
         </span>
         <button v-if="portList.length < 10" class="add-port" @click="addPort">
@@ -554,7 +554,7 @@
     display: inline-block;
     background: #e3e3e3;
     border-radius: 4px;
-    padding: 2px 6px;
+    padding: 2px;
     margin-right: 5px;
     margin-bottom: 5px;
     font-size: 0.9em;
@@ -766,7 +766,7 @@
   .settings-sections {
     display: flex;
     justify-content: left;
-    gap: 2rem;
+    gap: 5px;
     width: 100%;
   }
 

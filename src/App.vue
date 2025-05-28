@@ -44,4 +44,14 @@
     width: 100%;
     height: 100%;
   }
+
+  .pipeline-img svg {
+    width:100%;
+    height:auto;
+  }
+
+  .simulation-img svg {
+    width:100%;
+    height:auto;
+  }
 </style>

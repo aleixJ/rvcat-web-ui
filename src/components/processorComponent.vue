@@ -27,7 +27,7 @@
   height: 100%;
   width: 100%;
   background: white;
-  overflow: hidden;
+  overflow: auto;
   padding: 5px;
   border-radius: 10px;
   position: relative;
@@ -91,4 +91,5 @@ table{
   background: #003f73;
   color: white;
 }
+
 </style>

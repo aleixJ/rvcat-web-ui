@@ -343,7 +343,6 @@
     width: 3ch;
     padding: 2px;
     text-align: center;
-    /* hide native number spinners */
     -moz-appearance: textfield;
   }
   .iterations-input::-webkit-outer-spin-button,

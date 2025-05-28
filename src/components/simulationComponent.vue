@@ -1,5 +1,8 @@
 <script setup>
-  import { onMounted, nextTick } from "vue";
+  import { onMounted, nextTick, ref } from "vue";
+
+  const iterations = ref(200);
+
   onMounted(() => {
     nextTick(() => {
 
@@ -11,6 +14,16 @@
 
     });
   });
+
+  function changeIterations(delta) {
+    const min = 1;
+    const max = 3000;
+    let v = iterations.value + delta;
+    if (v < min) v = min;
+    if (v > max) v = max;
+    iterations.value = v;
+    lastExecutedCommand();
+  }
 </script>
 
 <template>
@@ -18,9 +31,10 @@
     <div class="header">
       <h3>Simulation</h3>
       <div class="iters-run">
-        <div class="iterations-config">
-          <label for="iterations"> Iterations: </label>
-          <input type="number" id="num-iters" name="iterations" min="1" max="3000" value="200" >
+        <div class="iterations-group">
+          <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
+          <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="3000" v-model.number="iterations">
+          <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
         </div>
 
         <div id="run-simulation-button">
@@ -31,7 +45,7 @@
     </div>
     <div class="content">
       <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
-      <div id="simulation-graph" style="display: none">
+      <div id="simulation-graph" class="simulation-img" style="display: none">
 
       </div>
       <div id="simulation-results-info">
@@ -187,5 +201,39 @@
     margin-top: 10px;
     font-size: 16px;
     font-family: Arial, sans-serif;
+  }
+
+  .iterations-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .iterations-input {
+    width: 3ch;
+    padding: 2px;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .iterations-input::-webkit-outer-spin-button,
+  .iterations-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .iterations-btn {
+    background: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+    text-align: center;
+    font-size: 1.2em;
+    cursor: pointer;
+    user-select: none;
+  }
+  .iterations-btn:hover {
+    background: #d0d0d0;
   }
 </style>
