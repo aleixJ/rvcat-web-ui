@@ -318,6 +318,17 @@
     resources[key] = resources[key] + 1;
   }
 
+  const noPortAssigned = (instr)=>{
+    if(!portList.value.some(p => ports.value[p]?.includes(instr))){
+      ports.value[0].push(instr);
+      document.getElementById("auto-tooltip").style.display="block";
+      setTimeout(()=>{
+        document.getElementById("auto-tooltip").style.display="none";
+      },2000);
+    }
+    return !portList.value.some(p => ports.value[p]?.includes(instr));
+  }
+
 </script>
 
 <template>
@@ -440,13 +451,22 @@
                 <button type="button" class="latency-btn" @click="increaseLatency(instr)">+</button>
               </div>
             </td>
-            <!-- one TD per port, just the checkbox -->
             <td v-for="port in portList" :key="port" class="port-checkbox">
-              <input type="checkbox" :checked="ports[port]?.includes(instr)" @change="togglePortInstruction(port, instr, $event.target.checked)"/>
+              <label class="port-label">
+                <input
+                  type="checkbox"
+                  :checked="
+                    (ports[port] || []).includes(instr)
+                    || (port === portList[0] && noPortAssigned(instr))
+                  "
+                  @change="togglePortInstruction(port, instr, $event.target.checked)"
+                />
+              </label>
             </td>
           </tr>
         </tbody>
       </table>
+
     </div>
   </div>
 

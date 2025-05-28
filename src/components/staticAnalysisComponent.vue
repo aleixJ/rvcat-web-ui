@@ -214,13 +214,13 @@
 
   .fullscreen-content {
     background: white;
-    margin: 10px;                   /* space from viewport edges */
+    margin: 10px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
-    width: 90%;
-    height: 90%;
-
+    width: 95%;
+    height: 95%;
+    resize:both;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -235,12 +235,12 @@
     margin-bottom: 8px;
   }
 
-  .fullscreen-content .output-block {
+  .output-block {
     flex: 1;
     overflow: hidden;
   }
 
-  .fullscreen-content .output-block svg {
+  .output-block svg {
     width: 100%;
     height: 100%;
   }
@@ -251,9 +251,6 @@
     gap: 0.5em; /* space between button and title */
   }
 
-  .graph-header h4{
-    margin-top:20px;
-  }
   .fullscreen-header {
     display: flex;
     justify-content: space-between;
@@ -274,6 +271,30 @@
     line-height: 1;
     cursor: pointer;
     padding: 4px;
+  }
+
+  .output-block-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 90%;
+  }
+
+  .graph-header {
+    flex: 0 0 auto;
+  }
+
+  .output-block {
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .output-block svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
   }
 
 
