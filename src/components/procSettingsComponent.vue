@@ -1,6 +1,5 @@
 <script setup>
-  import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from "vue";
-
+  import { ref, reactive, computed, onMounted, onUnmounted, nextTick} from "vue";
   // --- existing reactive state ---
   const dispatch = ref(0);
   const retire = ref(0);
@@ -11,6 +10,7 @@
   const blkSize = ref(0);
   const mPenalty = ref(0);
   const mIssueTime = ref(0);
+  const showTooltip = ref(false);
   let processorsListHandler;
   let lastRequestId = 0;
 
@@ -96,6 +96,7 @@
     if (list && processorsListHandler) {
       list.removeEventListener("change", processorsListHandler);
     }
+    window.removeEventListener('beforeunload', handleBeforeUnload);
   });
 
   // --- detect modifications ---
@@ -113,9 +114,19 @@
     for (let k of ka) {
       const arrA = a[k] || [], arrB = b[k] || [];
       if (arrA.length !== arrB.length) return false;
-      for (let i = 0; i < arrA.length; i++) {
-        if (arrA[i] !== arrB[i]) return false;
+
+      // get frequencies as arrays could be in different order
+      const freq = new Map();
+      for (let v of arrA) {
+        freq.set(v, (freq.get(v) || 0) + 1);
       }
+      for (let v of arrB) {
+        if (!freq.has(v)) return false;
+        freq.set(v, freq.get(v) - 1);
+        if (freq.get(v) === 0) freq.delete(v);
+      }
+      // after removing all arrB items, map should be empty
+      if (freq.size !== 0) return false;
     }
     return true;
   }
@@ -130,6 +141,12 @@
     if (!portsEq(ports.value, originalSettings.ports)) return true;
     return false;
   });
+
+  function canLeave() {
+    return isModified.value;
+  }
+
+  defineExpose({ canLeave });
 
   // --- helpers and modal controls ---
   function getCurrentProcessorJSON() {
@@ -318,16 +335,26 @@
     resources[key] = resources[key] + 1;
   }
 
-  const noPortAssigned = (instr)=>{
-    if(!portList.value.some(p => ports.value[p]?.includes(instr))){
-      ports.value[0].push(instr);
-      document.getElementById("auto-tooltip").style.display="block";
-      setTimeout(()=>{
-        document.getElementById("auto-tooltip").style.display="none";
-      },2000);
+  function noPortAssigned(instr) {
+    if (!portList.value.some(p => ports.value[p]?.includes(instr))) {
+      ports.value[0].push(instr)
+
+      showTooltip.value = true
+      setTimeout(() => { showTooltip.value = false }, 2000)
     }
-    return !portList.value.some(p => ports.value[p]?.includes(instr));
+    return !portList.value.some(p => ports.value[p]?.includes(instr))
   }
+
+  // --- browser close / reload guard ---
+  function handleBeforeUnload(e) {
+    if (isModified.value) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  }
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
+
 
 </script>
 
@@ -508,6 +535,10 @@
       </div>
     </div>
   </div>
+
+  <span id="auto-tooltip" ref="tooltip" class="auto-tooltip" :class="{ 'slide-in': showTooltip }">
+    Each instruction must have at least one assigned port. Defaulting to P0.
+  </span>
 </template>
 
 <style scoped>
@@ -645,14 +676,6 @@
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(8px);
   }
-  .modal-close {
-    position: absolute;
-    top: 8px; right: 8px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-  }
   .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -763,7 +786,7 @@
   .tooltip-text {
     visibility: hidden;
     width: 240px;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 0.7);
     color: #fff;
     text-align: left;
     border-radius: 4px;
@@ -802,4 +825,20 @@
     margin-bottom: 5px;
   }
 
+  .auto-tooltip {
+    position:fixed;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    top: 35vh;
+    right: 0;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  .auto-tooltip.slide-in {
+    transform: translateX(0);
+  }
 </style>

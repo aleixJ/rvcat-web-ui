@@ -1,12 +1,13 @@
 <script setup>
-import { ref } from "vue";
-
-const activeComponent = ref("simulationComponent");
-
-const switchComponent = (component) => {
-  activeComponent.value = component;
-};
-
+// Props
+const props = defineProps({
+  activeView: {
+    type: String,
+    required: true
+  }
+});
+// Emitted event
+const emit = defineEmits([ 'requestSwitch' ]);
 </script>
 
 <template>
@@ -17,49 +18,56 @@ const switchComponent = (component) => {
     <nav>
       <ul>
         <li>
-          <button class="tab-button"
-          :class="{ active: activeComponent === 'procSettingsComponent' }"
-          @click="$emit('switchComponent','procSettingsComponent'); switchComponent('procSettingsComponent');">
-          Settings
+          <button
+            class="tab-button"
+            :class="{ active: activeView === 'procSettingsComponent' }"
+            @click="emit('requestSwitch', 'procSettingsComponent')"
+          >
+            Settings
           </button>
         </li>
         <li>
           <button
             class="tab-button"
-            :class="{ active: activeComponent === 'staticAnalysisComponent' }"
-            @click="$emit('switchComponent', 'staticAnalysisComponent'); switchComponent('staticAnalysisComponent');">
+            :class="{ active: activeView === 'staticAnalysisComponent' }"
+            @click="emit('requestSwitch', 'staticAnalysisComponent')"
+          >
             Static Analysis
           </button>
         </li>
         <li>
           <button
             class="tab-button"
-            :class="{ active: activeComponent === 'simulationComponent' }"
-            @click="$emit('switchComponent', 'simulationComponent'); switchComponent('simulationComponent');">
+            :class="{ active: activeView === 'simulationComponent' }"
+            @click="emit('requestSwitch', 'simulationComponent')"
+          >
             Simulation
           </button>
         </li>
         <li>
           <button
             class="tab-button"
-            :class="{ active: activeComponent === 'timelineComponent' }"
-            @click="$emit('switchComponent', 'timelineComponent'); switchComponent('timelineComponent');">
+            :class="{ active: activeView === 'timelineComponent' }"
+            @click="emit('requestSwitch', 'timelineComponent')"
+          >
             Timeline
           </button>
         </li>
         <li>
           <button
             class="tab-button"
-            :class="{ active: activeComponent === 'aboutComponent' }"
-            @click="$emit('switchComponent', 'aboutComponent'); switchComponent('aboutComponent');">
+            :class="{ active: activeView === 'aboutComponent' }"
+            @click="emit('requestSwitch', 'aboutComponent')"
+          >
             About
           </button>
         </li>
-
       </ul>
     </nav>
   </div>
 </template>
+
+
 
 <style scoped>
 #top {
@@ -82,23 +90,16 @@ h1 {
   font-size: 20px;
 }
 
-nav {
-  display: flex;
-  align-items: center;
-}
-
-ul {
+nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
 }
-
-ul li {
+nav ul li {
   margin: 0 5px;
 }
 
-/* Improved button styling */
 .tab-button {
   background: #0085dd;
   color: white;
@@ -109,15 +110,10 @@ ul li {
   cursor: pointer;
   transition: all 0.3s ease-in-out;
 }
-
 .tab-button:hover {
   background: #006fb9;
-  color: white;
 }
-
 .tab-button.active {
-  outline: none;
   background: #003f73;
-  color: white;
 }
 </style>
