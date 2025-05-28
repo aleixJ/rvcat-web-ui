@@ -59,6 +59,8 @@ const handlers = {
 
       let array=data.split("Through");
       let annotations = "Through"+array[1];
+      array=annotations.split("CACHE");
+      annotations = array[0];
       let item = document.getElementById('performance-annotations');
       item.textContent = annotations;
     },
@@ -137,7 +139,7 @@ const handlers = {
 
     },
     'format_timeline': (data) => {
-      let tmpitem = document.getElementById('simulation-output');
+      /*let tmpitem = document.getElementById('simulation-output');
       tmpitem.innerHTML = '';
 
       let item = document.getElementById('simulation-output');
@@ -163,9 +165,9 @@ const handlers = {
       // append code to codeItem
       pre.appendChild(code);
       codeItem.appendChild(pre);
-      item.appendChild(codeItem);
+      item.appendChild(codeItem);*/
 
-      //timelineData = data; //TODO: canvas Timeline
+      timelineData = data; //TODO: canvas Timeline
     },
     'print_output': (data) => {
         let out = data.replace(/\n/g, '<br>');
@@ -486,12 +488,26 @@ async function getTimeline() {
         document.getElementById('dependencies-num-iters').value = 50;
     }
 
-    await executeCode(
-        RVCAT_HEADER() + show_timeline(num_iters),
-        'format_timeline'
-    )
-    lastExecutedCommand = getTimeline;
-    return timelineData;
+    return new Promise((resolve, reject)=>{
+      const original = handlers['format_timeline'];
+
+      handlers['format_timeline'] = (data) => {
+        try {
+          timelineData = data;
+          resolve(data);
+        } catch (err) {
+          reject(err);
+        } finally {
+          // restore the old handler
+          handlers['format_timeline'] = original;
+        }
+      };
+
+      // fire off the code to the worker
+      executeCode(RVCAT_HEADER() + show_timeline(num_iters),
+      'format_timeline');
+      lastExecutedCommand = getTimeline;
+    });
 }
 
 async function saveModifiedProcessor(config) {

@@ -377,17 +377,18 @@
             <div class="width-group">
               <span>Block Size:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="blkSize = Math.max(1, blkSize - 1)">−</button>
-                <input type="number" v-model.number="blkSize" min="1" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="blkSize = (blkSize + 1)%100">+</button>
+                <button class="latency-btn" @click="blkSize = Math.max(1, Math.floor(blkSize / 2))">−</button>
+                <input type="number" v-model.number="blkSize" readonly class="latency-input"/>
+                <button class="latency-btn" @click="blkSize = blkSize * 2">+</button>
               </div>
             </div>
+
 
             <div class="width-group">
               <span>Miss Penalty:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
-                <input type="number" v-model.number="mPenalty" min="1" max="99" class="latency-input"/>
+                <input type="number" v-model.number="mPenalty" min="1" :max="nBlocks" class="latency-input"/>
                 <button class="latency-btn" @click="mPenalty = (mPenalty + 1)%100">+</button>
               </div>
             </div>
@@ -396,7 +397,7 @@
               <span>Miss Issue Time:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
-                <input type="number" v-model.number="mIssueTime" min="1" max="99" class="latency-input"/>
+                <input type="number" v-model.number="mIssueTime" min="1" :max="nBlocks" class="latency-input"/>
                 <button class="latency-btn" @click="mIssueTime = (mIssueTime + 1)%100">+</button>
               </div>
             </div>

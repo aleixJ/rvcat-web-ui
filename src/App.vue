@@ -36,13 +36,8 @@
   }
 
   .output-block svg {
-      width: 100%;
-      height: auto;
-  }
-
-  .fullscreen-content .output-block svg {
     width: 100%;
-    height: 100%;
+    max-height: 100%;
   }
 
   .pipeline-img svg {
