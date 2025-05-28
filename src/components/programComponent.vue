@@ -89,9 +89,7 @@
       </div>
     </div>
     <section class="main-box code-block">
-        <pre>
-          <code id="rvcat-asm-code">LOADING</code>
-        </pre>
+        <pre><code id="rvcat-asm-code">LOADING</code></pre>
     </section>
   </div>
 
@@ -148,4 +146,5 @@ h3 {
   background: #003f73;
   color: white;
 }
+
 </style>
