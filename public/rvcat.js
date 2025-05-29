@@ -65,7 +65,7 @@ const handlers = {
       item.textContent = annotations;
     },
     'get_proc_settings': (data) => {
-        processorInfo = JSON.parse(data);
+      processorInfo = JSON.parse(data);
     },
     'save_processor_info': (data) => {
         let procinfo = JSON.parse(data);

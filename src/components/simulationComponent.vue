@@ -22,7 +22,6 @@
     if (v < min) v = min;
     if (v > max) v = max;
     iterations.value = v;
-    lastExecutedCommand();
   }
 </script>
 

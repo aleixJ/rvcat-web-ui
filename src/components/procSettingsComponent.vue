@@ -13,6 +13,8 @@
   const mIssueTime = ref(0);
   const showTooltip = ref(false);
   const showModalChange = ref(false);
+  const prevProcessor = ref(null);
+  let prevProcessorHandler;
   let processorsListHandler;
   let lastRequestId = 0;
   let modalConfirmOperation = null;
@@ -89,25 +91,32 @@
     nextTick(() => {
       const list = document.getElementById("processors-list");
       if (list) {
+        prevProcessorHandler = () => {
+          prevProcessor.value=list.value;
+        }
         processorsListHandler = () => {
           if(isModified.value){
             showModalChange.value = true;
             modalConfirmOperation = 'change';
           }
-          else{
+          else {
             setTimeout( ()=> { updateProcessorSettings();},100);
           }
         }
+        list.addEventListener("focus", prevProcessorHandler);
         list.addEventListener("change", processorsListHandler);
       }
       updateProcessorSettings();
     });
   });
+
   onUnmounted(() => {
     const list = document.getElementById("processors-list");
     if (list && processorsListHandler) {
       list.removeEventListener("change", processorsListHandler);
+
     }
+    list.removeEventListener("focus", prevProcessorHandler);
   });
 
   // --- detect modifications ---
@@ -262,7 +271,6 @@
     setTimeout(()=>{
       list.value=modalName.value;
       reloadRvcat();
-      //updateProcessorSettings();
     },100);
   }
 
@@ -379,14 +387,17 @@
       document.getElementById('file-upload').click();
     }
     else if(modalConfirmOperation=='change') {
-      //TODO: Reset llista processadors (+ diagrama)
-      //document.getElementById('processors-list')
+
       updateProcessorSettings();
 
     }
   }
 
   function cancelLeave(){
+    if(modalConfirmOperation=='change') {
+      document.getElementById('processors-list').value = prevProcessor.value;
+      reloadRvcat();
+    }
     showModalChange.value = false;
   }
 
