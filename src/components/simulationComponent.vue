@@ -32,6 +32,7 @@
       <h3>Simulation</h3>
       <div class="iters-run">
         <div class="iterations-group">
+          Iterations:
           <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
           <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="3000" v-model.number="iterations">
           <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>

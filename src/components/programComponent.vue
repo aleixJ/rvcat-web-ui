@@ -8,7 +8,7 @@
     nextTick(() => {
       const list = document.getElementById("processors-list");
       if (list) {
-        processorsListHandler = () => setTimeout( ()=> { updateProcessorSettings();},100);
+        processorsListHandler = () => setTimeout( ()=> { reloadRvcat();},100);
         list.addEventListener("change", processorsListHandler);
       }
       reloadRvcat();

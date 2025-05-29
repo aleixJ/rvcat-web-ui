@@ -1,5 +1,6 @@
 <script setup>
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick} from "vue";
+
   // --- existing reactive state ---
   const dispatch = ref(0);
   const retire = ref(0);
@@ -11,8 +12,11 @@
   const mPenalty = ref(0);
   const mIssueTime = ref(0);
   const showTooltip = ref(false);
+  const showModalChange = ref(false);
   let processorsListHandler;
   let lastRequestId = 0;
+  let modalConfirmOperation = null;
+
 
   const originalSettings = reactive({
     dispatch: 0,
@@ -85,7 +89,15 @@
     nextTick(() => {
       const list = document.getElementById("processors-list");
       if (list) {
-        processorsListHandler = () => setTimeout( ()=> { updateProcessorSettings();},100);
+        processorsListHandler = () => {
+          if(isModified.value){
+            showModalChange.value = true;
+            modalConfirmOperation = 'change';
+          }
+          else{
+            setTimeout( ()=> { updateProcessorSettings();},100);
+          }
+        }
         list.addEventListener("change", processorsListHandler);
       }
       updateProcessorSettings();
@@ -96,7 +108,6 @@
     if (list && processorsListHandler) {
       list.removeEventListener("change", processorsListHandler);
     }
-    window.removeEventListener('beforeunload', handleBeforeUnload);
   });
 
   // --- detect modifications ---
@@ -201,6 +212,20 @@
     const data = getCurrentProcessorJSON();
     await saveModifiedProcessor(data);
 
+    Object.assign(originalSettings, {
+      dispatch: data.stages.dispatch,
+      retire:   data.stages.retire,
+      name:     data.name,
+      resources: JSON.parse(JSON.stringify(data.resources)),
+      ports:     JSON.parse(JSON.stringify(data.ports)),
+      rports:    JSON.parse(JSON.stringify(data.rports)),
+      cache:     data.cache,
+      nBlocks:   data.nBlocks,
+      blkSize:   data.blkSize,
+      mPenalty:  data.mPenalty,
+      mIssueTime:data.mIssueTime,
+    });
+
     //download JSON file
     if (modalDownload.value) {
       const jsonText = JSON.stringify(data, null, 2);
@@ -233,8 +258,11 @@
     name.value = modalName.value;
     showModalDown.value = false;
     showModalUp.value = false;
-    setTimeout(()=>{list.value=name.value;
+
+    setTimeout(()=>{
+      list.value=modalName.value;
       reloadRvcat();
+      //updateProcessorSettings();
     },100);
   }
 
@@ -345,14 +373,39 @@
     return !portList.value.some(p => ports.value[p]?.includes(instr))
   }
 
-  // --- browser close / reload guard ---
-  function handleBeforeUnload(e) {
-    if (isModified.value) {
-      e.preventDefault();
-      e.returnValue = '';
+  function confirmLeave(){
+    showModalChange.value = false;
+    if(modalConfirmOperation=='upload') {
+      document.getElementById('file-upload').click();
+    }
+    else if(modalConfirmOperation=='change') {
+      //TODO: Reset llista processadors (+ diagrama)
+      //document.getElementById('processors-list')
+      updateProcessorSettings();
+
     }
   }
-  window.addEventListener('beforeunload', handleBeforeUnload);
+
+  function cancelLeave(){
+    showModalChange.value = false;
+  }
+
+
+  function openUploadModal() {
+    if(isModified.value){
+
+      showModalChange.value = true;
+      modalConfirmOperation = 'upload';
+    }
+    else{
+      document.getElementById('file-upload').click();
+    }
+
+  }
+
+  function onFileChange(e) {
+    uploadProcessorConfig(e);
+  }
 
 
 
@@ -366,9 +419,8 @@
         <button class="save-button" @click="openModal" :disabled="!isModified">
           Apply Changes
         </button>
-        <label class="save-button">Upload
-          <input type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;"/>
-        </label>
+        <input id="file-upload" type="file" accept=".json" @change="onFileChange" style="display: none;"/>
+        <button class="save-button" @click="openUploadModal">Upload</button>
       </div>
     </div>
     <br/>
@@ -450,7 +502,7 @@
       <div class="ports-toolbar">
         <span v-for="port in portList" :key="port" class="port-tag">
           P{{ port }}
-          <button class="delete-port" @click="removePort(port)" :title="`Remove P${port}`">
+          <button v-if="portList.length > 1" class="delete-port" @click="removePort(port)" :title="`Remove P${port}`">
             <img src="/img/delete.png" class="delete-icon" width="16px">
           </button>
         </span>
@@ -532,6 +584,20 @@
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
         <button class="save-button" @click="confirmModal">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showModalChange" class="modal-overlay">
+    <div class="modal">
+      <p>
+        Your processor settings have been modified. They will not be saved if
+        you change the selected processor or upload a new one.
+      </p>
+      <p><b>Do you want to continue?</b></p>
+      <div class="modal-actions">
+        <button class="save-button" @click="confirmLeave">OK</button>
+        <button class="save-button" @click="cancelLeave">Cancel</button>
       </div>
     </div>
   </div>
