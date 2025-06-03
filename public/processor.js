@@ -55,7 +55,7 @@ digraph {
 
 */
 
-const PROCESSOR_GRAPH_PREAMBLE = `digraph {
+const PROCESSOR_GRAPH_PREAMBLE = `digraph "Processor Pipeline Graph"{
     edge [headport="w"]
     rankdir="LR";
 `
@@ -65,7 +65,7 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     // --- DISPATCH ---
     dot_code += `
     node [fontsize=8, fontname="Arial"];
-    Fetch[style=invis,shape=box,height=0.6,width=0.1,fixedsize=true]
+    Fetch[style=invis,shape=box,height=0,width=0,fixedsize=true]
     `
     dot_code += `Dispatch[shape=box,height=0.6,width=0.6,fixedsize=true,label="D\nw=${dispatch_width}"]\n`
     dot_code += `Fetch -> Dispatch [label="${dispatch_width}", fontsize=10];\n`
@@ -123,8 +123,12 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     return dot_code + `}`
 }
 
-function construct_full_processor_dot(dispatch_width, num_ports, retire_width, usage=null) {
-  let dot_code = PROCESSOR_GRAPH_PREAMBLE;
+function construct_full_processor_dot(dispatch_width, num_ports, retire_width, usage = null) {
+  let dot_code = `
+  digraph "Processor Pipeline Graph"{
+    rankdir=TB;
+    node [fontsize=14, fontname="Arial"];
+  `;
 
   // Colorscale from green to red
   let color = [
@@ -140,29 +144,33 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
       "#FF3300",
       "#FF0000"
   ];
-
-  console.log("Usage:");
-  console.log(usage);
-
-  // --- DISPATCH ---
+  let dispatch_color = color[Math.floor(usage.dispatch/10)];
+  // --- FETCH ---
+  dot_code += `Fetch [style=invis, shape=box, height=0, width=0];`
   dot_code += `
-  node [fontsize=8, fontname="Arial"];
-  Fetch[style=invis,shape=box,height=0.6, width=0.1]
-  `
-  dot_code += `"Waiting Buffer"[shape=box,height=1,width=1,fixedsize=true]\n`
-  dot_code += `Fetch -> "Waiting Buffer" [label="Dispatch = ${dispatch_width}", fontsize=10];\n`
+    Fetch -> "Waiting Buffer" [
+      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${dispatch_color}"><TR><TD TITLE="Usage: ${usage.dispatch.toFixed(1)}%">Dispatch = ${dispatch_width}</TD></TR></TABLE>>,
+      fontsize=14,
+      fontname="Arial",
+      tooltip="Usage: ${usage.dispatch.toFixed(1)}%"
+    ];
+  `;
 
-  // --- EXECUTE ---
+
+  // --- WAITING BUFFER ---
+  dot_code += `  "Waiting Buffer" [label="Waiting\\nBuffer", shape=box, height=1.2, width=1.2, fixedsize=true];\n`;
+
   dot_code += `subgraph cluster_execute {
-    rankdir="LR";
+      rankdir="TB";
   `
   for (let i = 0; i < num_ports; i++) {
-      if (usage !== null && usage.ports[i]!==0.0) {
-          let execute_color = color[Math.floor(usage.ports[i] / 10)];
-          dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
-      } else {
-          dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, tooltip="Usage: 0.0%"];\n`
-      }
+    if (usage !== null && usage.ports[i]!==0.0) {
+        let execute_color = color[Math.floor(usage.ports[i] / 10)];
+        dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
+    } else {
+        dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, tooltip="Usage: 0.0%"];\n`
+    }
+    dot_code += `  "Waiting Buffer" -> P${i};\n`;
   }
 
   dot_code += `label = "Execute";\n
@@ -170,44 +178,50 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
   fontsize=12;
   }\n`
 
-  for (let i=0; i<num_ports; i++) {
-      dot_code += `"Waiting Buffer":e${i} -> P${i}\n`
-  }
+  dot_code += `  Registers [shape=box, height=1.2, width=1.2, fixedsize=true];\n`;
 
+  // Align top row
   dot_code += `
-  {
-    rank=lower;
-    ROB;
-  }\n`
+    {
+      rank=same;
+      Fetch;
+      "Waiting Buffer";
+      ${[...Array(num_ports).keys()].map(i => `P${i}`).join("; ")};
+      Registers;
+    }
+  `;
 
-  dot_code += `ROB[shape=box,height=0.6,width=5,fixedsize=true]\n`
-  dot_code += `Fetch -> ROB\n`
+  // --- ROB ---
+  dot_code += `
+    ROB [shape=box, height=0.6, width=5, fixedsize=true];
+    {
+      rank=sink;
+      ROB;
+    }
+  `;
 
+  dot_code += `  Fetch -> ROB;\n`;
   for (let i = 0; i < num_ports; i++) {
-      dot_code += `P${i}:e -> ROB:w${i}\n`
+    dot_code += `  P${i} -> ROB;\n`;
   }
 
-  dot_code += `Registers[shape=box,height=1,width=1,fixedsize=true]\n`
-
-  dot_code += `ROB -> Registers [label="Retire = ${retire_width}", fontsize=10]
-  {
-    rank=sink;
-    ROB;
-  };\n`
-
+  let retire_color = color[Math.floor(usage.retire/10)];
   dot_code += `
-  {
-    rank=same;
-    Fetch;
-    "Waiting Buffer";
-    ${[...Array(num_ports).keys()].map(i => `P${i}`).join("; ")};
-    Registers;
-  }\n`;
+    ROB -> Registers [
+      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${retire_color}"><TR><TD TITLE="Usage: ${usage.retire.toFixed(1)}%">Retire = ${retire_width}</TD></TR></TABLE>>,
+      fontsize=14,
+      fontname="Arial",
+      tooltip="Usage: ${usage.retire.toFixed(1)}%"
+    ];
+  `;
 
-  return dot_code + `}`
+  dot_code += `}`;
+
+  return dot_code;
 }
 
 
+// OLD PROCESSOR PIPELINE GRAPH
 /*function construct_full_processor_dot(dispatch_width, num_ports, retire_width, usage=null) {
   let dot_code = PROCESSOR_GRAPH_PREAMBLE;
 

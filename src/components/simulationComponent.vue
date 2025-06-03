@@ -126,7 +126,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    margin-top: 10%;
   }
   .simulation-graph{
     display:block;
