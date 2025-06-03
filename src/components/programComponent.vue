@@ -1,14 +1,13 @@
 <script setup>
+  import { ref, onMounted, onUnmounted, nextTick } from "vue";
 
-  import {onMounted, onUnmounted, nextTick } from "vue";
-
-  let processorsListHandler=null;
+  let processorsListHandler = null;
 
   onMounted(() => {
     nextTick(() => {
       const list = document.getElementById("processors-list");
       if (list) {
-        processorsListHandler = () => setTimeout( ()=> { reloadRvcat();},100);
+        processorsListHandler = () => setTimeout(() => { reloadRvcat(); }, 100);
         list.addEventListener("change", processorsListHandler);
       }
       reloadRvcat();
@@ -21,10 +20,51 @@
     }
   });
 
-  async function downloadProgram(){
-    let data= await getProgramJSON();
+  // Modal logic
+  const showModalUp = ref(false);
+  const modalName = ref("");
+  const nameError = ref("");
+  let uploadedProgramObject = null;
+
+  async function confirmModal() {
+    const name = modalName.value.trim();
+    const selectEl = document.getElementById("programs-list");
+
+    const nameExists = Array.from(selectEl.options).some(opt => opt.value === name);
+    if (nameExists) {
+      nameError.value = "A program with this name already exists. Please choose another one.";
+      return;
+    }
+
+    nameError.value = "";
+    showModalUp.value = false;
+
+    uploadedProgramObject.name = name;
+    const jsonText = JSON.stringify(uploadedProgramObject, null, 2);
+    await saveNewProgram(jsonText);
+
+    const observer = new MutationObserver((mutations, obs) => {
+      const justAdded = Array.from(selectEl.options).some(opt => opt.value === name);
+      if (justAdded) {
+        selectEl.value = name;
+        reloadRvcat();
+        obs.disconnect();
+      }
+    });
+    observer.observe(selectEl, { childList: true });
+    reloadRvcat();
+  }
+
+  function cancelModal() {
+    showModalUp.value = false;
+    modalName.value = "";
+    nameError.value = "";
+    uploadedProgramObject = null;
+  }
+
+  async function downloadProgram() {
+    let data = await getProgramJSON();
     const jsonText = JSON.stringify(data, null, 2);
-    // force a Save As... dialog if API is supported
     if (window.showSaveFilePicker) {
       const handle = await window.showSaveFilePicker({
         suggestedName: `${document.getElementById('programs-list').value}.json`,
@@ -36,12 +76,10 @@
       const writable = await handle.createWritable();
       await writable.write(jsonText);
       await writable.close();
-
     } else {
-      // fallback: traditional anchor download
       const blob = new Blob([jsonText], { type: 'application/json' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
       a.href = url;
       a.download = `${document.getElementById('programs-list').value}.json`;
       document.body.appendChild(a);
@@ -49,11 +87,9 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-
   }
-  //TODO: SHOW MODAL AND ASK FOR NAME (CHECK IF IT'S NOT REPEATED)
-  function uploadProgram() {
 
+  function uploadProgram() {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "application/json";
@@ -63,19 +99,27 @@
       if (!file) return;
       try {
         const text = await file.text();
-        saveNewProgram(text);
+        const parsed = JSON.parse(text);
+
+        if (!parsed.name) {
+          alert("The JSON file must contain a 'name' field.");
+          return;
+        }
+
+        uploadedProgramObject = parsed;
+        modalName.value = parsed.name;
+        showModalUp.value = true;
       } catch (err) {
-        console.error("Failed to read JSON file:", err);
+        console.error("Failed to parse JSON file:", err);
         alert("Could not load program file.");
       }
     };
     document.body.appendChild(input);
     input.click();
-    // clean up
     input.remove();
   }
-
 </script>
+
 
 <template>
   <div class="program_info">
@@ -92,6 +136,19 @@
         <pre><code id="rvcat-asm-code">LOADING</code></pre>
     </section>
   </div>
+  <div v-if="showModalUp" class="modal-overlay">
+    <div class="modal">
+      <h4>Save Program As</h4>
+      <label for="config-name">Name:</label>
+      <input id="config-name" type="text" v-model="modalName" />
+      <div v-if="nameError" class="error">{{ nameError }}</div>
+      <div class="modal-actions">
+        <button class="save-button" @click="confirmModal">Save</button>
+        <button class="save-button" @click="cancelModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
 
 </template>
 
@@ -147,4 +204,54 @@ h3 {
   color: white;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index:9999;
+}
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  z-index:99999;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.error {
+  color: red;
+  margin: 6px 0;
+}
+.save-button {
+  background: #0085dd;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-right: 5px;
+  text-align:center;
+}
+.save-button:hover {
+  background: #006fb9;
+}
+.save-button:active {
+  outline: none;
+  background: #003f73;
+  color: white;
+}
 </style>

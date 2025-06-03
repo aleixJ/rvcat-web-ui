@@ -213,7 +213,7 @@
     if (list) {
       for (const opt of list.options) {
         if (opt.value === modalName.value) {
-          nameError.value = "Name already exists. Please choose another one.";
+          nameError.value = "A processor with this name already exists. Please choose another one.";
           return;
         }
       }
@@ -307,6 +307,7 @@
   }
 
   function uploadProcessorConfig(event) {
+    const inputEl = event.target;
     const file = event.target.files[0];
     if (!file) return;
 
@@ -359,6 +360,7 @@
         console.error("Invalid JSON:", err);
         alert("Failed to load processor config. Please check the file.");
       }
+      inputEl.value = "";
     };
     reader.readAsText(file);
   }
@@ -414,10 +416,6 @@
 
   }
 
-  function onFileChange(e) {
-    uploadProcessorConfig(e);
-  }
-
 
 
 </script>
@@ -430,7 +428,7 @@
         <button class="save-button" @click="openModal" :disabled="!isModified">
           Apply Changes
         </button>
-        <input id="file-upload" type="file" accept=".json" @change="onFileChange" style="display: none;"/>
+        <input id="file-upload" type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;"/>
         <button class="save-button" @click="openUploadModal">Upload</button>
       </div>
     </div>
@@ -595,6 +593,7 @@
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
         <button class="save-button" @click="confirmModal">Save</button>
+        <button class="save-button" @click="closeModal">Cancel</button>
       </div>
     </div>
   </div>

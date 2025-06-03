@@ -36,56 +36,53 @@
           <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="3000" v-model.number="iterations">
           <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
         </div>
-
         <div id="run-simulation-button">
           <button id="run-button" class="run-button" onclick="getSchedulerAnalysis();">Run</button>
           <div id="run-simulation-spinner" class="spinner-small" style="display: none;"></div>
         </div>
       </div>
     </div>
-    <div class="content">
-      <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
-      <div id="simulation-graph" class="simulation-img" style="display: none">
 
+    <!-- Move this section here -->
+    <div id="simulation-results-info" class="results-info">
+      <div class="row">
+        <div class="simulation-inline-item">
+          <label for="instructions"><b>Instructions:</b></label>
+          <span id="instructions-output">?</span>
+        </div>
+        <div class="simulation-inline-item">
+          <label for="cycles"><b>Cycles:</b></label>
+          <span id="cycles-output">?</span>
+        </div>
       </div>
-      <div id="simulation-results-info">
-        <div class="simulation-inline-output">
-            <div class="simulation-inline-item">
-                <label for="instructions"><b>Instructions: </b></label>
-                <span id="instructions-output">?</span>
-            </div>
-            <div class="simulation-inline-item">
-                <label for="cycles"><b>Cycles: </b></label>
-                <span id="cycles-output">?</span>
-            </div>
-            <div class="simulation-inline-item">
-                <label for="IPC"><b>IPC: </b></label>
-                <span id="IPC-output">?</span>
-            </div>
-            <div class="simulation-inline-item">
-                <label for="cycles-per-iteration"><b>Cycles per iteration: </b></label>
-                <span id="cycles-per-iteration-output">?</span>
-            </div>
+      <div class="row">
+        <div class="simulation-inline-item">
+          <label for="cycles-per-iteration"><b>Cycles per iteration:</b></label>
+          <span id="cycles-per-iteration-output">?</span>
+        </div>
+        <div class="simulation-inline-item">
+          <label for="IPC"><b>IPC:</b></label>
+          <span id="IPC-output">?</span>
         </div>
       </div>
     </div>
-    <div class="scale-container">
-          <!-- Color scale bar -->
-          <div class="color-scale">
-              <!-- Example pointer (optional) -->
-              <!-- <div class="pointer"></div> -->
-          </div>
 
-          <!-- Optional scale labels -->
-          <div class="scale-labels">
-              <span>Underutilized</span>
-              <span></span>
-              <span>Saturated</span>
-          </div>
+    <div class="content">
+      <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
+      <div id="simulation-graph" class="simulation-img" style="display: none"></div>
+    </div>
+
+    <div class="scale-container">
+      <div class="color-scale"></div>
+      <div class="scale-labels">
+        <span>Underutilized</span>
+        <span></span>
+        <span>Saturated</span>
+      </div>
     </div>
   </div>
-
 </template>
+
 
 <style scoped>
   .main{
@@ -236,4 +233,40 @@
   .iterations-btn:hover {
     background: #d0d0d0;
   }
+
+  .results-info {
+    width: 100%;
+    margin-top: 10px;
+    font-family: Arial, sans-serif;
+  }
+
+  .results-info .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 5px;
+  }
+
+  .simulation-inline-item {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+    background: #f0f0f0;
+    border-radius: 6px;
+  }
+
+  .simulation-inline-item label {
+    flex: 1;
+
+    margin-right: 10px;
+  }
+
+  .simulation-inline-item span {
+    text-align: right;
+    flex-shrink: 0;
+    min-width: 60px;
+  }
+
 </style>

@@ -123,8 +123,92 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     return dot_code + `}`
 }
 
-
 function construct_full_processor_dot(dispatch_width, num_ports, retire_width, usage=null) {
+  let dot_code = PROCESSOR_GRAPH_PREAMBLE;
+
+  // Colorscale from green to red
+  let color = [
+      "#00FF00",
+      "#33FF00",
+      "#66FF00",
+      "#99FF00",
+      "#CCFF00",
+      "#FFFF00",
+      "#FFCC00",
+      "#FF9900",
+      "#FF6600",
+      "#FF3300",
+      "#FF0000"
+  ];
+
+  console.log("Usage:");
+  console.log(usage);
+
+  // --- DISPATCH ---
+  dot_code += `
+  node [fontsize=8, fontname="Arial"];
+  Fetch[style=invis,shape=box,height=0.6, width=0.1]
+  `
+  dot_code += `"Waiting Buffer"[shape=box,height=1,width=1,fixedsize=true]\n`
+  dot_code += `Fetch -> "Waiting Buffer" [label="Dispatch = ${dispatch_width}", fontsize=10];\n`
+
+  // --- EXECUTE ---
+  dot_code += `subgraph cluster_execute {
+    rankdir="LR";
+  `
+  for (let i = 0; i < num_ports; i++) {
+      if (usage !== null && usage.ports[i]!==0.0) {
+          let execute_color = color[Math.floor(usage.ports[i] / 10)];
+          dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
+      } else {
+          dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, tooltip="Usage: 0.0%"];\n`
+      }
+  }
+
+  dot_code += `label = "Execute";\n
+  fontname="Arial";
+  fontsize=12;
+  }\n`
+
+  for (let i=0; i<num_ports; i++) {
+      dot_code += `"Waiting Buffer":e${i} -> P${i}\n`
+  }
+
+  dot_code += `
+  {
+    rank=lower;
+    ROB;
+  }\n`
+
+  dot_code += `ROB[shape=box,height=0.6,width=5,fixedsize=true]\n`
+  dot_code += `Fetch -> ROB\n`
+
+  for (let i = 0; i < num_ports; i++) {
+      dot_code += `P${i}:e -> ROB:w${i}\n`
+  }
+
+  dot_code += `Registers[shape=box,height=1,width=1,fixedsize=true]\n`
+
+  dot_code += `ROB -> Registers [label="Retire = ${retire_width}", fontsize=10]
+  {
+    rank=sink;
+    ROB;
+  };\n`
+
+  dot_code += `
+  {
+    rank=same;
+    Fetch;
+    "Waiting Buffer";
+    ${[...Array(num_ports).keys()].map(i => `P${i}`).join("; ")};
+    Registers;
+  }\n`;
+
+  return dot_code + `}`
+}
+
+
+/*function construct_full_processor_dot(dispatch_width, num_ports, retire_width, usage=null) {
   let dot_code = PROCESSOR_GRAPH_PREAMBLE;
 
   // Colorscale from green to red
@@ -165,11 +249,11 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
       rankdir="LR";
   `
   for (let i = 0; i < num_ports; i++) {
-      if (usage !== null) {
+      if (usage !== null && usage.ports[i]!==0.0) {
           let execute_color = color[Math.floor(usage.ports[i] / 10)];
           dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
       } else {
-          dot_code += `P${i} [shape=box3d,height=0.2,width=0.4];\n`
+          dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, tooltip="Usage: 0.0%"];\n`
       }
   }
 
@@ -210,3 +294,4 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
 
   return dot_code + `}`
 }
+*/
