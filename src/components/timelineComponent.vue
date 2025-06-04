@@ -57,7 +57,6 @@
     const canvas = timelineCanvas.value;
     const ctx    = canvas.getContext('2d');
 
-    // Configurations
     const cellWidth   = 14;
     const cellHeight  = 20;
     const xPadding    = 20;
@@ -65,58 +64,248 @@
     const fontSize    = 14;
     const fontYOffset = 3;
 
+    // 1) Split raw lines:
     const rawLines = data.split('\n');
-    const measureLines = rawLines.map(raw => {
+
+    // 1a) Find the header line (the one that is only spaces + digits + spaces),
+    //     record where it starts and how wide it is.
+    let headerStart  = null;
+    let headerLength = null;
+    let headerMask   = null;  // an array of booleans, one per character of header
+    let cycleCount   = 0;     // number of 'true' entries in headerMask
+
+    for (const line of rawLines) {
+      // Check if this line is purely [spaces][digits and spaces][spaces]
+      const m = line.match(/^(\s*)([0-9 ]+)(\s*)$/);
+      if (m) {
+        //  - m[1] is all leading spaces
+        //  - m[2] is something like "0 1 2 3 4 5 …"
+        //  - m[3] is trailing spaces
+        headerStart  = m[1].length;         // index where the first digit appears
+        headerLength = m[2].length;         // how many characters (digits+spaces) the header has
+
+        // Build a mask: headerMask[i]===true if line[i] is a digit, false if it's a space.
+        headerMask = Array.from(
+          line.slice(headerStart, headerStart + headerLength),
+          ch => /\d/.test(ch)
+        );
+        cycleCount = headerMask.filter(b => b).length; // count of digit‐columns
+        break;
+      }
+    }
+
+    // If we never found a header, abort drawing:
+    if (headerStart === null) {
+      console.error("drawTimeline: no header line (digits+spaces) found.");
+      return;
+    }
+
+    // 2) Build processedLines
+    const processedLines = rawLines.map(line => {
+
+      // Header lines
+      const headerMatch = line.match(/^(\s*)([0-9 ]+)(\s*)$/);
+      if (headerMatch) {
+        const prefix = headerMatch[1];
+        const middle = headerMatch[2].replace(/ /g, "");
+        const suffix = headerMatch[3];
+        return prefix + middle + suffix;
+      }
+
+      // Port usage lines
+      if (line.trim().startsWith("P.")) {
+
+        const labelPart = line.slice(0, headerStart);
+        let rest = line.slice(headerStart);
+
+        if (rest.length < headerLength) {
+          rest = rest + " ".repeat(headerLength - rest.length);
+        }
+
+        let collapsedTimeline = "";
+        for (let i = 0; i < headerLength; i++) {
+          if (headerMask[i]) {
+            collapsedTimeline += rest[i] || " ";
+          }
+        }
+
+        if (rest.length > headerLength) {
+          collapsedTimeline += rest.slice(headerLength);
+        }
+
+        return labelPart + collapsedTimeline;
+      }
+
+      // Instruction lines
+      const instrMatch = line.match(/^(\s*\[[^\]]+\]\s*)(.*)$/);
+      if (instrMatch) {
+
+        const labelPart = line.slice(0, headerStart);
+        let   rest      = line.slice(headerStart);
+
+        if (rest.length < headerLength) {
+          rest = rest + " ".repeat(headerLength - rest.length);
+        }
+        let retireRawIdx = rest.indexOf("R");
+
+        let afterRetireIdx = retireRawIdx + 1;
+        if (rest.charAt(afterRetireIdx) === "\x1b") {
+          // Attempt to match "\x1b[<digits>m" right after retireRawIdx
+          const ansiMatch = rest.slice(afterRetireIdx).match(/^\x1b\[(\d+)m/);
+          if (ansiMatch) {
+            afterRetireIdx += ansiMatch[0].length;
+          }
+        }
+
+        let timelineRaw   = rest.slice(0, afterRetireIdx);
+        let commentSuffix = rest.slice(afterRetireIdx);
+        commentSuffix = commentSuffix.replace(/^\s*/, " ");
+
+        //    Parse `timelineRaw` into arrays of visible characters + color flags.
+        //    track when color = red (“\x1b[91m”) vs normal (“\x1b[0m”).
+        const chars = [];
+        const isRed = [];
+        let   idx    = 0;
+        let   color  = null; // "red" or null
+
+        while (idx < timelineRaw.length && chars.length < headerLength) {
+          if (timelineRaw[idx] === "\x1b") {
+            // Match an ANSI sequence like "\x1b[91m" or "\x1b[0m"
+            const ansiMatch = timelineRaw.slice(idx).match(/^\x1b\[(\d+)m/);
+            if (ansiMatch) {
+              if (ansiMatch[1] === "91") {
+                color = "red";
+              } else if (ansiMatch[1] === "0") {
+                color = null;
+              }
+              idx += ansiMatch[0].length;
+              continue;
+            } else {
+              // Malformed escape? Skip one char to avoid infinite loop.
+              idx++;
+              continue;
+            }
+          }
+          // Otherwise, it’s a visible char:
+          chars.push(timelineRaw[idx]);
+          isRed.push(color === "red");
+          idx++;
+        }
+
+        // If we didn’t collect headerLength visible chars, pad with spaces:
+        while (chars.length < headerLength) {
+          chars.push(" ");
+          isRed.push(false);
+        }
+
+        // 6) Count how many columns the header wants to drop:
+        //    falseCount = number of false entries in headerMask.
+        const falseCount = headerMask.reduce((sum, keep) => sum + (keep ? 0 : 1), 0);
+
+        // 7) Build a “keepFlags” array of length = headerLength.
+        //    For each i where headerMask[i] === false, we try to remove a space.
+        //    If chars[i] !== " ", we must skip removing here and find the next space
+        //    in a false position. We never remove non-spaces.
+        const keepFlags = new Array(headerLength).fill(true);
+        let   toRemove  = falseCount;
+
+        // First pass: for each i where headerMask[i]===false, if chars[i]===" " and we still need to remove,
+        // mark keepFlags[i]=false and decrement toRemove. If chars[i] !== " ", leave keepFlags[i]=true.
+        for (let i = 0; i < headerLength && toRemove > 0; i++) {
+          if (!headerMask[i]) {
+            if (chars[i] === " ") {
+              keepFlags[i] = false;
+              toRemove--;
+            }
+            // If chars[i] !== " ", we skip removing at this position.
+          }
+        }
+
+        // If we still haven’t removed enough (because some false positions had non-space),
+        // do a second pass over any remaining false positions to find more spaces:
+        if (toRemove > 0) {
+          for (let i = 0; i < headerLength && toRemove > 0; i++) {
+            if (!headerMask[i] && keepFlags[i] && chars[i] === " ") {
+              keepFlags[i] = false;
+              toRemove--;
+            }
+          }
+        }
+
+        // 8) Now build the collapsed timeline by keeping exactly those chars where keepFlags[i]===true.
+        //    Wrap in ANSI `[91m ... 0m` if isRed[i] was true.
+        let collapsedTimeline = "";
+        for (let i = 0; i < headerLength; i++) {
+          if (keepFlags[i]) {
+            const ch = chars[i];
+            if (isRed[i]) {
+              collapsedTimeline += "\x1b[91m" + ch + "\x1b[0m";
+            } else {
+              collapsedTimeline += ch;
+            }
+          }
+        }
+        // At this point, `collapsedTimeline` has exactly `headerLength - falseCount === cycleCount`
+        // visible characters (each possibly wrapped in ANSI).
+
+        // 9) Reassemble: label + collapsedTimeline + one space + commentSuffix.
+        return labelPart + collapsedTimeline + " " + commentSuffix;
+      }
+
+
+      // 2D) Case D: Anything else (collapse only spaces that sit between two non-spaces)
+      return line.replace(/(\S) +(\S)/g, "$1$2");
+    });
+
+    // 3) Use processedLines for measuring/drawing (unchanged from before):
+    const measureLines = processedLines.map(raw => {
       let line = raw;
       if (!showInstructions.value) {
-        const rIndex = line.indexOf('R');
+        const rIndex = line.indexOf("R");
         if (rIndex !== -1) line = line.slice(0, rIndex + 1);
       }
-      return line.replace(/\x1b\[91m/g, '').replace(/\x1b\[0m/g, '');
+      return line.replace(/\x1b\[91m/g, "").replace(/\x1b\[0m/g, "");
     });
 
     const maxCols = measureLines.reduce((max, l) => Math.max(max, l.length), 0);
-
     canvas.width  = xPadding * 2 + maxCols * cellWidth;
     canvas.height = yPadding * 2 + measureLines.length * cellHeight;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font               = `${fontSize}px monospace`;
-    ctx.textBaseline       = 'top';
+    ctx.textBaseline       = "top";
     ctx.imageSmoothingEnabled = false;
 
     const interactiveCells = [];
 
-    rawLines.forEach((raw, rowIndex) => {
+    processedLines.forEach((raw, rowIndex) => {
       let line = raw;
       if (!showInstructions.value) {
-        const rIndex = line.indexOf('R');
+        const rIndex = line.indexOf("R");
         if (rIndex !== -1) line = line.slice(0, rIndex + 1);
       }
 
-      const y     = yPadding + rowIndex * cellHeight;
-      let   x     = xPadding;
-      let   color = '#000';
+      const y = yPadding + rowIndex * cellHeight;
+      let   x = xPadding;
+      let   color = "#000";
 
       for (let i = 0; i < line.length; i++) {
-        // ANSI handling
-        if (line[i] === '\x1b') {
-          if (line.substr(i, 5) === '\x1b[91m') { color = 'red'; i += 4; continue; }
-          if (line.substr(i, 4) === '\x1b[0m')   { color = '#000'; i += 3; continue; }
+        // ANSI handling (unchanged)
+        if (line[i] === "\x1b") {
+          if (line.substr(i, 5) === "\x1b[91m") { color = "red"; i += 4; continue; }
+          if (line.substr(i, 4) === "\x1b[0m")   { color = "#000"; i += 3; continue; }
         }
 
-        // draw cell box
-        ctx.fillStyle   = '#fff';
-        ctx.strokeStyle = '#ddd';
+        // Draw each “cell”:
+        ctx.fillStyle   = "#fff";
+        ctx.strokeStyle = "#ddd";
         ctx.lineWidth   = 1;
         ctx.fillRect(x, y, cellWidth, cellHeight);
         ctx.strokeRect(x, y, cellWidth, cellHeight);
 
-        // draw character
         ctx.fillStyle = color;
         ctx.fillText(line[i], x + 2, y + fontYOffset);
 
-        // record for hover
         interactiveCells.push({
           x, y,
           width:  cellWidth,
@@ -146,15 +335,14 @@
             x: mouseX + 10,
             y: mouseY + 10,
             cycle: cell.colIndex,
-            port:  cell.port || 'N/A',
-            dependencies: cell.dependencies || 'N/A'
+            port:  cell.port || "N/A",
+            dependencies: cell.dependencies || "N/A"
           };
           break;
         }
       }
     };
   }
-
 
 
   async function getTimelineAndDraw() {

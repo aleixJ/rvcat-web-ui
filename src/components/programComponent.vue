@@ -173,7 +173,7 @@
   overflow:auto;
   max-height:70%;
   margin-top:5px;
-  background:#e3e3e3;
+  background:#f0f0f0;
   border-radius:10px;
   padding:5px;
 }
