@@ -365,14 +365,6 @@
     reader.readAsText(file);
   }
 
-  function decreaseLatency(key) {
-    resources[key] = Math.max(1, resources[key] - 1);
-  }
-
-  function increaseLatency(key) {
-    resources[key] = resources[key] + 1;
-  }
-
   function noPortAssigned(instr) {
     if (!portList.value.some(p => ports.value[p]?.includes(instr))) {
       ports.value[0].push(instr)
@@ -416,8 +408,6 @@
 
   }
 
-
-
 </script>
 
 <template>
@@ -445,7 +435,7 @@
               <div class="latency-group">
                 <button class="latency-btn" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
                 <input type="number" v-model.number="dispatch" min="1" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="dispatch = (dispatch + 1)%100">+</button>
+                <button class="latency-btn" @click="dispatch = Math.min(99, dispatch + 1);">+</button>
               </div>
             </div>
 
@@ -454,7 +444,7 @@
               <div class="latency-group">
                 <button class="latency-btn" @click="retire = Math.max(1, retire - 1)">−</button>
                 <input type="number" v-model.number="retire" min="1" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="retire = (retire + 1)%100">+</button>
+                <button class="latency-btn" @click="retire = Math.min(99, retire + 1);">+</button>
               </div>
             </div>
           </div>
@@ -469,7 +459,7 @@
               <div class="latency-group">
                 <button class="latency-btn" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
                 <input type="number" v-model.number="nBlocks" min="0" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="nBlocks = (nBlocks + 1)%100">+</button>
+                <button class="latency-btn" @click="nBlocks = Math.min(99, nBlocks + 1);">+</button>
               </div>
             </div>
 
@@ -477,8 +467,8 @@
               <span>Block Size:</span>
               <div class="latency-group">
                 <button class="latency-btn" @click="blkSize = Math.max(1, Math.floor(blkSize / 2))">−</button>
-                <input type="number" v-model.number="blkSize" readonly class="latency-input"/>
-                <button class="latency-btn" @click="blkSize = blkSize * 2">+</button>
+                <input type="number" v-model.number="blkSize" min="1" max="2048" readonly class="latency-input"/>
+                <button class="latency-btn" @click="blkSize = Math.min(2048, blkSize*2);">+</button>
               </div>
             </div>
 
@@ -488,7 +478,7 @@
               <div class="latency-group">
                 <button class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
                 <input type="number" v-model.number="mPenalty" min="1" :max="nBlocks" class="latency-input"/>
-                <button class="latency-btn" @click="mPenalty = (mPenalty + 1)%100">+</button>
+                <button class="latency-btn" @click="mPenalty = Math.min(99, nBlocks + 1);">+</button>
               </div>
             </div>
 
@@ -497,7 +487,7 @@
               <div class="latency-group">
                 <button class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
                 <input type="number" v-model.number="mIssueTime" min="1" :max="nBlocks" class="latency-input"/>
-                <button class="latency-btn" @click="mIssueTime = (mIssueTime + 1)%100">+</button>
+                <button class="latency-btn" @click="mIssueTime = Math.min(99, nBlocks + 1);">+</button>
               </div>
             </div>
           </div>
@@ -534,9 +524,9 @@
             <td>{{ instr }}</td>
             <td>
               <div class="latency-group">
-                <button type="button" class="latency-btn" @click="decreaseLatency(instr)">−</button>
+                <button type="button" class="latency-btn" @click="resources[instr] = Math.max(1, resources[instr] - 1);">−</button>
                 <input type="number" v-model.number="resources[instr]" class="latency-input" min="1" max="99"/>
-                <button type="button" class="latency-btn" @click="increaseLatency(instr)">+</button>
+                <button type="button" class="latency-btn" @click="resources[instr] = Math.min(99, resources[instr] + 1);">+</button>
               </div>
             </td>
             <td v-for="port in portList" :key="port" class="port-checkbox">
