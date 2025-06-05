@@ -226,7 +226,7 @@
     // Case C: Instruction line (remove spaces in same positions as header(ignoring ANSI labels))
     const instrMatch = line.match(/^(\s*\[[^\]]+\]\s*)(.*)$/);
     if (instrMatch) {
-      const labelPart = line.slice(0, headerStart);
+      let labelPart = line.slice(0, headerStart);
       let rest = line.slice(headerStart);
       if (rest.length < headerLen) {
         rest += " ".repeat(headerLen - rest.length);
@@ -302,7 +302,21 @@
       if (idP !== -1) {
         comment = comment.slice(0, idP).trimEnd();
       }
-      return labelPart + collapsed + " " + comment;
+
+      if (comment.length > 1) {
+        const firstChar = comment.charAt(0);
+        const restChars = comment.slice(1).replace(/ /g, "");
+        comment = firstChar + restChars;
+      }
+
+      const idxBracket = labelPart.indexOf('[');
+      if (idxBracket !== -1 && labelPart[idxBracket + 1] === ' ') {
+        // Remove only the single space immediately after “[”
+        labelPart =
+          labelPart.slice(0, idxBracket + 1) +
+          labelPart.slice(idxBracket + 2);
+      }
+      return labelPart + " " + collapsed + " " + comment;
     }
 
     // Case D: Anything else
