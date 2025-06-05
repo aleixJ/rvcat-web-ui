@@ -205,12 +205,13 @@
     }
 
     // Case B: Port‐usage line (remove spaces in same positions as header)
-    if (line.trim().startsWith("P.")) {
-      const labelPart = line.slice(0, headerStart);
+    if (line.trim().startsWith("P") || line.trim().startsWith("MM")) {
+      let labelPart = line.slice(0, headerStart);
       let rest = line.slice(headerStart);
       if (rest.length < headerLen) {
         rest += " ".repeat(headerLen - rest.length);
       }
+      labelPart = labelPart.replace(/\bP\.(\d)\b/, "P$1 ");
       let collapsed = "";
       for (let i = 0; i < headerLen; i++) {
         if (headerMask[i]) {
@@ -332,12 +333,9 @@
 
       if (!showPorts) {
         const t = line.trim();
-        if (t.startsWith("P.") || t.startsWith("MM") || i === 0) {
+        if (t.startsWith("P") || t.startsWith("MM") || i === 0) {
           continue;
         }
-      }
-      if (line.trim().startsWith("MM")) {
-        continue;
       }
       visible.push({
         raw:        line,
@@ -505,15 +503,15 @@
   function charToState(ch) {
     let msg = "This instruction is "
     switch (ch) {
-      case "E": msg += "being executed"; break;
-      case "R": msg += "being retired"; break;
-      case "D": msg += "being dispatched"; break;
-      case "-": msg += "waiting to be retired"; break;
-      case "W": msg += "on write back stage"; break;
-      case ".": msg += "waiting for execution due to dependencies"; break;
-      case "*": msg += "waiting for execution due to occupied ports"; break;
-      case "!": msg += "on a cache miss"; break;
-      case "2": msg += "on a cache hit"; break;
+      case "E": msg += "being executed."; break;
+      case "R": msg += "being retired."; break;
+      case "D": msg += "being dispatched."; break;
+      case "-": msg += "waiting to be retired."; break;
+      case "W": msg += "on write back stage."; break;
+      case ".": msg += "waiting for execution due to dependencies."; break;
+      case "*": msg += "waiting for execution due to occupied ports."; break;
+      case "!": msg += "on a cache miss."; break;
+      case "2": msg += "on a secondary cache miss."; break;
       default:  msg = "N/A"; break;
     }
     return msg;
@@ -570,7 +568,7 @@
       <canvas ref="timelineCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
       <div v-if="hoverInfo" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
-        <div><strong>Port: </strong> {{ hoverInfo.port }}</div>
+        <div><strong>Port: </strong> P{{ hoverInfo.port }}</div>
         <div><strong>Type: </strong> {{ hoverInfo.type }}</div>
         <div>{{ hoverInfo.state }}</div>
       </div>

@@ -68,8 +68,19 @@
     </div>
 
     <div class="content">
-      <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
-      <div id="simulation-graph" class="simulation-img" style="display: none"></div>
+
+      <div>
+        <h4>Processor Bottlenecks</h4>
+        <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
+        <div id="simulation-graph" class="simulation-img" style="display: none"></div>
+      </div>
+      <!--<div>
+        <h4>Critical Execution Path</h4>
+        <div id="critical_path">
+
+        </div>
+      </div>-->
+
     </div>
 
     <div class="scale-container">
@@ -126,7 +137,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 10%;
   }
   .simulation-graph{
     display:block;

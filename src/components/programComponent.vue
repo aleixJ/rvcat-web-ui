@@ -138,12 +138,12 @@
   </div>
   <div v-if="showModalUp" class="modal-overlay">
     <div class="modal">
-      <h4>Save Program As</h4>
+      <h4>Load Program As</h4>
       <label for="config-name">Name:</label>
       <input id="config-name" type="text" v-model="modalName" />
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
-        <button class="save-button" @click="confirmModal">Save</button>
+        <button class="save-button" @click="confirmModal">Load</button>
         <button class="save-button" @click="cancelModal">Cancel</button>
       </div>
     </div>
