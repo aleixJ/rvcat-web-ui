@@ -73,7 +73,7 @@
 
     // Split raw lines and extract port info
     const rawLines = data.split('\n');
-    const rowPorts = extractRowPorts(rawLines);
+    const rowPorts = extractRowInfo(rawLines);
 
     // Parse header (to find headerStart, headerMask, cycleCount)
     const { headerStart, headerMask, cycleCount } = parseHeader(rawLines);
@@ -103,30 +103,54 @@
     ctx.imageSmoothingEnabled = false;
 
     const interactiveCells = [];
-    visibleRows.forEach(({ raw, port }, rowIndex) => {
-      drawOneRow({
-        ctx, raw, port,
-        rowIndex, padX, padY, cellW, cellH,
-        headerStart, cycleCount,
-        fontYOffset,
-        showInstructions: showInstructions.value,
-        interactiveCells
-      });
+    visibleRows.forEach(({ raw, portNumber, type }, rowIndex) => {
+    drawOneRow({
+      ctx,
+      raw,
+      port: portNumber,
+      instrType: type,
+      rowIndex,
+      padX, padY, cellW, cellH,
+      headerStart, cycleCount,
+      fontYOffset,
+      showInstructions: showInstructions.value,
+      interactiveCells
     });
+  });
 
     // Attach mousemove to show hover info
     attachHover(canvas, interactiveCells, headerStart);
   }
 
 
-  // ─── Helper: extractRowPorts ─────────────────────────────────────────────────
-  function extractRowPorts(rawLines) {
-    // Returns an array of “P#” or null for each line
+  // get the esecution port of each instruction
+  function extractRowInfo(rawLines) {
+    const idToType = {};    // will map instrID → mnemonic string
+
     return rawLines.map(line => {
-      const m = line.match(/\(P\.(\d+)\)/);
-      return m ? `P${m[1]}` : null;
+      // Get instruction number
+      const idMatch = line.match(/^\s*\[\s*\d+\s*,\s*(\d+)\s*\]/);
+      const instrID = idMatch ? idMatch[1] : null;
+
+      // Get port and instruction type
+      const m = line.match(/\(P\.(\d+)\)(?:\s*([A-Za-z0-9_.]+))?/);
+      const portNumber = m ? m[1] : null;
+      let type = (m && m[2]) ? m[2] : null;
+
+      // Store type if instruction does have it
+      if (instrID !== null && type !== null) {
+        idToType[instrID] = type;
+      }
+
+      // Reuse type if not in first
+      if (instrID !== null && type === null && idToType[instrID]) {
+        type = idToType[instrID];
+      }
+
+      return { instrID, portNumber, type };
     });
   }
+
 
 
   // Parse header to get its beggining, end and deleted whitespaces
@@ -274,6 +298,10 @@
           collapsed += isRed[i] ? `\x1b[91m${ch}\x1b[0m` : ch;
         }
       }
+      const idP = comment.indexOf("(");
+      if (idP !== -1) {
+        comment = comment.slice(0, idP).trimEnd();
+      }
       return labelPart + collapsed + " " + comment;
     }
 
@@ -282,27 +310,32 @@
   }
 
 
-  // Filter port usage rows if hidden
-  function filterVisibleRows(processedLines, rowPorts, showPorts) {
-    // Returns array of { raw: string, port: string|null } for each visible line
+  function filterVisibleRows(processedLines, rowInfo, showPorts) {
     const visible = [];
     for (let i = 0; i < processedLines.length; i++) {
       const line = processedLines[i];
-      const port = rowPorts[i];
+      const { instrID, portNumber, type } = rowInfo[i];
+
       if (!showPorts) {
         const t = line.trim();
         if (t.startsWith("P.") || t.startsWith("MM") || i === 0) {
           continue;
         }
       }
-      //Always delete MM line (to show in another section)
       if (line.trim().startsWith("MM")) {
         continue;
       }
-      visible.push({ raw: line, port });
+      visible.push({
+        raw:        line,
+        instrID,
+        portNumber,
+        type
+      });
     }
     return visible;
   }
+
+
 
 
   // Remove instructions if necessary and compute canvas size
@@ -322,7 +355,7 @@
 
   // Draw row of timeline canvas element
   function drawOneRow({
-    ctx, raw, port, rowIndex,
+    ctx, raw, port, instrType, rowIndex,
     padX, padY, cellW, cellH,
     headerStart, cycleCount,fontYOffset,
     interactiveCells
@@ -377,6 +410,7 @@
             rowIndex,
             colIndexVis: colIdxVis,
             port,
+            instrType,
             state:      charToState(ch)
           });
         }
@@ -444,7 +478,8 @@
             y: e.clientY + 10,
             cycle:       cell.colIndexVis - headerStart,
             port:        cell.port || "N/A",
-            state:       cell.state
+            state:       cell.state || "N/A",
+            type:        cell.instrType || "N/A"
           };
           break;
         }
@@ -454,18 +489,20 @@
 
   // Get state from char in cell
   function charToState(ch) {
+    let msg = "This instruction is "
     switch (ch) {
-      case "E": return "Executing";
-      case "R": return "Retire";
-      case "D": return "Dispatch";
-      case "-": return "Waiting to retire";
-      case "W": return "Write back";
-      case ".": return "Waiting to execute (dependencies)";
-      case "*": return "Waiting to execute (ports)";
-      case "!": return "Cache miss";
-      case "2": return "Cache hit";
-      default:  return "N/A";
+      case "E": msg += "being executed"; break;
+      case "R": msg += "being retired"; break;
+      case "D": msg += "being dispatched"; break;
+      case "-": msg += "waiting to be retired"; break;
+      case "W": msg += "on write back stage"; break;
+      case ".": msg += "waiting for execution due to dependencies"; break;
+      case "*": msg += "waiting for execution due to occupied ports"; break;
+      case "!": msg += "on a cache miss"; break;
+      case "2": msg += "on a cache hit"; break;
+      default:  msg = "N/A"; break;
     }
+    return msg;
   }
 
 
@@ -520,7 +557,8 @@
       <div v-if="hoverInfo" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
         <div><strong>Port: </strong> {{ hoverInfo.port }}</div>
-        <div><strong>State: </strong> {{ hoverInfo.state }}</div>
+        <div><strong>Type: </strong> {{ hoverInfo.type }}</div>
+        <div>{{ hoverInfo.state }}</div>
       </div>
     </div>
   </div>
@@ -556,6 +594,7 @@
     pointer-events: none;
     z-index: 10;
     font-size: 12px;
+    width: 10%;
   }
   .toggle-button {
     background: #0085dd;

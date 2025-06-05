@@ -58,8 +58,7 @@ digraph {
 const PROCESSOR_GRAPH_PREAMBLE = `digraph "Processor Pipeline Graph"{
     edge [headport="w"]
     rankdir="LR";
-`
-
+`;
 function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width) {
     let dot_code = PROCESSOR_GRAPH_PREAMBLE;
     // --- DISPATCH ---
@@ -122,6 +121,95 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
 
     return dot_code + `}`
 }
+/*
+function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width, usage = null) {
+  let dot_code = `
+  digraph "Processor Pipeline Graph"{
+    rankdir=TB;
+    node [fontsize=12, fontname="Arial"];
+  `;
+  // --- FETCH ---
+  dot_code += `Fetch [style=invis, shape=box, height=0, width=0];`
+  dot_code += `
+    Fetch -> "Waiting Buffer" [
+      label="Dispatch = ${dispatch_width}",
+      fontsize=12,
+      fontname="Arial",
+    ];
+  `;
+
+
+  // --- WAITING BUFFER ---
+  dot_code += `  "Waiting Buffer" [label="Waiting\\nBuffer", shape=box, height=0.6, width=0.6, fixedsize=true];\n`;
+
+  // --- EXECUTE ---
+  dot_code += `subgraph cluster_execute {
+    rankdir="TB";\n`
+
+  let shown_ports=[]
+  if(num_ports>=4){
+    shown_ports=[0,1,2,num_ports-1];
+    for (let i = 0; i < 3; i++) {
+      dot_code += `P${i} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
+    }
+    if(num_ports>4){
+      dot_code += `"..." [shape=plaintext,height=0.05,width=0.4,fixedsize=true,fontsize=14];\n`
+    }
+    dot_code += `P${num_ports-1} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
+  }
+  else{
+    for (let i = 0; i < num_ports; i++) {
+      dot_code += `P${i} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
+      shown_ports.push(i);
+    }
+  }
+
+  dot_code += `fontname="Arial";
+  fontsize=12;
+  }\n`
+
+  for (let i = 0; i < shown_ports.length; i++) {
+    dot_code += `"Waiting Buffer" -> P${shown_ports[i]};\n`;
+  }
+
+  dot_code += `  Registers [shape=box, height=0.6, width=0.6, fixedsize=true];\n`;
+
+  // Align top row
+  dot_code += `
+    {
+      rank=same;
+      Fetch;
+      "Waiting Buffer";
+      ${[...Array(shown_ports)].map(i => `P${i}`).join("; ")};
+      Registers;
+    }
+  `;
+
+  // --- ROB ---
+  dot_code += `
+    ROB [shape=box, height=0.6, width=5, fixedsize=true];
+    {
+      rank=sink;
+      ROB;
+    }
+  `;
+
+  dot_code += `  Fetch -> ROB;\n`;
+  for (let i = 0; i < shown_ports.length; i++) {
+    dot_code += `  P${shown_ports[i]} -> ROB;\n`;
+  }
+  dot_code += `
+    ROB -> Registers [
+      label="Retire = ${retire_width}",
+      fontsize=12,
+      fontname="Arial",
+    ];
+  `;
+
+  dot_code += `}`;
+
+  return dot_code;
+}*/
 
 function construct_full_processor_dot(dispatch_width, num_ports, retire_width, usage = null) {
   let dot_code = `
@@ -163,14 +251,14 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
   dot_code += `subgraph cluster_execute {
       rankdir="TB";
   `
-  for (let i = 0; i < num_ports; i++) {
+  for (let i = num_ports-1; i >= 0; i--) {
     if (usage !== null && usage.ports[i]!==0.0) {
         let execute_color = color[Math.floor(usage.ports[i] / 10)];
         dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
     } else {
         dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, tooltip="Usage: 0.0%"];\n`
     }
-    dot_code += `  "Waiting Buffer" -> P${i};\n`;
+    dot_code += `"Waiting Buffer" -> P${i};\n`;
   }
 
   dot_code += `label = "Execute";\n
