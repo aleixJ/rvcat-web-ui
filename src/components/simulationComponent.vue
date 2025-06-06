@@ -192,7 +192,7 @@
     color: white;
   }
   .scale-container {
-    width: 30%;
+    width: 50%;
     margin: 0 auto;
     margin-top: 2%;
     text-align: center;
@@ -276,7 +276,6 @@
 
   .simulation-inline-item label {
     flex: 1;
-
     margin-right: 10px;
   }
 
@@ -291,6 +290,8 @@
     justify-content: center;
     align-items: center;
     width: 50%;
+    max-width: 80%;
     margin: 0 auto;
+    gap: 5px;
   }
 </style>
