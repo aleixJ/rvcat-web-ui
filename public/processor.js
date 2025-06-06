@@ -127,6 +127,16 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     digraph "Processor Pipeline Graph" {
       rankdir=TB;
       node [fontsize=14, fontname="Arial"];
+
+      Fetch [
+        shape=point
+        width=0
+        height=0
+        fixedsize=true
+        label=""
+        margin=0
+        style=invis
+      ];
     `;
 
     // --- FETCH  ---
@@ -241,7 +251,16 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
   ];
   let dispatch_color = color[Math.floor(usage.dispatch/10)];
   // --- FETCH ---
-  dot_code += `Fetch [style=invis, shape=box, height=0, width=0];`
+  dot_code += `Fetch [
+        shape=point
+        width=0
+        height=0
+        fixedsize=true
+        label=""
+        margin=0
+        style=invis
+      ];`;
+
   dot_code += `
     Fetch -> "Waiting Buffer" [
       label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${dispatch_color}"><TR><TD TITLE="Usage: ${usage.dispatch.toFixed(1)}%">Dispatch = ${dispatch_width}</TD></TR></TABLE>>,

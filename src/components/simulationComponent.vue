@@ -66,17 +66,16 @@
         </div>
       </div>
     </div>
+    <div class="sim-running-msg">
+      <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
+    </div>
 
-    <div class="graph-section">
-      <div>
+    <div id="graph-section" class="graph-section">
         <h4>Processor Bottlenecks</h4>
-        <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
-        <div id="simulation-graph" class="simulation-img" style="display: none"></div>
-      </div>
+        <div id="simulation-graph" class="simulation-img"></div>
     </div>
     <div id="critical-path-section" class="critical-path-section">
       <h4>Critical Execution Path</h4>
-      <div id="simulation-running2" style="display: none;"><p>Simulation on course...</p></div>
       <div id="critical-path">
 
       </div>
@@ -140,6 +139,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+  .sim-running-msg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
   }
   .simulation-graph{
     display:block;
@@ -287,17 +292,5 @@
     align-items: center;
     width: 50%;
     margin: 0 auto;
-  }
-
-  .critical-path-el {
-    display: flex;
-    flex-wrap: nowrap;       /* do not wrap children onto the next line */
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .critical-path-el > div {
-    white-space: nowrap;     /* keep the text in each child on one line */
-    flex-shrink: 0;          /* never shrink below its content width */
   }
 </style>

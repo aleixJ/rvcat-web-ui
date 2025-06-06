@@ -107,8 +107,7 @@ const handlers = {
             alert('Error running simulation');
             document.getElementById('run-simulation-spinner').style.display = 'none';
             document.getElementById('simulation-running').style.display = 'none';
-            document.getElementById('simulation-running2').style.display = 'none';
-            document.getElementById('simulation-graph').style.display = 'block';
+            document.getElementById('graph-section').style.display = 'block';
             document.getElementById('critical-path-section').style.display = 'block';
             document.getElementById('run-button').style.display = 'block';
             document.getElementById('run-simulation-button').disabled = false;
@@ -136,8 +135,7 @@ const handlers = {
         createCriticalPathList(d['critical_path'])
         document.getElementById('run-simulation-spinner').style.display = 'none';
         document.getElementById('simulation-running').style.display = 'none';
-        document.getElementById('simulation-running2').style.display = 'none';
-        document.getElementById('simulation-graph').style.display = 'block';
+        document.getElementById('graph-section').style.display = 'block';
         document.getElementById('critical-path-section').style.display = 'block';
         document.getElementById('run-button').style.display = 'block';
         document.getElementById('run-simulation-button').disabled = false;
@@ -344,25 +342,25 @@ function reloadRvcat() {
 }
 
 function createGraphVizGraph(dotCode, targetElement, callback=null) {
-        // Create an instance of Viz.js
-        const viz = new Viz();
+  // Create an instance of Viz.js
+  const viz = new Viz();
 
-        // Render the graph
-        viz.renderSVGElement(dotCode)
-            .then(function(element) {
-                // Append the SVG element to the container
-                // Remove any existing SVG elements
-                targetElement.innerHTML = '';
-                targetElement.appendChild(element);
+  // Render the graph
+  viz.renderSVGElement(dotCode)
+    .then(function(element) {
+        // Append the SVG element to the container
+        // Remove any existing SVG elements
+        targetElement.innerHTML = '';
+        targetElement.appendChild(element);
 
-                if (callback !== null) {
-                    callback();
-                }
-            })
-            .catch(error => {
-                // Handle any errors
-                console.error("Error rendering graph:", error);
-            });
+        if (callback !== null) {
+            callback();
+        }
+    })
+    .catch(error => {
+        // Handle any errors
+        console.error("Error rendering graph:", error);
+    });
 }
 
 function createProcessorGraph(dispatch, execute, retire) {
@@ -444,9 +442,8 @@ function getSchedulerAnalysis() {
 
     document.getElementById('run-simulation-spinner').style.display = 'block';
     document.getElementById('simulation-running').style.display = 'block';
-    document.getElementById('simulation-running2').style.display = 'block';
-    document.getElementById('simulation-graph').style.display = 'none';
-    document.getElementById('critical-path-section').style.display = 'block';
+    document.getElementById('graph-section').style.display = 'none';
+    document.getElementById('critical-path-section').style.display = 'none';
     document.getElementById('run-button').style.display = 'none';
     document.getElementById('run-simulation-button').disabled = true;
     executeCode(
