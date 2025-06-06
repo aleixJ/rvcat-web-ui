@@ -107,7 +107,9 @@ const handlers = {
             alert('Error running simulation');
             document.getElementById('run-simulation-spinner').style.display = 'none';
             document.getElementById('simulation-running').style.display = 'none';
+            document.getElementById('simulation-running2').style.display = 'none';
             document.getElementById('simulation-graph').style.display = 'block';
+            document.getElementById('critical-path-section').style.display = 'block';
             document.getElementById('run-button').style.display = 'block';
             document.getElementById('run-simulation-button').disabled = false;
             return;
@@ -131,43 +133,18 @@ const handlers = {
             i++;
         }
         createProcessorSimulationGraph(processorInfo.stages.dispatch, Object.keys(processorInfo.ports).length, processorInfo.stages.retire, usage);
+        createCriticalPathList(d['critical_path'])
         document.getElementById('run-simulation-spinner').style.display = 'none';
         document.getElementById('simulation-running').style.display = 'none';
+        document.getElementById('simulation-running2').style.display = 'none';
         document.getElementById('simulation-graph').style.display = 'block';
+        document.getElementById('critical-path-section').style.display = 'block';
         document.getElementById('run-button').style.display = 'block';
         document.getElementById('run-simulation-button').disabled = false;
 
     },
     'format_timeline': (data) => {
-      /*let tmpitem = document.getElementById('simulation-output');
-      tmpitem.innerHTML = '';
-
-      let item = document.getElementById('simulation-output');
-      // new div with class code-block
-      let codeItem = document.createElement('div');
-      codeItem.classList.add('code-block');
-
-      let pre = document.createElement('pre');
-
-      // \033[91m
-      // \033[0m
-      // replace all \033[91m with <span style="color: red">
-      // replace all \033[0m with </span>
-      data = data.replace(/\033\[91m/g, '<span style="color: red">');
-      data = data.replace(/\033\[0m/g, '</span>');
-
-      // new <code> with ID timeline-output
-      let code = document.createElement('code');
-      code.id = 'timeline-output';
-      code.classList.add('large-code-output');
-      code.innerHTML = data;
-
-      // append code to codeItem
-      pre.appendChild(code);
-      codeItem.appendChild(pre);
-      item.appendChild(codeItem);*/
-
-      timelineData = data; //TODO: canvas Timeline
+      timelineData = data;
     },
     'print_output': (data) => {
         let out = data.replace(/\n/g, '<br>');
@@ -467,7 +444,9 @@ function getSchedulerAnalysis() {
 
     document.getElementById('run-simulation-spinner').style.display = 'block';
     document.getElementById('simulation-running').style.display = 'block';
+    document.getElementById('simulation-running2').style.display = 'block';
     document.getElementById('simulation-graph').style.display = 'none';
+    document.getElementById('critical-path-section').style.display = 'block';
     document.getElementById('run-button').style.display = 'none';
     document.getElementById('run-simulation-button').disabled = true;
     executeCode(
@@ -549,4 +528,42 @@ async function saveNewProgram(config) {
     'add_new_program'
   );
   await executeCode(GET_AVAIL_PROGRAMS, 'get_programs');
+}
+
+function createCriticalPathList(data) {
+  let color = [
+    "#00FF00",
+    "#33FF00",
+    "#66FF00",
+    "#99FF00",
+    "#CCFF00",
+    "#FFFF00",
+    "#FFCC00",
+    "#FF9900",
+    "#FF6600",
+    "#FF3300",
+    "#FF0000"
+  ];
+  let out="<list>";
+  out += `<li style="background-color:${color[Math.floor(data['dispatch']/10)]}; list-style-type: none;">
+    <div class="critical-path-el" style="display:flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;">
+      <div><b>${data['dispatch'].toFixed(1)}%  </b></div><div>DISPATCH</div>
+    </div>
+  </li>`;
+
+  for(let i in data['instructions']){
+    out += `<li style="background-color:${color[Math.floor(data['instructions'][i]['percentage']/10)]}; list-style-type: none;">
+      <div class="critical-path-el" style="display:flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;">
+        <div><b>${data['instructions'][i]['percentage'].toFixed(1)}%  </b></div><div>${data['instructions'][i]['instruction']}</div>
+      </div>
+    </li>`;
+  }
+
+  out+=`<li style="background-color:${color[Math.floor(data['retire']/10)]}; list-style-type: none;">
+    <div class="critical-path-el" style="display:flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;">
+      <div><b>${data['retire'].toFixed(1)}%  </b></div><div>RETIRE</div>
+    </div>
+  </li></list>`;
+
+  document.getElementById('critical-path').innerHTML = out;
 }

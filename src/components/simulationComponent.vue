@@ -69,18 +69,19 @@
 
     <div class="content">
 
-      <div>
+      <div id="graph-section">
         <h4>Processor Bottlenecks</h4>
         <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
         <div id="simulation-graph" class="simulation-img" style="display: none"></div>
       </div>
-      <!--<div>
-        <h4>Critical Execution Path</h4>
-        <div id="critical_path">
 
-        </div>
-      </div>-->
+    </div>
+    <div id="critical-path-section" class="critical-path-section">
+      <h4>Critical Execution Path</h4>
+      <div id="simulation-running2" style="display: none;"><p>Simulation on course...</p></div>
+      <div id="critical-path">
 
+      </div>
     </div>
 
     <div class="scale-container">
@@ -112,6 +113,10 @@
   }
   h3 {
     margin: 0;
+  }
+  h4 {
+    text-align: center;
+    width: 100%;
   }
   .header{
     position:sticky;
@@ -190,7 +195,6 @@
     text-align: center;
     display:block;
   }
-
 
   .color-scale {
     width: 100%;
@@ -279,4 +283,23 @@
     min-width: 60px;
   }
 
+  .critical-path-section{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    margin: 0 auto;
+  }
+
+  .critical-path-el {
+    display: flex;
+    flex-wrap: nowrap;       /* do not wrap children onto the next line */
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .critical-path-el > div {
+    white-space: nowrap;     /* keep the text in each child on one line */
+    flex-shrink: 0;          /* never shrink below its content width */
+  }
 </style>
