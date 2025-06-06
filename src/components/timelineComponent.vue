@@ -10,6 +10,7 @@
   const showPorts = ref(true);
   const hoverInfo = ref(null);
   const timelineCanvas = ref(null);
+  const tooltipRef = ref(null);
   let timelineData = ref(null);
 
   onMounted(() => {
@@ -472,32 +473,63 @@
 
   // Attach hover event to cell
   function attachHover(canvas, interactiveCells, headerStart) {
-    canvas.onmousemove = e => {
-      const rect   = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      hoverInfo.value = null;
+  canvas.onmousemove = e => {
+    const rect   = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-      for (const cell of interactiveCells) {
-        if (
-          mouseX >= cell.x &&
-          mouseX <= cell.x + cell.width &&
-          mouseY >= cell.y &&
-          mouseY <= cell.y + cell.height
-        ) {
-          hoverInfo.value = {
-            x: e.clientX + 10,
-            y: e.clientY + 10,
-            cycle:       cell.colIndexVis - headerStart,
-            port:        cell.port || "N/A",
-            state:       cell.state || "N/A",
-            type:        cell.instrType || "N/A"
-          };
-          break;
-        }
+    let hitCell = null;
+    for (const cell of interactiveCells) {
+      if (
+        mouseX >= cell.x &&
+        mouseX <= cell.x + cell.width &&
+        mouseY >= cell.y &&
+        mouseY <= cell.y + cell.height
+      ) {
+        hitCell = cell;
+        break;
       }
+    }
+
+    if (!hitCell) {
+      hoverInfo.value = null;
+      return;
+    }
+
+    hoverInfo.value = {
+      x: e.clientX + 10,
+      y: e.clientY + 10,
+      cycle: hitCell.colIndexVis - headerStart,
+      port:  hitCell.port || "N/A",
+      state: hitCell.state || "N/A",
+      type:  hitCell.instrType || "N/A"
     };
-  }
+
+    // Flip tooltip if it overflows screen
+    nextTick(() => {
+      const tt = tooltipRef.value;
+      if (!tt) return;
+      const tr = tt.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      let newX = hoverInfo.value.x;
+      let newY = hoverInfo.value.y;
+
+      if (tr.right > vw) {
+        newX = e.clientX - tr.width - 10;
+      }
+      if (tr.bottom > vh) {
+        newY = e.clientY - tr.height - 10;
+      }
+
+      if (newX !== hoverInfo.value.x || newY !== hoverInfo.value.y) {
+        hoverInfo.value = { ...hoverInfo.value, x: newX, y: newY };
+      }
+    });
+  };
+}
+
 
   // Get state from char in cell
   function charToState(ch) {
@@ -566,7 +598,7 @@
       <section class="simulation-results-controls" id="dependencies-controls">
       </section>
       <canvas ref="timelineCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
-      <div v-if="hoverInfo" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
+      <div v-if="hoverInfo" ref="tooltipRef" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
         <div><strong>Port: </strong> P{{ hoverInfo.port }}</div>
         <div><strong>Type: </strong> {{ hoverInfo.type }}</div>

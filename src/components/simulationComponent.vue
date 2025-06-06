@@ -67,14 +67,14 @@
       </div>
     </div>
     <div class="sim-running-msg">
-      <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
+      <div id="simulation-running"><p>Simulation on course...</p></div>
     </div>
 
-    <div id="graph-section" class="graph-section">
+    <div id="graph-section" class="graph-section" style="display: none;">
         <h4>Processor Bottlenecks</h4>
         <div id="simulation-graph" class="simulation-img"></div>
     </div>
-    <div id="critical-path-section" class="critical-path-section">
+    <div id="critical-path-section" class="critical-path-section" style="display: none;">
       <h4>Critical Execution Path</h4>
       <div id="critical-path">
 
