@@ -545,22 +545,52 @@ function createCriticalPathList(data) {
     "#FF0000"
   ];
   let out="<list>";
-  out += `<li style="background-color:${color[Math.floor(data['dispatch']/10)]}; list-style-type: none;">
-    <div class="critical-path-el" style="display:flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;">
+  let lineColor;
+  const style = `display:flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px;
+  border-top: 1px solid black;
+  border-right: 1px solid black;
+  border-left: 1px solid black;`;
+
+
+  if(data['dispatch'].toFixed(1)!=0.0){
+    lineColor=color[Math.floor(data['dispatch']/10)];
+  }
+  else{
+    lineColor='white';
+  }
+  out += `<li style="background-color:${lineColor}; list-style-type: none;">
+    <div class="critical-path-el" style="${style}">
       <div><b>${data['dispatch'].toFixed(1)}%  </b></div><div>DISPATCH</div>
     </div>
   </li>`;
 
   for(let i in data['instructions']){
-    out += `<li style="background-color:${color[Math.floor(data['instructions'][i]['percentage']/10)]}; list-style-type: none;">
-      <div class="critical-path-el" style="display:flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;">
+    if(data['instructions'][i]['percentage'].toFixed(1)!=0.0){
+      lineColor=color[Math.floor(data['instructions'][i]['percentage']/10)]
+    }
+    else{
+      lineColor='white';
+    }
+    out += `<li style="background-color:${lineColor}; list-style-type: none;">
+      <div class="critical-path-el" style="${style}">
         <div><b>${data['instructions'][i]['percentage'].toFixed(1)}%  </b></div><div>${data['instructions'][i]['instruction']}</div>
       </div>
     </li>`;
   }
 
-  out+=`<li style="background-color:${color[Math.floor(data['retire']/10)]}; list-style-type: none;">
-    <div class="critical-path-el" style="display:flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;">
+  if(data['retire'].toFixed(1)!=0.0){
+    lineColor=color[Math.floor(data['retire']/10)];
+  }
+  else{
+    lineColor = 'white';
+  }
+
+  out+=`<li style="background-color:${lineColor}; list-style-type: none;">
+    <div class="critical-path-el" style="${style} border-bottom: 1px solid black;">
       <div><b>${data['retire'].toFixed(1)}%  </b></div><div>RETIRE</div>
     </div>
   </li></list>`;

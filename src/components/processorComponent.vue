@@ -91,5 +91,8 @@ table{
   background: #003f73;
   color: white;
 }
-
+.pipeline-img{
+  margin: 0 auto;
+  margin-top: 10%;
+}
 </style>

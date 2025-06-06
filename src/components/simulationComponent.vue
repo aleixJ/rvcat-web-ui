@@ -67,14 +67,12 @@
       </div>
     </div>
 
-    <div class="content">
-
-      <div id="graph-section">
+    <div class="graph-section">
+      <div>
         <h4>Processor Bottlenecks</h4>
         <div id="simulation-running" style="display: none;"><p>Simulation on course...</p></div>
         <div id="simulation-graph" class="simulation-img" style="display: none"></div>
       </div>
-
     </div>
     <div id="critical-path-section" class="critical-path-section">
       <h4>Critical Execution Path</h4>
@@ -138,7 +136,7 @@
   #num-iters{
     width:45px;
   }
-  .content{
+  .graph-section{
     display: flex;
     justify-content: center;
     align-items: center;
