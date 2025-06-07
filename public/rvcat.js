@@ -68,8 +68,7 @@ const handlers = {
       processorInfo = JSON.parse(data);
     },
     'save_processor_info': (data) => {
-        let procinfo = JSON.parse(data);
-        processorInfo = procinfo;
+        processorInfo = JSON.parse(data);
         showProcessor();
         getSchedulerAnalysis();
     },
@@ -180,20 +179,7 @@ worker.onmessage = function(message) {
                 handlers[message.data.id](data);
             } else {
                 // TODO: remove
-                if (data === undefined) {
-                    data = "None";
-                }
-                data = data.replace(/\n/g, '<br>');
-                if (message.data.data_type === 'text') {
-                    document.getElementById('execution-result').innerHTML = `
-                    <p class="rvcat-result">${data}</p>
-                    `
-                } else if (message.data.data_type === 'error') {
-                    // Replace newlines with <br>
-                    document.getElementById('execution-result').innerHTML = `
-                    <p class="rvcat-error">${data}</p>
-                    `
-                }
+
             }
         }
     }

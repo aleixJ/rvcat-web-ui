@@ -135,8 +135,13 @@
 
       // Get port and instruction type
       const m = line.match(/\(P\.(\d+)\)(?:\s*([A-Za-z0-9_.]+))?/);
-      const portNumber = m ? m[1] : null;
+      let portNumber = m ? m[1] : null;
       let type = (m && m[2]) ? m[2] : null;
+
+      if(line.trim().startsWith("P")){
+        const m = line.match(/^P\.?(\d+)/);
+        portNumber = parseInt(m[1]);
+      }
 
       // Store type if instruction does have it
       if (instrID !== null && type !== null) {
@@ -412,10 +417,16 @@
         ctx.lineWidth   = 1;
         ctx.fillRect(x, y, cellW, cellH);
         ctx.strokeRect(x, y, cellW, cellH);
-
+        let kind;
+        if(raw.trim().startsWith("P")){
+          kind='port';
+        } else {
+          kind='instr';
+        }
         // Register interactive cell
-        if (colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) {
+        if ((colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) || kind==='port') {
           interactiveCells.push({
+            kind,
             x, y,
             width:      cellW,
             height:     cellH,
@@ -495,14 +506,30 @@
       hoverInfo.value = null;
       return;
     }
+    let instrType = hitCell.instrType;
+    // If it is a Port cell, find which instruction the X corresponds to
+    if (hitCell.kind === 'port') {
+      if (hitCell.char === 'X') {
+        // find the instr cell in the same cycle & same port, with char 'E'
+        const match = interactiveCells.find(c =>
+          c.kind == 'instr' &&
+          c.port == hitCell.port &&
+          c.colIndexVis == hitCell.colIndexVis &&
+          c.char == 'E'
+        );
+        if (match){
+          instrType = match.instrType;
+        }
+      }
+    }
 
     hoverInfo.value = {
       x: e.clientX + 10,
       y: e.clientY + 10,
       cycle: hitCell.colIndexVis - headerStart,
-      port:  hitCell.port || "N/A",
-      state: hitCell.state || "N/A",
-      type:  hitCell.instrType || "N/A"
+      port:  hitCell.port ?? "N/A",
+      state: hitCell.state ?? "N/A",
+      type:  instrType ?? "N/A"
     };
 
     // Flip tooltip if it overflows screen
@@ -533,7 +560,10 @@
 
   // Get state from char in cell
   function charToState(ch) {
-    let msg = "This instruction is "
+    let msg="";
+    if(ch!=" " && ch!="X"){
+      msg = "This instruction is ";
+    }
     switch (ch) {
       case "E": msg += "being executed."; break;
       case "R": msg += "being retired."; break;
@@ -544,6 +574,8 @@
       case "*": msg += "waiting for execution due to occupied ports."; break;
       case "!": msg += "on a cache miss."; break;
       case "2": msg += "on a secondary cache miss."; break;
+      case "X": msg += "This port is used in the current cycle."; break;
+      case " ": msg += "This port is unused in the current cycle."; break;
       default:  msg = "N/A"; break;
     }
     return msg;
@@ -600,8 +632,8 @@
       <canvas ref="timelineCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
       <div v-if="hoverInfo" ref="tooltipRef" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
-        <div><strong>Port: </strong> P{{ hoverInfo.port }}</div>
-        <div><strong>Type: </strong> {{ hoverInfo.type }}</div>
+        <div v-if="hoverInfo.port!='N/A'"><strong>Port: </strong> P{{ hoverInfo.port }}</div>
+        <div v-if="hoverInfo.type!='N/A'"><strong>Type: </strong> {{ hoverInfo.type }}</div>
         <div>{{ hoverInfo.state }}</div>
       </div>
     </div>
