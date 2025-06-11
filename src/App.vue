@@ -10,6 +10,7 @@
     max-width: 100vf;
     max-height: 100vh;
     font-family: Lato, sans-serif;
+    font-size: 2.5vh;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -17,8 +18,8 @@
     background: #e3e3e3;
   }
   ::-webkit-scrollbar {
-    width: 5px;
-    height:5px;
+    width: 0.75vh;
+    height:0.75vh;
   }
   ::-webkit-scrollbar-track {
     width:10px;
@@ -48,5 +49,35 @@
   .simulation-img svg {
     width:100%;
     max-height:50%;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 3.5vh;
+  }
+
+  .blue-button {
+    background: #0085dd;
+    color: white;
+    border: none;
+    padding: 0.5vh 1vh;
+    font-size: 2.5vh;
+    border-radius: 1vh;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+  .blue-button:hover {
+    background: #006fb9;
+  }
+  .blue-button.active {
+    background: #003f73;
+  }
+  .blue-button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  input {
+    font-size: 2.5vh;
   }
 </style>

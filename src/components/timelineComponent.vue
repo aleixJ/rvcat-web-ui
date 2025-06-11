@@ -1,17 +1,55 @@
 
 <script setup>
-  import { ref, onMounted, nextTick, onUnmounted} from 'vue';
+  import { ref, onMounted, nextTick, onUnmounted, watch} from 'vue';
 
   let processorsListHandler;
   let programsListHandler;
   const canvasWidth = 1200;
   const canvasHeight = 10000;
-  const showInstructions = ref(true);
-  const showPorts = ref(true);
   const hoverInfo = ref(null);
   const timelineCanvas = ref(null);
   const tooltipRef = ref(null);
   let timelineData = ref(null);
+
+  function getCookie(name) {
+    const re = new RegExp(
+      "(?:^|; )" +
+        name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
+        "=([^;]*)"
+    );
+    const match = document.cookie.match(re);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function setCookie(name, value, days = 30) {
+    const maxAge = days * 24 * 60 * 60;
+    document.cookie = `${name}=${encodeURIComponent(
+      value
+    )}; max-age=${maxAge}; path=/`;
+  }
+
+  function useBooleanCookie(key, defaultValue = false) {
+    const val = ref(defaultValue);
+
+    onMounted(() => {
+      const c = getCookie(key);
+      if (c !== null) {
+        val.value = c === '1';
+      }
+    });
+
+    watch(val, (v) => {
+      setCookie(key, v ? '1' : '0');
+    });
+
+    return val;
+  }
+
+  const iterations = ref(parseInt(getCookie("timelineIterations")) || 1);
+  watch(iterations, (v) => setCookie("timelineIterations", v));
+
+  const showPorts = useBooleanCookie('showPorts', true);
+  const showInstructions = useBooleanCookie('showInstructions', true);
 
   onMounted(() => {
     nextTick(async () => {
@@ -39,11 +77,9 @@
 
    function changeIterations(delta) {
     const input = document.getElementById("dependencies-num-iters");
-    let val = parseInt(input.value, 10) || 1;
-    const min = parseInt(input.min, 10) || 1;
-    const max = parseInt(input.max, 10) || Infinity;
-    val = Math.min(Math.max(val + delta, min), max);
-    input.value = val;
+    const newVal = Math.min(Math.max(iterations.value + delta, 1), 50);
+    iterations.value = newVal;
+    input.value = newVal;
 
     getTimelineAndDraw();
   }
@@ -104,12 +140,13 @@
     ctx.imageSmoothingEnabled = false;
 
     const interactiveCells = [];
-    visibleRows.forEach(({ raw, portNumber, type }, rowIndex) => {
+    visibleRows.forEach(({ raw, instrID, portNumber, type }, rowIndex) => {
     drawOneRow({
       ctx,
       raw,
       port: portNumber,
       instrType: type,
+      instrID,
       rowIndex,
       padX, padY, cellW, cellH,
       headerStart, cycleCount,
@@ -373,7 +410,7 @@
 
   // Draw row of timeline canvas element
   function drawOneRow({
-    ctx, raw, port, instrType, rowIndex,
+    ctx, raw, port, instrType, instrID, rowIndex,
     padX, padY, cellW, cellH,
     headerStart, cycleCount,fontYOffset,
     interactiveCells
@@ -424,7 +461,7 @@
           kind='instr';
         }
         // Register interactive cell
-        if ((colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) || kind==='port') {
+        if ((colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) || (kind==='port' && ch==="X")) {
           interactiveCells.push({
             kind,
             x, y,
@@ -435,7 +472,8 @@
             colIndexVis: colIdxVis,
             port,
             instrType,
-            state:      charToState(ch)
+            state:      charToState(ch),
+            instrID
           });
         }
       }
@@ -507,6 +545,7 @@
       return;
     }
     let instrType = hitCell.instrType;
+    let instrID   = hitCell.instrID;
     // If it is a Port cell, find which instruction the X corresponds to
     if (hitCell.kind === 'port') {
       if (hitCell.char === 'X') {
@@ -515,10 +554,11 @@
           c.kind == 'instr' &&
           c.port == hitCell.port &&
           c.colIndexVis == hitCell.colIndexVis &&
-          c.char == 'E'
+          c.char == 'E' && isFirstE(interactiveCells, c)
         );
         if (match){
           instrType = match.instrType;
+          instrID   = match.instrID;
         }
       }
     }
@@ -529,7 +569,8 @@
       cycle: hitCell.colIndexVis - headerStart,
       port:  hitCell.port ?? "N/A",
       state: hitCell.state ?? "N/A",
-      type:  instrType ?? "N/A"
+      type:  instrType ?? "N/A",
+      instr: instrID ?? "N/A",
     };
 
     // Flip tooltip if it overflows screen
@@ -556,26 +597,26 @@
     });
   };
 }
+  function isFirstE(interactiveCells, cell) {
+    return interactiveCells
+      .filter(c => c.rowIndex === cell.rowIndex && c.char === 'E')
+      .every(other => other.colIndexVis >= cell.colIndexVis);
+  }
 
 
   // Get state from char in cell
   function charToState(ch) {
     let msg="";
-    if(ch!=" " && ch!="X"){
-      msg = "This instruction is ";
-    }
     switch (ch) {
-      case "E": msg += "being executed."; break;
-      case "R": msg += "being retired."; break;
-      case "D": msg += "being dispatched."; break;
-      case "-": msg += "waiting to be retired."; break;
-      case "W": msg += "on write back stage."; break;
-      case ".": msg += "waiting for execution due to dependencies."; break;
-      case "*": msg += "waiting for execution due to occupied ports."; break;
-      case "!": msg += "on a cache miss."; break;
-      case "2": msg += "on a secondary cache miss."; break;
-      case "X": msg += "This port is used in the current cycle."; break;
-      case " ": msg += "This port is unused in the current cycle."; break;
+      case "E": msg += "Execution"; break;
+      case "R": msg += "Retire"; break;
+      case "D": msg += "Dispatch"; break;
+      case "-": msg += "Waiting to retire"; break;
+      case "W": msg += "Write back"; break;
+      case ".": msg += "Waiting to execute due to dependencies"; break;
+      case "*": msg += "Waiting to execute due to occupied ports."; break;
+      case "!": msg += "Cache miss"; break;
+      case "2": msg += "Secondary cache miss"; break;
       default:  msg = "N/A"; break;
     }
     return msg;
@@ -617,12 +658,12 @@
           </label>
           <div class="iterations-group">
             <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
-            <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" value="1" @change="getTimelineAndDraw"/>
+            <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" @change="getTimelineAndDraw" v-model.number="iterations"/>
             <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
           </div>
         </div>
-        <button @click="toggleInstructions" class="toggle-button">{{ showInstructions ? 'Hide' : 'Show' }} Instructions</button>
-        <button @click="togglePorts" class="toggle-button">{{ showPorts ? 'Hide' : 'Show' }} Ports</button>
+        <button @click="toggleInstructions" class="blue-button">{{ showInstructions ? 'Hide' : 'Show' }} Instructions</button>
+        <button @click="togglePorts" class="blue-button">{{ showPorts ? 'Hide' : 'Show' }} Ports</button>
       </div>
 
     </div>
@@ -632,9 +673,11 @@
       <canvas ref="timelineCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
       <div v-if="hoverInfo" ref="tooltipRef" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
-        <div v-if="hoverInfo.port!='N/A'"><strong>Port: </strong> P{{ hoverInfo.port }}</div>
+        <div v-if="hoverInfo.instr!='N/A'"><strong>Instruction:</strong> {{ hoverInfo.instr }}</div>
         <div v-if="hoverInfo.type!='N/A'"><strong>Type: </strong> {{ hoverInfo.type }}</div>
-        <div>{{ hoverInfo.state }}</div>
+        <div v-if="hoverInfo.state!='N/A'"><strong>State: </strong> {{ hoverInfo.state }}</div>
+        <div v-if="hoverInfo.port!='N/A'"><strong>Port: </strong> P{{ hoverInfo.port }}</div>
+
       </div>
     </div>
   </div>
@@ -669,31 +712,8 @@
     border-radius: 4px;
     pointer-events: none;
     z-index: 10;
-    font-size: 12px;
+    font-size: 2vh;
     width: 10%;
-  }
-  .toggle-button {
-    background: #0085dd;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    font-size: 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    margin-right: 5px;
-    margin-bottom: 5px;
-  }
-
-  .toggle-button:hover {
-    background: #006fb9;
-    color: white;
-  }
-
-  .toggle-button:active {
-    outline: none;
-    background: #003f73;
-    color: white;
   }
 
   .header{
@@ -708,7 +728,7 @@
 
   .timeline-controls {
     display:flex;
-
+    gap:5px;
   }
 
   .iterations-group {

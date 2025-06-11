@@ -1,7 +1,26 @@
 <script setup>
-  import { onMounted, nextTick, ref } from "vue";
+  import { onMounted, nextTick, ref, watch } from "vue";
 
-  const iterations = ref(200);
+  function getCookie(name) {
+    const re = new RegExp(
+      "(?:^|; )" +
+        name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
+        "=([^;]*)"
+    );
+    const match = document.cookie.match(re);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function setCookie(name, value, days = 30) {
+    const maxAge = days * 24 * 60 * 60;
+    document.cookie = `${name}=${encodeURIComponent(
+      value
+    )}; max-age=${maxAge}; path=/`;
+  }
+
+  const iterations = ref(parseInt(getCookie("simulationIterations")) || 200);
+  watch(iterations, (v) => setCookie("simulationIterations", v));
+
 
   onMounted(() => {
     nextTick(() => {
@@ -37,7 +56,7 @@
           <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
         </div>
         <div id="run-simulation-button">
-          <button id="run-button" class="run-button" onclick="getSchedulerAnalysis();">Run</button>
+          <button id="run-button" class="blue-button" onclick="getSchedulerAnalysis();">Run</button>
           <div id="run-simulation-spinner" class="spinner-small" style="display: none;"></div>
         </div>
       </div>
@@ -170,27 +189,6 @@
     }
 }
 
-  .run-button {
-    background: #0085dd;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    font-size: 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-  }
-
-  .run-button:hover {
-    background: #006fb9;
-    color: white;
-  }
-
-  .run-button:active {
-    outline: none;
-    background: #003f73;
-    color: white;
-  }
   .scale-container {
     width: 50%;
     margin: 0 auto;
@@ -202,8 +200,9 @@
   .color-scale {
     width: 100%;
     height: 10px;
-    background: linear-gradient(to right, #00FF00, #FFFF00, #FF0000);
+    background: linear-gradient(to right, white, #6bff6b, #ffc400, #ce0000);
     border-radius: 5px;
+    border: 1px solid black;
     position: relative;
   }
 
@@ -213,8 +212,7 @@
     display: flex;
     justify-content: space-between;
     margin-top: 10px;
-    font-size: 16px;
-    font-family: Arial, sans-serif;
+    font-size: 2.75vh;
   }
 
   .iterations-group {

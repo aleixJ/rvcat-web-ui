@@ -39,7 +39,7 @@
     background:white;
     width:100%;
   }
-  h3 {
-  margin: 0;
+  p{
+    font-size: 2.5vh;
   }
 </style>

@@ -101,7 +101,7 @@
     </div>
     <div class="output-block-wrapper" id="simulation-output-container">
       <div class="graph-header">
-        <button class="fullscreen-button" @click="openFullScreen">
+        <button class="blue-button" @click="openFullScreen">
           <img src="/img/fullscreen.png">
         </button>
         <h4>Recurrent Paths Graph</h4>
@@ -163,7 +163,7 @@
     border-radius: 0 0 5px 5px;
     font-family: monospace;
     margin-top: 0;
-    font-size: 13px;
+    font-size: 2.5vh;
   }
 
   /* Folding animation */
@@ -178,26 +178,6 @@
   .fold-enter-to, .fold-leave-from {
     max-height: 500px;
     opacity: 1;
-  }
-
-  .fullscreen-button {
-    background: #0085dd;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    margin-right: 5px;
-    text-align:center;
-  }
-  .fullscreen-button:hover {
-    background: #006fb9;
-  }
-  .fullscreen-button:active {
-    outline: none;
-    background: #003f73;
-    color: white;
   }
 
   /* The full-screen overlay */
@@ -268,6 +248,10 @@
     margin: 0;
     font-size: 1.2em;
     font-weight: 500;
+  }
+
+  .title {
+    font-size: 2.75vh;
   }
 
   .close-btn {

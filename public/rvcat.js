@@ -349,9 +349,9 @@ function createGraphVizGraph(dotCode, targetElement, callback=null) {
     });
 }
 
-function createProcessorGraph(dispatch, execute, retire) {
+function createProcessorGraph(dispatch, execute, retire, cache) {
     // Define your Graphviz DOT code
-    const dotCode = construct_reduced_processor_dot(dispatch, execute, retire);
+    const dotCode = construct_reduced_processor_dot(dispatch, execute, retire, cache);
     createGraphVizGraph(dotCode, document.getElementById('pipeline-graph'));
 }
 
@@ -388,7 +388,11 @@ function showProcessor() {
     let dispatch_width = processorInfo.stages.dispatch;
     let num_ports = Object.keys(processorInfo.ports).length;
     let retire_width = processorInfo.stages.retire;
-    createProcessorGraph(dispatch_width, num_ports, retire_width);
+    let cache = {'nBlocks': processorInfo.nBlocks,
+                 'blkSize': processorInfo.blkSize,
+                 'mPenalty': processorInfo.mPenalty,
+                 'mIssueTime': processorInfo.mIssueTime};
+    createProcessorGraph(dispatch_width, num_ports, retire_width, cache);
 }
 
 function showDependenciesGraph() {
@@ -514,18 +518,18 @@ async function saveNewProgram(config) {
 }
 
 function createCriticalPathList(data) {
-  let color = [
-    "#00FF00",
-    "#33FF00",
-    "#66FF00",
-    "#99FF00",
-    "#CCFF00",
-    "#FFFF00",
-    "#FFCC00",
-    "#FF9900",
-    "#FF6600",
-    "#FF3300",
-    "#FF0000"
+  const color = [
+    "#ffffff",
+    "#d3ffd3",
+    "#a6ffa6",
+    "#7aff7a",
+    "#89f356",
+    "#b5e235",
+    "#e1d015",
+    "#fab000",
+    "#eb7600",
+    "#dd3b00",
+    "#ce0000"
   ];
   let out="<list>";
   let lineColor;

@@ -7,7 +7,7 @@
     nextTick(() => {
       const list = document.getElementById("processors-list");
       if (list) {
-        processorsListHandler = () => setTimeout(() => { reloadRvcat(); }, 100);
+        processorsListHandler = () => setTimeout(() => { programShow(); }, 100);
         list.addEventListener("change", processorsListHandler);
       }
       reloadRvcat();
@@ -126,8 +126,8 @@
     <div class="program-header">
       <h3>Program</h3>
       <div id="settings-div">
-        <button id="download-button" class="program-button" @click="downloadProgram">Download</button>
-        <button id="upload-button" class="program-button" @click="uploadProgram">Upload</button>
+        <button id="download-button" class="blue-button" @click="downloadProgram">Download</button>
+        <button id="upload-button" class="blue-button" @click="uploadProgram">Upload</button>
         <select id="programs-list" name="assembly-code" onchange="reloadRvcat();">
         </select>
       </div>
@@ -173,37 +173,19 @@
   overflow:auto;
   max-height:70%;
   margin-top:5px;
-  background:#f0f0f0;
+  background: #f0f0f0;
   border-radius:10px;
   padding:5px;
+  font-size:2.2vh;
+}
+#settings-div{
+  display:flex;
+  gap:5px;
 }
 
-h3 {
-  margin: 0;
+#programs-list{
+  font-size:2.5vh;
 }
-.program-button {
-  background: #0085dd;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  font-size: 14px;
-  border-radius: 6px;
-  margin-right:3px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-}
-
-.program-button:hover {
-  background: #006fb9;
-  color: white;
-}
-
-.program-button:active {
-  outline: none;
-  background: #003f73;
-  color: white;
-}
-
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;

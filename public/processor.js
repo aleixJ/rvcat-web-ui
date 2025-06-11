@@ -122,7 +122,18 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     return dot_code + `}`
 }*/
 
-  function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width, usage = null) {
+  function insert_cache_annotations(cache) {
+    if(cache.nBlocks>0){
+      document.getElementById('cache-info').innerHTML=`
+      <b>Cache settings:</b> <span>${cache.nBlocks} blocks of ${cache.blkSize} bytes.</span><span> Miss penalty: ${cache.mPenalty}. Miss issue time: ${cache.mIssueTime}</span>`;
+    }
+    else {
+      document.getElementById('cache-info').innerHTML="<b>This processor does not have a cache memory.</b>";
+    }
+  }
+
+  function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width, cache) {
+    insert_cache_annotations(cache)
     let dot_code = `
     digraph "Processor Pipeline Graph" {
       rankdir=TB;
@@ -209,7 +220,7 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
     dot_code += `Registers;\n  }\n`;
 
     // --- ROB ---
-    dot_code += `ROB [shape=box, height=0.6, width=5, fixedsize=true];\n`;
+    dot_code += `ROB [label="ROB: ${document.getElementById('rob-size').value} entries", shape=box, height=0.6, width=5, fixedsize=true];\n`;
     dot_code += `{ rank=sink; ROB; }\n\n`;
 
     dot_code += `Fetch -> ROB;\n`;
@@ -236,18 +247,18 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
   `;
 
   // Colorscale from green to red
-  let color = [
-      "#00FF00",
-      "#33FF00",
-      "#66FF00",
-      "#99FF00",
-      "#CCFF00",
-      "#FFFF00",
-      "#FFCC00",
-      "#FF9900",
-      "#FF6600",
-      "#FF3300",
-      "#FF0000"
+  const color = [
+    "#ffffff",
+    "#d3ffd3",
+    "#a6ffa6",
+    "#7aff7a",
+    "#89f356",
+    "#b5e235",
+    "#e1d015",
+    "#fab000",
+    "#eb7600",
+    "#dd3b00",
+    "#ce0000"
   ];
   let dispatch_color = color[Math.floor(usage.dispatch/10)];
   // --- FETCH ---
@@ -307,7 +318,7 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
 
   // --- ROB ---
   dot_code += `
-    ROB [shape=box, height=0.6, width=5, fixedsize=true];
+    ROB [label="ROB: ${document.getElementById('rob-size').value} entries", shape=box, height=0.6, width=5, fixedsize=true];
     {
       rank=sink;
       ROB;

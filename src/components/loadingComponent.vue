@@ -44,6 +44,7 @@
     margin: auto;
     font-weight: bold;
     text-align: center;
+    font-size: 2.5vh;
 }
 
 /* Spinner animation */

@@ -414,12 +414,12 @@
   <div class="main">
     <div class="header">
       <h3>Processor Settings - {{ name }}</h3>
-      <div>
-        <button class="save-button" @click="openModal" :disabled="!isModified">
+      <div class="buttons">
+        <button class="blue-button" @click="openModal" :disabled="!isModified">
           Apply Changes
         </button>
         <input id="file-upload" type="file" accept=".json" @change="uploadProcessorConfig" style="display: none;"/>
-        <button class="save-button" @click="openUploadModal">Upload</button>
+        <button class="blue-button" @click="openUploadModal">Upload</button>
       </div>
     </div>
     <br/>
@@ -569,8 +569,8 @@
 
 
       <div class="modal-actions">
-        <button class="save-button" @click="confirmModal">Apply</button>
-        <button class="save-button" @click="closeModal">Cancel</button>
+        <button class="blue-button" @click="confirmModal">Apply</button>
+        <button class="blue-button" @click="closeModal">Cancel</button>
       </div>
     </div>
   </div>
@@ -582,8 +582,8 @@
       <input id="config-name" type="text" v-model="modalName"/>
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
-        <button class="save-button" @click="confirmModal">Save</button>
-        <button class="save-button" @click="closeModal">Cancel</button>
+        <button class="blue-button" @click="confirmModal">Save</button>
+        <button class="blue-button" @click="closeModal">Cancel</button>
       </div>
     </div>
   </div>
@@ -596,8 +596,8 @@
       </p>
       <p><b>Do you want to continue?</b></p>
       <div class="modal-actions">
-        <button class="save-button" @click="confirmLeave">OK</button>
-        <button class="save-button" @click="cancelLeave">Cancel</button>
+        <button class="blue-button" @click="confirmLeave">OK</button>
+        <button class="blue-button" @click="cancelLeave">Cancel</button>
       </div>
     </div>
   </div>
@@ -628,6 +628,10 @@
     justify-content: space-between;
     align-items: center;
   }
+  .buttons {
+    display:flex;
+    gap:5px;
+  }
   .switch {
     position: relative;
     display: inline-block;
@@ -638,29 +642,6 @@
     opacity: 0;
     width: 0;
     height: 0;
-  }
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 17px;
-  }
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 13px; width: 13px;
-    left: 2px; bottom: 2px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-  }
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-  input:checked + .slider:before {
-    transform: translateX(13px);
   }
   .widths input {
     width: 30px; height: 13px; text-align: center;
@@ -703,26 +684,6 @@
     padding: 5px;
     text-align: center;
   }
-  .save-button {
-    background: #0085dd;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    font-size: 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    margin-right: 5px;
-    text-align:center;
-  }
-  .save-button:hover {
-    background: #006fb9;
-  }
-  .save-button:active {
-    outline: none;
-    background: #003f73;
-    color: white;
-  }
   /* Modal Styles */
   .modal-overlay {
     position: fixed;
@@ -759,16 +720,8 @@
   h4{
     margin:5px;
     margin-left:0;
+    font-size: 3vh;
   }
-  h3{
-    margin:0;
-    top:5px;
-  }
-  .save-button[disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
   .latency-group {
     display: inline-flex;
     align-items: center;
@@ -878,6 +831,7 @@
     justify-content: left;
     gap: 5px;
     width: 100%;
+    font-size:2.5vh;
   }
 
   .settings-group {
@@ -897,7 +851,7 @@
     color: #fff;
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 2.2vh;
     white-space: nowrap;
     top: 35vh;
     right: 0;

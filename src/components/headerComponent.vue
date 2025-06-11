@@ -19,7 +19,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
       <ul>
         <li>
           <button
-            class="tab-button"
+            class="blue-button"
             :class="{ active: activeView === 'procSettingsComponent' }"
             @click="emit('requestSwitch', 'procSettingsComponent')"
           >
@@ -28,7 +28,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
         </li>
         <li>
           <button
-            class="tab-button"
+            class="blue-button"
             :class="{ active: activeView === 'staticAnalysisComponent' }"
             @click="emit('requestSwitch', 'staticAnalysisComponent')"
           >
@@ -37,7 +37,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
         </li>
         <li>
           <button
-            class="tab-button"
+            class="blue-button"
             :class="{ active: activeView === 'simulationComponent' }"
             @click="emit('requestSwitch', 'simulationComponent')"
           >
@@ -46,7 +46,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
         </li>
         <li>
           <button
-            class="tab-button"
+            class="blue-button"
             :class="{ active: activeView === 'timelineComponent' }"
             @click="emit('requestSwitch', 'timelineComponent')"
           >
@@ -55,7 +55,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
         </li>
         <li>
           <button
-            class="tab-button"
+            class="blue-button"
             :class="{ active: activeView === 'aboutComponent' }"
             @click="emit('requestSwitch', 'aboutComponent')"
           >
@@ -71,8 +71,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
 
 <style scoped>
 #top {
-  height: 5vh;
-  max-height: 40px;
+  max-height: 5vh;
   width: 100vw;
   padding: 0.6%;
   display: flex;
@@ -87,7 +86,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
 
 h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 4vh;
 }
 
 nav ul {
@@ -98,22 +97,5 @@ nav ul {
 }
 nav ul li {
   margin: 0 5px;
-}
-
-.tab-button {
-  background: #0085dd;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  font-size: 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-}
-.tab-button:hover {
-  background: #006fb9;
-}
-.tab-button.active {
-  background: #003f73;
 }
 </style>
