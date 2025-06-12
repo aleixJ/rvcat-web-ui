@@ -51,9 +51,9 @@
       <div class="iters-run">
         <div class="iterations-group">
           Iterations:
-          <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
+          <button type="button" class="gray-button" @click="changeIterations(-1)">−</button>
           <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="3000" v-model.number="iterations">
-          <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
+          <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
         </div>
         <div id="run-simulation-button">
           <button id="run-button" class="blue-button" onclick="getSchedulerAnalysis();">Run</button>
@@ -151,9 +151,6 @@
     align-items: center;
     gap:5px;
   }
-  #num-iters{
-    width:45px;
-  }
   .graph-section{
     display: flex;
     justify-content: center;
@@ -222,7 +219,7 @@
   }
 
   .iterations-input {
-    width: 3ch;
+    width: 8vh;
     padding: 2px;
     text-align: center;
     -moz-appearance: textfield;
@@ -231,22 +228,6 @@
   .iterations-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
-  }
-
-  .iterations-btn {
-    background: #e0e0e0;
-    border: 1px solid #b0b0b0;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    line-height: 1;
-    text-align: center;
-    font-size: 1.2em;
-    cursor: pointer;
-    user-select: none;
-  }
-  .iterations-btn:hover {
-    background: #d0d0d0;
   }
 
   .results-info {

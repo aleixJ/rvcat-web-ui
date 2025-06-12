@@ -657,9 +657,9 @@
             Iterations:
           </label>
           <div class="iterations-group">
-            <button type="button" class="iterations-btn" @click="changeIterations(-1)">−</button>
+            <button type="button" class="gray-button" @click="changeIterations(-1)">−</button>
             <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" @change="getTimelineAndDraw" v-model.number="iterations"/>
-            <button type="button" class="iterations-btn" @click="changeIterations(1)">+</button>
+            <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
           </div>
         </div>
         <button @click="toggleInstructions" class="blue-button">{{ showInstructions ? 'Hide' : 'Show' }} Instructions</button>
@@ -739,7 +739,7 @@
   }
 
   .iterations-input {
-    width: 3ch;
+    width: 5vh;
     padding: 2px;
     text-align: center;
     -moz-appearance: textfield;

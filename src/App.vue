@@ -77,6 +77,23 @@
     cursor: not-allowed;
   }
 
+  .gray-button {
+    background: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    width: 3.5vh;
+    height: 3.5vh;
+    line-height: 1;
+    text-align: center;
+    font-size: 2.5vh;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .gray-button:hover {
+    background: #d0d0d0;
+  }
+
   input {
     font-size: 2.5vh;
   }

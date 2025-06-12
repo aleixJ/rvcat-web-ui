@@ -433,18 +433,18 @@
             <div class="width-group">
               <span>Dispatch:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
+                <button class="gray-button" @click="dispatch = Math.max(1, dispatch - 1)">−</button>
                 <input type="number" v-model.number="dispatch" min="1" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="dispatch = Math.min(99, dispatch + 1);">+</button>
+                <button class="gray-button" @click="dispatch = Math.min(99, dispatch + 1);">+</button>
               </div>
             </div>
 
             <div class="width-group">
               <span>Retire:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="retire = Math.max(1, retire - 1)">−</button>
+                <button class="gray-button" @click="retire = Math.max(1, retire - 1)">−</button>
                 <input type="number" v-model.number="retire" min="1" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="retire = Math.min(99, retire + 1);">+</button>
+                <button class="gray-button" @click="retire = Math.min(99, retire + 1);">+</button>
               </div>
             </div>
           </div>
@@ -457,18 +457,18 @@
             <div class="width-group">
               <span>Number of Blocks:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
+                <button class="gray-button" @click="nBlocks = Math.max(0, nBlocks - 1)">−</button>
                 <input type="number" v-model.number="nBlocks" min="0" max="99" class="latency-input"/>
-                <button class="latency-btn" @click="nBlocks = Math.min(99, nBlocks + 1);">+</button>
+                <button class="gray-button" @click="nBlocks = Math.min(99, nBlocks + 1);">+</button>
               </div>
             </div>
 
             <div class="width-group">
               <span>Block Size:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="blkSize = Math.max(1, Math.floor(blkSize / 2))">−</button>
+                <button class="gray-button" @click="blkSize = Math.max(1, Math.floor(blkSize / 2))">−</button>
                 <input type="number" v-model.number="blkSize" min="1" max="2048" readonly class="latency-input"/>
-                <button class="latency-btn" @click="blkSize = Math.min(2048, blkSize*2);">+</button>
+                <button class="gray-button" @click="blkSize = Math.min(2048, blkSize*2);">+</button>
               </div>
             </div>
 
@@ -476,18 +476,18 @@
             <div class="width-group">
               <span>Miss Penalty:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
+                <button class="gray-button" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
                 <input type="number" v-model.number="mPenalty" min="1" :max="nBlocks" class="latency-input"/>
-                <button class="latency-btn" @click="mPenalty = Math.min(99, nBlocks + 1);">+</button>
+                <button class="gray-button" @click="mPenalty = Math.min(99, nBlocks + 1);">+</button>
               </div>
             </div>
 
             <div class="width-group">
               <span>Miss Issue Time:</span>
               <div class="latency-group">
-                <button class="latency-btn" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
+                <button class="gray-button" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
                 <input type="number" v-model.number="mIssueTime" min="1" :max="nBlocks" class="latency-input"/>
-                <button class="latency-btn" @click="mIssueTime = Math.min(99, nBlocks + 1);">+</button>
+                <button class="gray-button" @click="mIssueTime = Math.min(99, nBlocks + 1);">+</button>
               </div>
             </div>
           </div>
@@ -524,9 +524,9 @@
             <td>{{ instr }}</td>
             <td>
               <div class="latency-group">
-                <button type="button" class="latency-btn" @click="resources[instr] = Math.max(1, resources[instr] - 1);">−</button>
+                <button type="button" class="gray-button" @click="resources[instr] = Math.max(1, resources[instr] - 1);">−</button>
                 <input type="number" v-model.number="resources[instr]" class="latency-input" min="1" max="99"/>
-                <button type="button" class="latency-btn" @click="resources[instr] = Math.min(99, resources[instr] + 1);">+</button>
+                <button type="button" class="gray-button" @click="resources[instr] = Math.min(99, resources[instr] + 1);">+</button>
               </div>
             </td>
             <td v-for="port in portList" :key="port" class="port-checkbox">
@@ -632,20 +632,6 @@
     display:flex;
     gap:5px;
   }
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 30px;
-    height: 17px;
-  }
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  .widths input {
-    width: 30px; height: 13px; text-align: center;
-  }
   .ports-toolbar {
     margin: 8px 0;
   }
@@ -697,7 +683,7 @@
     background: white;
     padding: 20px;
     border-radius: 8px;
-    width: 300px;
+    width: 30vh;
     position: relative;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     background: rgba(255, 255, 255, 0.85);
@@ -728,29 +714,14 @@
   }
 
   .latency-input {
-    width: 3ch;
+    width: 5vh;
     padding: 2px;
     margin: 0 4px;
     text-align: center;
-    font-size: 0.9em;
+    font-size: 2.5vh;
   }
 
-  .latency-btn {
-    background: #e0e0e0;
-    border: 1px solid #b0b0b0;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    line-height: 1;
-    text-align: center;
-    font-size: 1.2em;
-    cursor: pointer;
-    user-select: none;
-  }
 
-  .latency-btn:hover {
-    background: #d0d0d0;
-  }
 
   .widths {
     display: flex;
@@ -831,7 +802,6 @@
     justify-content: left;
     gap: 5px;
     width: 100%;
-    font-size:2.5vh;
   }
 
   .settings-group {

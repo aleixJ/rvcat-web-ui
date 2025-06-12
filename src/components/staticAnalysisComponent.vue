@@ -161,7 +161,6 @@
     background: #f0f0f0;
     padding: 10px;
     border-radius: 0 0 5px 5px;
-    font-family: monospace;
     margin-top: 0;
     font-size: 2.5vh;
   }
