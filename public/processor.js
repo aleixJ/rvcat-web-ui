@@ -125,7 +125,7 @@ function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width
   function insert_cache_annotations(cache) {
     if(cache.nBlocks>0){
       document.getElementById('cache-info').innerHTML=`
-      <b>Cache settings:</b> <span>${cache.nBlocks} blocks of ${cache.blkSize} bytes.</span><span> Miss penalty: ${cache.mPenalty}. Miss issue time: ${cache.mIssueTime}</span>`;
+      <b>Cache settings:</b><span>${cache.nBlocks} blocks of ${cache.blkSize} bytes. Miss penalty: ${cache.mPenalty}. Miss issue time: ${cache.mIssueTime}</span>`;
     }
     else {
       document.getElementById('cache-info').innerHTML="<b>This processor does not have a cache memory.</b>";

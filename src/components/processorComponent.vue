@@ -50,7 +50,7 @@
     justify-content: center;
   }
 
-  #processors-list, input {
+  #processors-list {
     font-size: 2.5vh;
   }
 
@@ -88,7 +88,7 @@
     background: #f0f0f0;
     border-radius: 6px;
     margin-top: 5px;
-    font-size: 2.2vh;
+    font-size: 2vh;
   }
   .content {
     height: 70%;
