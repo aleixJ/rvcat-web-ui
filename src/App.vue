@@ -28,7 +28,7 @@
   ::-webkit-scrollbar-thumb {
     background:rgb(167, 167, 167);
     border-radius:10px;
-    height:20px;
+    height:0.75vh;
   }
 
   /* Handle on hover */

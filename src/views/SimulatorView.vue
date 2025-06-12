@@ -113,12 +113,15 @@ onMounted(() => {
 
 <style scoped>
 .container {
+  position:relative;
   display: grid;
   grid-template-columns: 35% 64%;
   grid-auto-rows: 50%;
   width: 100vw;
-  height: 95vh;
+  height: 94vh;
   grid-gap: 2vh;
+  margin-top: 0.5vh;
+  margin-right: 0.5vh;
   background: #e3e3e3;
   overflow: hidden;
   box-sizing: border-box;
