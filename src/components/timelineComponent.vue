@@ -563,11 +563,24 @@
       }
     }
 
+    // For instruction rows, only show port on first 'E'
+    let displayPort = null;
+
+    if (hitCell.kind === 'port') {
+      displayPort = hitCell.port;
+    } else if (
+      hitCell.kind === 'instr' &&
+      hitCell.char === 'E' &&
+      isFirstE(interactiveCells, hitCell)
+    ) {
+      displayPort = hitCell.port;
+    }
+
     hoverInfo.value = {
       x: e.clientX + 10,
       y: e.clientY + 10,
       cycle: hitCell.colIndexVis - headerStart,
-      port:  hitCell.port ?? "N/A",
+      port:  displayPort != null ? displayPort : "N/A",
       state: hitCell.state ?? "N/A",
       type:  instrType ?? "N/A",
       instr: instrID ?? "N/A",

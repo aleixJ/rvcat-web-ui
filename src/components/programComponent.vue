@@ -143,8 +143,8 @@
       <input id="config-name" type="text" v-model="modalName" />
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
-        <button class="save-button" @click="confirmModal">Load</button>
-        <button class="save-button" @click="cancelModal">Cancel</button>
+        <button class="blue-button" @click="confirmModal">Load</button>
+        <button class="blue-button" @click="cancelModal">Cancel</button>
       </div>
     </div>
   </div>
@@ -186,54 +186,5 @@
 #programs-list{
   font-size:2.5vh;
 }
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index:9999;
-}
-.modal {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 300px;
-  position: relative;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  z-index:99999;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-.error {
-  color: red;
-  margin: 6px 0;
-}
-.save-button {
-  background: #0085dd;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  font-size: 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  margin-right: 5px;
-  text-align:center;
-}
-.save-button:hover {
-  background: #006fb9;
-}
-.save-button:active {
-  outline: none;
-  background: #003f73;
-  color: white;
-}
+
 </style>

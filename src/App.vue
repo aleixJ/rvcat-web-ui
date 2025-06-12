@@ -97,4 +97,49 @@
   input {
     font-size: 2.5vh;
   }
+
+  /* Modal styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal         {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 30%;
+    max-width: 300px;
+    position: relative;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .error {
+    color: red;
+    margin: 6px 0;
+  }
+
+  /* Folding animation */
+  .fold-enter-active, .fold-leave-active {
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+  }
+  .fold-enter-from, .fold-leave-to {
+    max-height: 0;
+    opacity: 0;
+  }
+  .fold-enter-to, .fold-leave-from {
+    max-height: 500px;
+    opacity: 1;
+  }
 </style>

@@ -1,6 +1,12 @@
 <script setup>
   import { onMounted, nextTick, ref, watch } from "vue";
 
+  const showCriticalPath = ref(false);
+
+  function toggleCriticalPath() {
+    showCriticalPath.value = !showCriticalPath.value;
+  }
+
   function getCookie(name) {
     const re = new RegExp(
       "(?:^|; )" +
@@ -88,17 +94,26 @@
     <div class="sim-running-msg">
       <div id="simulation-running"><p>Simulation on course...</p></div>
     </div>
+    <div class="critical-wrapper" id="critical-path-section">
+      <div class="critical-header" @click="toggleCriticalPath">
+        <span class="arrow">{{ showCriticalPath ? '▼' : '▶' }}</span>
+        <span class="title"><b>Critical Execution Path</b></span>
+      </div>
+
+      <Transition name="fold" appear>
+        <!-- v-show keeps it in the DOM for your external JS to inject into -->
+        <div v-show="showCriticalPath" id="critical-path" class="critical-box">
+
+        </div>
+      </Transition>
+    </div>
 
     <div id="graph-section" class="graph-section" style="display: none;">
         <h4>Processor Bottlenecks</h4>
         <div id="simulation-graph" class="simulation-img"></div>
     </div>
-    <div id="critical-path-section" class="critical-path-section" style="display: none;">
-      <h4>Critical Execution Path</h4>
-      <div id="critical-path">
 
-      </div>
-    </div>
+
 
     <div class="scale-container">
       <div class="color-scale"></div>
@@ -264,13 +279,31 @@
     min-width: 60px;
   }
 
-  .critical-path-section{
+  .critical-wrapper {
+    border-radius: 6px;
+    margin-top: 5px;
+  }
+  .critical-header {
     display: flex;
-    justify-content: center;
     align-items: center;
-    width: 50%;
-    max-width: 80%;
-    margin: 0 auto;
-    gap: 5px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px 6px 0 0;
+    background: #f0f0f0;
+  }
+  .critical-header .arrow {
+    margin-right: 8px;
+    font-size: 0.9em;
+  }
+  .critical-header .title {
+    font-size: 1em;
+  }
+
+  /* content box */
+  .critical-box {
+    overflow: hidden;
+    padding: 10px;
+    background:  #f0f0f0;
+    border-radius: 0 0 6px 6px;
   }
 </style>

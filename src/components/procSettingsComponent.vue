@@ -577,12 +577,12 @@
 
   <div v-if="showModalUp" class="modal-overlay">
     <div class="modal">
-      <h4>Save Configuration As</h4>
+      <h4>Load Configuration As</h4>
       <label for="config-name">Name:</label>
       <input id="config-name" type="text" v-model="modalName"/>
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
-        <button class="blue-button" @click="confirmModal">Save</button>
+        <button class="blue-button" @click="confirmModal">Load</button>
         <button class="blue-button" @click="closeModal">Cancel</button>
       </div>
     </div>
@@ -670,35 +670,7 @@
     padding: 5px;
     text-align: center;
   }
-  /* Modal Styles */
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 30vh;
-    position: relative;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-  }
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  .error {
-    color: red;
-    margin: 6px 0;
-  }
+
   .download-checkbox {
     display: block;
     margin-top: 10px;

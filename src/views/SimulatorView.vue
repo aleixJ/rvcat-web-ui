@@ -100,8 +100,8 @@ onMounted(() => {
           </p>
           <p><b>Do you want to continue?</b></p>
           <div class="modal-actions">
-            <button @click="confirmLeave" class="save-button">OK</button>
-            <button @click="cancelLeave" class="save-button">Cancel</button>
+            <button @click="confirmLeave" class="blue-button">OK</button>
+            <button @click="cancelLeave" class="blue-button">Cancel</button>
           </div>
         </div>
       </div>
@@ -132,46 +132,6 @@ onMounted(() => {
 .program   { grid-column: 1; grid-row: 2; }
 .results   { grid-column: 2; grid-row: 1 / 3; width: 99%; max-width: 99%; padding-bottom: 25px; }
 
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.modal         {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 300px;
-  position: relative;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(8px);
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-.save-button   {
-  background: #0085dd;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  font-size: 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  margin-right: 5px;
-  text-align: center; }
-.save-button:hover {
-  background: #006fb9;
-}
-.save-button:active {
-  background: #003f73;
-}
+
 
 </style>
