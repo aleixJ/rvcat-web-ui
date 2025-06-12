@@ -106,6 +106,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 1000;
   }
   .modal         {
     background: white;
@@ -116,6 +117,7 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     background: rgba(255,255,255,0.85);
     backdrop-filter: blur(8px);
+    z-index: 1000;
   }
   .modal-actions {
     display: flex;
