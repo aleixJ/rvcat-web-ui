@@ -83,7 +83,12 @@
   }
 
   #processors-list {
-    font-size: 2.5vh;
+    font-size: 2.2vh;
+  }
+
+  #rob-size {
+    max-width: 50%;
+    font-size: 2.2vh;
   }
 
   table{
