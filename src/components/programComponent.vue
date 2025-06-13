@@ -1,6 +1,7 @@
 <script setup>
   import { ref, onMounted, onUnmounted, nextTick } from "vue";
-  import TutorialComponent from '@/components/TutorialComponent.vue'
+  import TutorialComponent from '@/components/tutorialComponent.vue';
+
   let processorsListHandler = null;
 
   onMounted(() => {

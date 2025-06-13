@@ -1,6 +1,6 @@
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted } from "vue";
-  import TutorialComponent from '@/components/TutorialComponent.vue';
+  import TutorialComponent from '@/components/tutorialComponent.vue';
 
   let processorsListHandler;
   let programsListHandler;

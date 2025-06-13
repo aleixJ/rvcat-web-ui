@@ -1,10 +1,10 @@
 <script setup>
   import { ref, nextTick } from 'vue'
-  import TutorialComponent from '@/components/TutorialComponent.vue'
+  import TutorialComponent from '@/components/tutorialComponent.vue';
 
-  const showTutorial = ref(false)
-  const tutorialPosition = ref({ top: '50%', left: '50%' })
-  const infoIcon = ref(null)
+  const showTutorial = ref(false);
+  const tutorialPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
 
   function openTutorial() {
     nextTick(() => {
@@ -50,7 +50,6 @@
       </div>
     </div>
 
-    <!-- tutorial overlay -->
     <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
     text="This is the Processor Pipeline section. Here you can select a processor from the list,
     change its ROB and visualize a graph of its pipeline."

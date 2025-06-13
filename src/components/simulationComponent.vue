@@ -1,6 +1,6 @@
 <script setup>
   import { onMounted, nextTick, ref, watch } from "vue";
-  import TutorialComponent from '@/components/TutorialComponent.vue';
+  import TutorialComponent from '@/components/tutorialComponent.vue';
 
   const showCriticalPath = ref(false);
   const showTutorial = ref(false);
@@ -147,7 +147,7 @@
   </div>
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
   text="In the Simulation section, you can run simulations of the selected program and processor. The
-  number of iterations can be selected on the top-right input, and the 'Run' button pressed to launch the
+  number of iterations can be selected on the top-right input, and pressing the 'Run' button launches the
   simulation. The results are displayed down below, including the instructions' percentage of the
   Critical Execution Path and the usage of the different parts of the processor pipeline."
   @close="closeTutorial"

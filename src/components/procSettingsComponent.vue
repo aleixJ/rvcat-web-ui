@@ -1,6 +1,6 @@
 <script setup>
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick} from "vue";
-  import TutorialComponent from '@/components/TutorialComponent.vue'
+  import TutorialComponent from '@/components/tutorialComponent.vue';
 
   const dispatch = ref(0);
   const retire = ref(0);
