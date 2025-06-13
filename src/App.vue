@@ -9,7 +9,7 @@
     height: 100vh;
     max-width: 100vf;
     max-height: 100vh;
-    font-family: Lato, sans-serif;
+    font-family: 'Trebuchet MS', sans-serif;
     font-size: 2.5vh;
     height: 100%;
     margin: 0;
@@ -54,6 +54,10 @@
   h3 {
     margin: 0;
     font-size: 3.5vh;
+  }
+
+  h4{
+    font-size: 2.75vh;
   }
 
   .blue-button {
@@ -143,11 +147,14 @@
     opacity: 1;
   }
 
+  .info-img {
+    height:2.5vh;
+  }
+
   .info-icon {
-    font-size: 2.5vh;
     cursor: pointer;
     user-select: none;
-    margin-top:0.5vh;
+    margin-top:0.75vh;
   }
   .section-title-and-info{
     display:flex;

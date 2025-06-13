@@ -12,7 +12,8 @@ const emit = defineEmits([ 'requestSwitch' ]);
 
 <template>
   <div id="top">
-    <div>
+    <div class="header-title">
+      <img src="/img/favicon.png" class="title-img">
       <h1>RVCAT-Web</h1>
     </div>
     <nav>
@@ -97,5 +98,13 @@ nav ul {
 }
 nav ul li {
   margin: 0 5px;
+}
+.title-img {
+  height: 4vh;
+  margin-top: 0.25vh;
+}
+.header-title {
+  display:flex;
+  gap: 5px;
 }
 </style>

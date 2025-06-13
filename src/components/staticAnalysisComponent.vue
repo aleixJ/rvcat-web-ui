@@ -109,7 +109,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Static Analysis</h3>
       </div>
     </div>
@@ -127,7 +127,7 @@
     <div class="output-block-wrapper" id="simulation-output-container">
       <div class="graph-header">
         <button class="blue-button" @click="openFullScreen">
-          <img src="/img/fullscreen.png">
+          <img src="/img/fullscreen.png" class="fs-img">
         </button>
         <h4>Recurrent Paths Graph</h4>
       </div>
@@ -179,7 +179,6 @@
     background-color: #f0f0f0;
     padding: 4px 8px;
     border-radius: 5px 5px 0 0;
-    font-family: monospace;
     display: flex;
     align-items: center;
     font-size: 14px;
@@ -195,7 +194,9 @@
     margin-top: 0;
     font-size: 2.5vh;
   }
-
+  .fs-img {
+    height:2.5vh;
+  }
   /* The full-screen overlay */
   .fullscreen-overlay {
     position: fixed;

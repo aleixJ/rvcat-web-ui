@@ -29,7 +29,7 @@
   <div class="pipeline-display">
     <div class="pipeline-header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Processor Pipeline</h3>
       </div>
       <div id="settings-div">

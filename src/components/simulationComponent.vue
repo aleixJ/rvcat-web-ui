@@ -76,7 +76,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Simulation</h3>
       </div>
       <div class="iters-run">
@@ -276,7 +276,6 @@
   .results-info {
     width: 100%;
     margin-top: 10px;
-    font-family: Arial, sans-serif;
   }
 
   .results-info .row {
