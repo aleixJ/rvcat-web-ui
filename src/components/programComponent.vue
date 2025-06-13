@@ -1,6 +1,6 @@
 <script setup>
   import { ref, onMounted, onUnmounted, nextTick } from "vue";
-
+  import TutorialComponent from '@/components/TutorialComponent.vue'
   let processorsListHandler = null;
 
   onMounted(() => {
@@ -118,13 +118,38 @@
     input.click();
     input.remove();
   }
+
+  const showTutorial = ref(false)
+  const tutorialPosition = ref({ top: '50%', left: '50%' })
+  const infoIcon = ref(null)
+
+  function openTutorial() {
+    nextTick(() => {
+      const el = infoIcon.value
+      if (el) {
+        const r = el.getBoundingClientRect()
+        tutorialPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        }
+        showTutorial.value = true
+      }
+    })
+  }
+
+  function closeTutorial() {
+    showTutorial.value = false
+  }
 </script>
 
 
 <template>
   <div class="program_info">
     <div class="program-header">
-      <h3>Program</h3>
+      <div class="section-title-and-info">
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <h3>Program</h3>
+      </div>
       <div id="settings-div">
         <button id="download-button" class="blue-button" @click="downloadProgram">Download</button>
         <button id="upload-button" class="blue-button" @click="uploadProgram">Upload</button>
@@ -148,6 +173,13 @@
       </div>
     </div>
   </div>
+
+  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  text="This is the Program section. Use it to select a program to simulate.
+  You can also download the selected program in JSON format, or upload new custom ones.
+  The program and information about the instructions is displayed in the main box."
+  @close="closeTutorial"
+  />
 
 
 </template>

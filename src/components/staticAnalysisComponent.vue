@@ -1,10 +1,32 @@
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted } from "vue";
+  import TutorialComponent from '@/components/TutorialComponent.vue';
 
   let processorsListHandler;
   let programsListHandler;
   const showAnnotations = ref(false);
   const showFullScreen = ref(false);
+  const showTutorial = ref(false);
+  const tutorialPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
+
+  function openTutorial() {
+    nextTick(() => {
+      const el = infoIcon.value
+      if (el) {
+        const r = el.getBoundingClientRect()
+        tutorialPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        }
+        showTutorial.value = true
+      }
+    })
+  }
+
+  function closeTutorial() {
+    showTutorial.value = false
+  }
 
   function openFullScreen() {
     showFullScreen.value = true;
@@ -86,7 +108,10 @@
 <template>
   <div class="main">
     <div class="header">
-      <h3>Static Analysis</h3>
+      <div class="section-title-and-info">
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <h3>Static Analysis</h3>
+      </div>
     </div>
 
     <div class="annotations-wrapper">
@@ -118,6 +143,12 @@
       <div class="output-block" id="simulation-output-full"></div>
     </div>
   </div>
+  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  text="The Static Analysis section shows performance and program information from a static point of view.
+  The Performance Annotations dropdown showcases the throughput and latency limits of the execution,
+  while the graph below depicts all recurrent paths in the program. Click on the fullscreen button to make
+  the graph larger in a resizeable window."
+  @close="closeTutorial"/>
 </template>
 
 <style scoped>
@@ -163,20 +194,6 @@
     border-radius: 0 0 5px 5px;
     margin-top: 0;
     font-size: 2.5vh;
-  }
-
-  /* Folding animation */
-  .fold-enter-active, .fold-leave-active {
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    overflow: hidden;
-  }
-  .fold-enter-from, .fold-leave-to {
-    max-height: 0;
-    opacity: 0;
-  }
-  .fold-enter-to, .fold-leave-from {
-    max-height: 500px;
-    opacity: 1;
   }
 
   /* The full-screen overlay */

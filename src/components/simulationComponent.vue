@@ -1,7 +1,29 @@
 <script setup>
   import { onMounted, nextTick, ref, watch } from "vue";
+  import TutorialComponent from '@/components/TutorialComponent.vue';
 
   const showCriticalPath = ref(false);
+  const showTutorial = ref(false);
+  const tutorialPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
+
+  function openTutorial() {
+    nextTick(() => {
+      const el = infoIcon.value
+      if (el) {
+        const r = el.getBoundingClientRect()
+        tutorialPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        }
+        showTutorial.value = true
+      }
+    })
+  }
+
+  function closeTutorial() {
+    showTutorial.value = false
+  }
 
   function toggleCriticalPath() {
     showCriticalPath.value = !showCriticalPath.value;
@@ -53,7 +75,10 @@
 <template>
   <div class="main">
     <div class="header">
-      <h3>Simulation</h3>
+      <div class="section-title-and-info">
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <h3>Simulation</h3>
+      </div>
       <div class="iters-run">
         <div class="iterations-group">
           Iterations:
@@ -68,7 +93,6 @@
       </div>
     </div>
 
-    <!-- Move this section here -->
     <div id="simulation-results-info" class="results-info">
       <div class="row">
         <div class="simulation-inline-item">
@@ -94,14 +118,13 @@
     <div class="sim-running-msg">
       <div id="simulation-running"><p>Simulation on course...</p></div>
     </div>
-    <div class="critical-wrapper" id="critical-path-section">
+    <div class="critical-wrapper" id="critical-path-section" style="display: none;">
       <div class="critical-header" @click="toggleCriticalPath">
         <span class="arrow">{{ showCriticalPath ? '▼' : '▶' }}</span>
         <span class="title"><b>Critical Execution Path</b></span>
       </div>
 
       <Transition name="fold" appear>
-        <!-- v-show keeps it in the DOM for your external JS to inject into -->
         <div v-show="showCriticalPath" id="critical-path" class="critical-box">
 
         </div>
@@ -113,8 +136,6 @@
         <div id="simulation-graph" class="simulation-img"></div>
     </div>
 
-
-
     <div class="scale-container">
       <div class="color-scale"></div>
       <div class="scale-labels">
@@ -124,6 +145,13 @@
       </div>
     </div>
   </div>
+  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  text="In the Simulation section, you can run simulations of the selected program and processor. The
+  number of iterations can be selected on the top-right input, and the 'Run' button pressed to launch the
+  simulation. The results are displayed down below, including the instructions' percentage of the
+  Critical Execution Path and the usage of the different parts of the processor pipeline."
+  @close="closeTutorial"
+  />
 </template>
 
 

@@ -1,127 +1,3 @@
-/* SAMPLE
-
-digraph {
-    edge [headport="w"]
-    rankdir="LR";
-    Fetch:e1 -> Dispatch:w1;
-    Fetch:e2 -> Dispatch:w2;
-    Fetch:e3 -> Dispatch:w3;
-    Fetch:e4 -> Dispatch:w4;
-
-    Dispatch:e1 -> P0;
-    Dispatch:e2 -> P1;
-    Dispatch:e3 -> P2;
-    Dispatch:e4 -> P3;
-
-     subgraph cluster_0 {
-        rankdir="LR";
-        node [shape=box3d];
-        P0 [shape=box3d,height=0.15];
-        P1 [shape=box3d,height=0.15];
-        P2 [shape=box3d,height=0.15];
-        P3 [shape=box3d,height=0.15];
-
-        label = "Execute";
-    }
-
-    P0:e -> WriteBack:w1;
-    P1:e -> WriteBack:w2;
-    P2:e -> WriteBack:w3;
-    P3:e -> WriteBack:w4;
-
-    WriteBack:e1 -> Retire:w1;
-    WriteBack:e2 -> Retire:w2;
-    WriteBack:e3 -> Retire:w3;
-    WriteBack:e4 -> Retire:w4;
-
-    Retire:e1 -> Ret:w1;
-    Retire:e2 -> Ret:w2;
-    Retire:e3 -> Ret:w3;
-    Retire:e4 -> Ret:w4;
-    Retire:e5 -> Ret:w5;
-    Retire:e6 -> Ret:w6;
-    Retire:e6 -> Ret:w6;
-    Retire:e6 -> Ret:w6;
-
-    WriteBack[shape=box,height=1.5,width=1.5,label="Write Back"]
-    Dispatch[shape=box,height=1.5,width=1.5]
-    Retire[shape=box,height=1.5,width=1.5]
-
-    Fetch[style=invis,shape=box,height=1]
-
-    Ret[style=invis,shape=box,height=1.5]
-}
-
-
-*/
-/*
-const PROCESSOR_GRAPH_PREAMBLE = `digraph "Processor Pipeline Graph"{
-    edge [headport="w"]
-    rankdir="LR";
-`;
-function construct_reduced_processor_dot(dispatch_width, num_ports, retire_width) {
-    let dot_code = PROCESSOR_GRAPH_PREAMBLE;
-    // --- DISPATCH ---
-    dot_code += `
-    node [fontsize=8, fontname="Arial"];
-    Fetch[style=invis,shape=box,height=0,width=0,fixedsize=true]
-    `
-    dot_code += `Dispatch[shape=box,height=0.6,width=0.6,fixedsize=true,label="D\nw=${dispatch_width}"]\n`
-    dot_code += `Fetch -> Dispatch [label="${dispatch_width}", fontsize=10];\n`
-
-    // --- EXECUTE ---
-    dot_code += `subgraph cluster_execute {
-      rankdir="LR";`
-
-    let shown_ports=[]
-    if(num_ports>=4){
-      shown_ports=[0,1,2,num_ports-1];
-      for (let i = 0; i < 3; i++) {
-        dot_code += `P${i} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
-      }
-      if(num_ports>4){
-        dot_code += `"..." [shape=plaintext,height=0.05,width=0.4,fixedsize=true,fontsize=14];\n`
-      }
-      dot_code += `P${num_ports-1} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
-    }
-    else{
-      for (let i = 0; i < num_ports; i++) {
-        dot_code += `P${i} [shape=box3d,height=0.2,width=0.4,fixedsize=true];\n`
-        shown_ports.push(i);
-      }
-    }
-
-    dot_code += `label = "Execute";\n
-    fontname="Arial";
-    fontsize=12;
-    }\n`
-
-    for (let i in shown_ports) {
-        dot_code += `Dispatch:e${i} -> P${shown_ports[i]}\n`
-    }
-
-    // --- WRITEBACK ---
-    dot_code += `
-    WriteBack[shape=box,height=0.6,width=0.6,fixedsize=true,label="WB\nw=${num_ports}"]
-    `
-    for (let i in shown_ports) {
-        dot_code += `P${shown_ports[i]}:e -> WriteBack:w${i}\n`
-    }
-
-    // --- RETIRE ---
-    dot_code += `Retire[shape=box,height=0.6,width=0.6,fixedsize=true,label="RET\nw=${retire_width}"]`
-
-    dot_code += `
-    Ret[style=invis,shape=box,height=1.5,width=0.1,fixedsize=true]
-    `
-
-    dot_code += `WriteBack -> Retire [label="${num_ports}", fontsize=10];\n`
-
-    dot_code += `Retire -> Ret [label="${retire_width}", fontsize=10];\n`
-
-    return dot_code + `}`
-}*/
-
   function insert_cache_annotations(cache) {
     if(cache.nBlocks>0){
       document.getElementById('cache-info').innerHTML=`
@@ -246,21 +122,33 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
     node [fontsize=14, fontname="Arial"];
   `;
 
-  // Colorscale from green to red
+  // Colorscale from white to red
   const color = [
     "#ffffff",
-    "#d3ffd3",
-    "#a6ffa6",
-    "#7aff7a",
-    "#89f356",
-    "#b5e235",
-    "#e1d015",
-    "#fab000",
-    "#eb7600",
-    "#dd3b00",
+    "#eaffea",
+    "#d5ffd5",
+    "#c0ffc0",
+    "#aaffaa",
+    "#95ff95",
+    "#80ff80",
+    "#7ffb6e",
+    "#86f55d",
+    "#96ee4d",
+    "#abe63d",
+    "#bfde2d",
+    "#d4d51e",
+    "#e6ca11",
+    "#f2bb07",
+    "#f8a800",
+    "#f18c00",
+    "#ea7000",
+    "#e35400",
+    "#dc3800",
+    "#d51c00",
     "#ce0000"
   ];
-  let dispatch_color = color[Math.floor(usage.dispatch/10)];
+
+  let dispatch_color = color[Math.floor(usage.dispatch/5)];
   // --- FETCH ---
   dot_code += `Fetch [
         shape=point
@@ -290,7 +178,7 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
   `
   for (let i = num_ports-1; i >= 0; i--) {
     if (usage !== null && usage.ports[i]!==0.0) {
-        let execute_color = color[Math.floor(usage.ports[i] / 10)];
+        let execute_color = color[Math.floor(usage.ports[i] / 5)];
         dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, style=filled, fillcolor="${execute_color}", tooltip="Usage: ${usage.ports[i].toFixed(1)}%"];\n`
     } else {
         dot_code += `P${i} [shape=box3d,height=0.2,width=0.4, tooltip="Usage: 0.0%"];\n`
@@ -330,7 +218,7 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
     dot_code += `  P${i} -> ROB;\n`;
   }
 
-  let retire_color = color[Math.floor(usage.retire/10)];
+  let retire_color = color[Math.floor(usage.retire/5)];
   dot_code += `
     ROB -> Registers [
       label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${retire_color}"><TR><TD TITLE="Usage: ${usage.retire.toFixed(1)}%">Retire = ${retire_width}</TD></TR></TABLE>>,

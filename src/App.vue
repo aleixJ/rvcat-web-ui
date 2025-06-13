@@ -115,8 +115,7 @@
     width: 30%;
     position: relative;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(255,255,255);
     z-index: 1000;
   }
   .modal-actions {
@@ -142,5 +141,16 @@
   .fold-enter-to, .fold-leave-from {
     max-height: 500px;
     opacity: 1;
+  }
+
+  .info-icon {
+    font-size: 2.5vh;
+    cursor: pointer;
+    user-select: none;
+    margin-top:0.5vh;
+  }
+  .section-title-and-info{
+    display:flex;
+    gap:5px;
   }
 </style>

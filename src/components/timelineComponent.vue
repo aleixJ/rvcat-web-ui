@@ -1,6 +1,7 @@
 
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted, watch} from 'vue';
+  import TutorialComponent from '@/components/TutorialComponent.vue';
 
   let processorsListHandler;
   let programsListHandler;
@@ -10,6 +11,27 @@
   const timelineCanvas = ref(null);
   const tooltipRef = ref(null);
   let timelineData = ref(null);
+  const showTutorial = ref(false)
+  const tutorialPosition = ref({ top: '50%', left: '50%' })
+  const infoIcon = ref(null)
+
+  function openTutorial() {
+    nextTick(() => {
+      const el = infoIcon.value
+      if (el) {
+        const r = el.getBoundingClientRect()
+        tutorialPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        }
+        showTutorial.value = true
+      }
+    })
+  }
+
+  function closeTutorial() {
+    showTutorial.value = false
+  }
 
   function getCookie(name) {
     const re = new RegExp(
@@ -663,7 +685,10 @@
 <template>
   <div class="main">
     <div class="header">
-      <h3>Timeline</h3>
+      <div class="section-title-and-info">
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <h3>Timeline</h3>
+      </div>
       <div class="timeline-controls">
         <div class="simulation-results-controls-item">
           <label for="dependencies-num-iters" style="margin-right: 2px;">
@@ -694,6 +719,13 @@
       </div>
     </div>
   </div>
+  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  text="The Timeline section shows the program execution over time. The iterations displayed can be
+  selected on the top-right section, as well as hiding or showing extra information.Hover over the grid
+  to see basic info about the selected cell, such as the cycle, the instruction type or the port it is
+  being executed in. You can also click on timeline cells to obtain more detailed information."
+  @close="closeTutorial"
+  />
 </template>
 
 

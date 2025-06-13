@@ -1,20 +1,47 @@
+<script setup>
+  import { ref, nextTick } from 'vue'
+  import TutorialComponent from '@/components/TutorialComponent.vue'
+
+  const showTutorial = ref(false)
+  const tutorialPosition = ref({ top: '50%', left: '50%' })
+  const infoIcon = ref(null)
+
+  function openTutorial() {
+    nextTick(() => {
+      const el = infoIcon.value
+      if (el) {
+        const r = el.getBoundingClientRect()
+        tutorialPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        }
+        showTutorial.value = true
+      }
+    })
+  }
+
+  function closeTutorial() {
+    showTutorial.value = false
+  }
+</script>
 
 <template>
   <div class="pipeline-display">
     <div class="pipeline-header">
-      <h3>Processor Pipeline</h3>
+      <div class="section-title-and-info">
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <h3>Processor Pipeline</h3>
+      </div>
       <div id="settings-div">
-
-
         <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
-        <!-- <option value="model1">Model 1</option> -->
         </select>
         <div>
           <label for="rob-size"> ROB: </label>
           <input type="number" id="rob-size" name="rob-size" min="1" max="1000" value="100" onchange="reloadRvcat();">
         </div>
-      </div>
+        <!-- added info icon -->
 
+      </div>
     </div>
     <div class="content">
       <div class="cache-info" id="cache-info"></div>
@@ -23,6 +50,12 @@
       </div>
     </div>
 
+    <!-- tutorial overlay -->
+    <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+    text="This is the Processor Pipeline section. Here you can select a processor from the list,
+    change its ROB and visualize a graph of its pipeline."
+    @close="closeTutorial"
+    />
   </div>
 </template>
 
@@ -75,6 +108,7 @@
     gap: 5px;
     font-size: 2.5vh;
   }
+
   .pipeline-img{
     margin: 0 auto;
     margin-top: 10%;

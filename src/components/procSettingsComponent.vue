@@ -1,7 +1,7 @@
 <script setup>
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick} from "vue";
+  import TutorialComponent from '@/components/TutorialComponent.vue'
 
-  // --- existing reactive state ---
   const dispatch = ref(0);
   const retire = ref(0);
   const resources = reactive({});
@@ -408,12 +408,37 @@
 
   }
 
+  const showTutorial = ref(false)
+  const tutorialPosition = ref({ top: '50%', left: '50%' })
+  const infoIcon = ref(null)
+
+  function openTutorial() {
+    nextTick(() => {
+      const el = infoIcon.value
+      if (el) {
+        const r = el.getBoundingClientRect()
+        tutorialPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        }
+        showTutorial.value = true
+      }
+    })
+  }
+
+  function closeTutorial() {
+    showTutorial.value = false
+  }
+
 </script>
 
 <template>
   <div class="main">
     <div class="header">
-      <h3>Processor Settings - {{ name }}</h3>
+      <div class="section-title-and-info">
+        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png"></span>
+        <h3>Processor Settings - {{ name }}</h3>
+      </div>
       <div class="buttons">
         <button class="blue-button" @click="openModal" :disabled="!isModified">
           Apply Changes
@@ -547,6 +572,14 @@
 
     </div>
   </div>
+
+  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  text="In the Processor Settings section you can create new processor configurations
+     to use in simulations. Dispatch and Retire widths can be modified in Stage Width Settings,
+     and cache memory can be added or modified in the Cache settings section. Ports can be added
+     (up to a maximum of 10) and deleted in the toolbar above the table. Use the table below to change
+     instruction latencies and the ports they are assigned to."
+  @close="closeTutorial"/>
 
   <!-- Modal Dialog -->
   <div v-if="showModalDown" class="modal-overlay">
