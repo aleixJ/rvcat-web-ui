@@ -579,6 +579,7 @@
      and cache memory can be added or modified in the Cache settings section. Ports can be added
      (up to a maximum of 10) and deleted in the toolbar above the table. Use the table below to change
      instruction latencies and the ports they are assigned to."
+  title="Processor Settings"
   @close="closeTutorial"/>
 
   <!-- Modal Dialog -->

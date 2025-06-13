@@ -53,6 +53,7 @@
     <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
     text="This is the Processor Pipeline section. Here you can select a processor from the list,
     change its ROB and visualize a graph of its pipeline."
+    title="Processor Pipeline"
     @close="closeTutorial"
     />
   </div>

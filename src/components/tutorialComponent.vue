@@ -10,6 +10,10 @@
       type: String,
       default: '',
     },
+    title: {
+      type: String,
+      default: '',
+    }
   });
 
   const emit = defineEmits(['close']);
@@ -30,8 +34,8 @@
 <template>
   <div v-if="visible" class="tutorial-overlay" @click.self="close">
     <div class="tutorial-dialog" :style="positionStyle">
-      <b>Help</b>
-      <button class="close-button" @click="close">×</button>
+      <b>Help - {{title}}</b>
+      <button class="close-button" @click="close">x</button>
       <div class="dialog-content">{{ text }}</div>
     </div>
   </div>
@@ -66,7 +70,7 @@
     right: 10px;
     background: transparent;
     border: none;
-    font-size: 20px;
+    font-size: 3vh;
     cursor: pointer;
   }
 

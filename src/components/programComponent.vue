@@ -179,6 +179,7 @@
   text="This is the Program section. Use it to select a program to simulate.
   You can also download the selected program in JSON format, or upload new custom ones.
   The program and information about the instructions is displayed in the main box."
+  title="Program"
   @close="closeTutorial"
   />
 

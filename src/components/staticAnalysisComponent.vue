@@ -138,7 +138,7 @@
     <div class="fullscreen-content">
       <div class="fullscreen-header">
         <h3>Recurrent Paths Graph</h3>
-        <button class="close-btn" @click="closeFullScreen">×</button>
+        <button class="close-btn" @click="closeFullScreen">x</button>
       </div>
       <div class="output-block" id="simulation-output-full"></div>
     </div>
@@ -148,6 +148,7 @@
   The Performance Annotations dropdown showcases the throughput and latency limits of the execution,
   while the graph below depicts all recurrent paths in the program. Click on the fullscreen button to make
   the graph larger in a resizeable window."
+  title="Static Analysis"
   @close="closeTutorial"/>
 </template>
 
@@ -233,7 +234,7 @@
     align-self: flex-end;
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 3vh;
     cursor: pointer;
     margin-bottom: 8px;
   }
