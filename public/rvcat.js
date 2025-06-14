@@ -520,15 +520,26 @@ async function saveNewProgram(config) {
 function createCriticalPathList(data) {
   const color = [
     "#ffffff",
-    "#d3ffd3",
-    "#a6ffa6",
-    "#7aff7a",
-    "#89f356",
-    "#b5e235",
-    "#e1d015",
-    "#fab000",
-    "#eb7600",
-    "#dd3b00",
+    "#eaffea",
+    "#d5ffd5",
+    "#c0ffc0",
+    "#aaffaa",
+    "#95ff95",
+    "#80ff80",
+    "#7ffb6e",
+    "#86f55d",
+    "#96ee4d",
+    "#abe63d",
+    "#bfde2d",
+    "#d4d51e",
+    "#e6ca11",
+    "#f2bb07",
+    "#f8a800",
+    "#f18c00",
+    "#ea7000",
+    "#e35400",
+    "#dc3800",
+    "#d51c00",
     "#ce0000"
   ];
   let out="<list>";
@@ -544,7 +555,7 @@ function createCriticalPathList(data) {
 
 
   if(data['dispatch'].toFixed(1)!=0.0){
-    lineColor=color[Math.floor(data['dispatch']/10)];
+    lineColor=color[Math.floor(data['dispatch']/5)];
   }
   else{
     lineColor='white';
@@ -557,7 +568,7 @@ function createCriticalPathList(data) {
 
   for(let i in data['instructions']){
     if(data['instructions'][i]['percentage'].toFixed(1)!=0.0){
-      lineColor=color[Math.floor(data['instructions'][i]['percentage']/10)]
+      lineColor=color[Math.floor(data['instructions'][i]['percentage']/5)]
     }
     else{
       lineColor='white';
@@ -570,7 +581,7 @@ function createCriticalPathList(data) {
   }
 
   if(data['retire'].toFixed(1)!=0.0){
-    lineColor=color[Math.floor(data['retire']/10)];
+    lineColor=color[Math.floor(data['retire']/5)];
   }
   else{
     lineColor = 'white';

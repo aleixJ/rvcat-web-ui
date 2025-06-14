@@ -479,11 +479,13 @@
         let kind;
         if(raw.trim().startsWith("P")){
           kind='port';
+        } else if(raw.trim().startsWith("MM")){
+          kind='mem';
         } else {
           kind='instr';
         }
         // Register interactive cell
-        if ((colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) || (kind==='port' && ch==="X")) {
+        if ((colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) || (kind==='port' && ch==="X") || (kind==='mem' && ch==="#")) {
           interactiveCells.push({
             kind,
             x, y,
@@ -606,6 +608,7 @@
       state: hitCell.state ?? "N/A",
       type:  instrType ?? "N/A",
       instr: instrID ?? "N/A",
+      kind: hitCell.kind,
     };
 
     // Flip tooltip if it overflows screen
@@ -715,7 +718,7 @@
         <div v-if="hoverInfo.type!='N/A'"><strong>Type: </strong> {{ hoverInfo.type }}</div>
         <div v-if="hoverInfo.state!='N/A'"><strong>State: </strong> {{ hoverInfo.state }}</div>
         <div v-if="hoverInfo.port!='N/A'"><strong>Port: </strong> P{{ hoverInfo.port }}</div>
-
+        <div v-if="hoverInfo.kind==='mem'">Block read from main memory</div>
       </div>
     </div>
   </div>

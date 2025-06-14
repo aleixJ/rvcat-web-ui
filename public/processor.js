@@ -162,7 +162,7 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
 
   dot_code += `
     Fetch -> "Waiting Buffer" [
-      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${dispatch_color}"><TR><TD TITLE="Usage: ${usage.dispatch.toFixed(1)}%">Dispatch = ${dispatch_width}</TD></TR></TABLE>>,
+      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${dispatch_color}"><TR><TD>Dispatch = ${dispatch_width} (${usage.dispatch.toFixed(1)}%)</TD></TR></TABLE>>,
       fontsize=14,
       fontname="Arial",
       tooltip="Usage: ${usage.dispatch.toFixed(1)}%"
@@ -221,7 +221,7 @@ function construct_full_processor_dot(dispatch_width, num_ports, retire_width, u
   let retire_color = color[Math.floor(usage.retire/5)];
   dot_code += `
     ROB -> Registers [
-      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${retire_color}"><TR><TD TITLE="Usage: ${usage.retire.toFixed(1)}%">Retire = ${retire_width}</TD></TR></TABLE>>,
+      label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="${retire_color}"><TR><TD>Retire = ${retire_width} (${usage.retire.toFixed(1)}%)</TD></TR></TABLE>>,
       fontsize=14,
       fontname="Arial",
       tooltip="Usage: ${usage.retire.toFixed(1)}%"

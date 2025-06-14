@@ -19,7 +19,9 @@
           tools (for example, as part of a final degree project), please
           contact your professors.
       </p>
-
+      <p>
+          <b>The RVCAT developers © 2025</b>
+      </p>
     </div>
 </template>
 
