@@ -218,7 +218,7 @@
 }
 
 #programs-list{
-  font-size:2.5vh;
+  font-size:2.2vh;
 }
 
 </style>
