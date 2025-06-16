@@ -520,28 +520,29 @@ async function saveNewProgram(config) {
 function createCriticalPathList(data) {
   const color = [
     "#ffffff",
-    "#eaffea",
-    "#d5ffd5",
-    "#c0ffc0",
-    "#aaffaa",
-    "#95ff95",
-    "#80ff80",
-    "#7ffb6e",
-    "#86f55d",
-    "#96ee4d",
-    "#abe63d",
-    "#bfde2d",
-    "#d4d51e",
-    "#e6ca11",
-    "#f2bb07",
-    "#f8a800",
-    "#f18c00",
-    "#ea7000",
-    "#e35400",
-    "#dc3800",
-    "#d51c00",
-    "#ce0000"
+    "#fff3f3",
+    "#ffe7e7",
+    "#ffdbdb",
+    "#ffcece",
+    "#ffc2c2",
+    "#ffb6b6",
+    "#ffaaaa",
+    "#ff9e9e",
+    "#ff9292",
+    "#ff8686",
+    "#ff7979",
+    "#ff6d6d",
+    "#ff6161",
+    "#ff5555",
+    "#ff4949",
+    "#ff3d3d",
+    "#ff3131",
+    "#ff2424",
+    "#ff1818",
+    "#ff0c0c",
+    "#ff0000"
   ];
+
   let out="<list>";
   let lineColor;
   const style = `display:flex;
