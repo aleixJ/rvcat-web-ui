@@ -14,7 +14,7 @@ const emit = defineEmits([ 'requestSwitch' ]);
   <div id="top">
     <div class="header-title">
       <img src="/img/favicon.png" class="title-img">
-      <h1>RVCAT-Web</h1>
+      <h1>RVCAT-WEB</h1>
     </div>
     <nav>
       <ul>

@@ -517,6 +517,11 @@ async function saveNewProgram(config) {
   await executeCode(GET_AVAIL_PROGRAMS, 'get_programs');
 }
 
+async function showCellInfo(instrID, cycle) {
+  //TO DO: Create Python function that returs additional info
+  return 'TO DO'
+}
+
 function createCriticalPathList(data) {
   const color = [
     "#ffffff",

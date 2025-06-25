@@ -11,9 +11,10 @@
   const timelineCanvas = ref(null);
   const tooltipRef = ref(null);
   let timelineData = ref(null);
-  const showTutorial = ref(false)
-  const tutorialPosition = ref({ top: '50%', left: '50%' })
-  const infoIcon = ref(null)
+  const showTutorial = ref(false);
+  const tutorialPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
+  const clickedCellInfo = ref(null);
 
   function openTutorial() {
     nextTick(() => {
@@ -512,7 +513,7 @@
   }
 
 
-  // Get index of D and R (start and end of this line's interactive cells) ignoring ANSI
+  // Get index of D and R
   function computeDandRIdxs(raw) {
     let dVisIdx = Infinity;
     let rVisIdx = -1;
@@ -544,97 +545,121 @@
   }
 
 
-  // Attach hover event to cell
+  // Attach hover and click event to cells
   function attachHover(canvas, interactiveCells, headerStart) {
-  canvas.onmousemove = e => {
-    const rect   = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    canvas.onmousemove = e => {
+      const rect   = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    let hitCell = null;
-    for (const cell of interactiveCells) {
-      if (
-        mouseX >= cell.x &&
-        mouseX <= cell.x + cell.width &&
-        mouseY >= cell.y &&
-        mouseY <= cell.y + cell.height
-      ) {
-        hitCell = cell;
-        break;
-      }
-    }
-
-    if (!hitCell) {
-      hoverInfo.value = null;
-      return;
-    }
-    let instrType = hitCell.instrType;
-    let instrID   = hitCell.instrID;
-    // If it is a Port cell, find which instruction the X corresponds to
-    if (hitCell.kind === 'port') {
-      if (hitCell.char === 'X') {
-        // find the instr cell in the same cycle & same port, with char 'E'
-        const match = interactiveCells.find(c =>
-          c.kind == 'instr' &&
-          c.port == hitCell.port &&
-          c.colIndexVis == hitCell.colIndexVis &&
-          c.char == 'E' && isFirstE(interactiveCells, c)
-        );
-        if (match){
-          instrType = match.instrType;
-          instrID   = match.instrID;
+      let hitCell = null;
+      for (const cell of interactiveCells) {
+        if (
+          mouseX >= cell.x &&
+          mouseX <= cell.x + cell.width &&
+          mouseY >= cell.y &&
+          mouseY <= cell.y + cell.height
+        ) {
+          hitCell = cell;
+          break;
         }
       }
-    }
 
-    // For instruction rows, only show port on first 'E'
-    let displayPort = null;
+      if (!hitCell) {
+        hoverInfo.value = null;
+        return;
+      }
+      let instrType = hitCell.instrType;
+      let instrID   = hitCell.instrID;
+      // If it is a Port cell, find which instruction the X corresponds to
+      if (hitCell.kind === 'port') {
+        if (hitCell.char === 'X') {
+          // find the instr cell in the same cycle & same port, with char 'E'
+          const match = interactiveCells.find(c =>
+            c.kind == 'instr' &&
+            c.port == hitCell.port &&
+            c.colIndexVis == hitCell.colIndexVis &&
+            c.char == 'E' && isFirstE(interactiveCells, c)
+          );
+          if (match){
+            instrType = match.instrType;
+            instrID   = match.instrID;
+          }
+        }
+      }
 
-    if (hitCell.kind === 'port') {
-      displayPort = hitCell.port;
-    } else if (
-      hitCell.kind === 'instr' &&
-      hitCell.char === 'E' &&
-      isFirstE(interactiveCells, hitCell)
-    ) {
-      displayPort = hitCell.port;
-    }
+      // For instruction rows, only show port on first 'E'
+      let displayPort = null;
 
-    hoverInfo.value = {
-      x: e.clientX + 10,
-      y: e.clientY + 10,
-      cycle: hitCell.colIndexVis - headerStart,
-      port:  displayPort != null ? displayPort : "N/A",
-      state: hitCell.state ?? "N/A",
-      type:  instrType ?? "N/A",
-      instr: instrID ?? "N/A",
-      kind: hitCell.kind,
+      if (hitCell.kind === 'port') {
+        displayPort = hitCell.port;
+      } else if (
+        hitCell.kind === 'instr' &&
+        hitCell.char === 'E' &&
+        isFirstE(interactiveCells, hitCell)
+      ) {
+        displayPort = hitCell.port;
+      }
+
+      hoverInfo.value = {
+        x: e.clientX + 10,
+        y: e.clientY + 10,
+        cycle: hitCell.colIndexVis - headerStart,
+        port:  displayPort != null ? displayPort : "N/A",
+        state: hitCell.state ?? "N/A",
+        type:  instrType ?? "N/A",
+        instr: instrID ?? "N/A",
+        kind: hitCell.kind,
+      };
+
+      canvas.onclick = e => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        for (const cell of interactiveCells) {
+          if (
+            mouseX >= cell.x &&
+            mouseX <= cell.x + cell.width &&
+            mouseY >= cell.y &&
+            mouseY <= cell.y + cell.height
+          ) {
+            handleCellClick(cell.instrID, cell.colIndexVis - headerStart);
+            break;
+          }
+        }
+      };
+
+      // Flip tooltip if it overflows screen
+      nextTick(() => {
+        const tt = tooltipRef.value;
+        if (!tt) return;
+        const tr = tt.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let newX = hoverInfo.value.x;
+        let newY = hoverInfo.value.y;
+
+        if (tr.right > vw) {
+          newX = e.clientX - tr.width - 10;
+        }
+        if (tr.bottom > vh) {
+          newY = e.clientY - tr.height - 10;
+        }
+
+        if (newX !== hoverInfo.value.x || newY !== hoverInfo.value.y) {
+          hoverInfo.value = { ...hoverInfo.value, x: newX, y: newY };
+        }
+      });
     };
+  }
 
-    // Flip tooltip if it overflows screen
-    nextTick(() => {
-      const tt = tooltipRef.value;
-      if (!tt) return;
-      const tr = tt.getBoundingClientRect();
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+  async function handleCellClick(instrID, cycle) {
+    const text = await showCellInfo(instrID, cycle);
+    clickedCellInfo.value = { instrID, cycle, text };
+  }
 
-      let newX = hoverInfo.value.x;
-      let newY = hoverInfo.value.y;
-
-      if (tr.right > vw) {
-        newX = e.clientX - tr.width - 10;
-      }
-      if (tr.bottom > vh) {
-        newY = e.clientY - tr.height - 10;
-      }
-
-      if (newX !== hoverInfo.value.x || newY !== hoverInfo.value.y) {
-        hoverInfo.value = { ...hoverInfo.value, x: newX, y: newY };
-      }
-    });
-  };
-}
   function isFirstE(interactiveCells, cell) {
     return interactiveCells
       .filter(c => c.rowIndex === cell.rowIndex && c.char === 'E')
@@ -730,6 +755,17 @@
   title="Timeline"
   @close="closeTutorial"
   />
+  <div v-if="clickedCellInfo" class="modal-overlay" @click.self="clickedCellInfo = null">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Cell Info</h3>
+        <button class="close-btn" @click="clickedCellInfo = null">x</button>
+      </div>
+      <p><strong>Instruction:</strong> {{ clickedCellInfo.instrID }}</p>
+      <p><strong>Cycle:</strong> {{ clickedCellInfo.cycle }}</p>
+      <p>{{ clickedCellInfo.text }}</p>
+    </div>
+  </div>
 </template>
 
 
@@ -799,4 +835,18 @@
     margin: 0;
   }
 
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .close-btn {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-size: 3vh;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
 </style>
