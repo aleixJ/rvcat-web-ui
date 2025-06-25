@@ -164,6 +164,7 @@
   .header {
     position: sticky;
     padding-top:2px;
+    padding-bottom:5px;
     top: -5px;
     left:0;
     background: white;

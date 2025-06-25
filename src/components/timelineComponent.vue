@@ -15,6 +15,7 @@
   const tutorialPosition = ref({ top: '50%', left: '50%' });
   const infoIcon = ref(null);
   const clickedCellInfo = ref(null);
+  const zoomLevel = ref(1);
 
   function openTutorial() {
     nextTick(() => {
@@ -124,12 +125,12 @@
   function drawTimeline(data) {
     const canvas = timelineCanvas.value;
     const ctx    = canvas.getContext('2d');
-    const cellW   = 14;
-    const cellH   = 20;
-    const padX    = 20;
-    const padY    = 10;
-    const fontSize = 14;
-    const fontYOffset = 3;
+    const cellW   = 14 * zoomLevel.value;
+    const cellH   = 20 * zoomLevel.value;
+    const padX    = 20 * zoomLevel.value;
+    const padY    = 10 * zoomLevel.value;
+    const fontSize = 14 * zoomLevel.value;
+    const fontYOffset = 3 * zoomLevel.value;
 
     // Split raw lines and extract port info
     const rawLines = data.split('\n');
@@ -151,7 +152,7 @@
     // Filter out port rows, compute visibleRows[]
     const visibleRows = filterVisibleRows(processed, rowPorts, showPorts.value);
 
-    // Measure & resize canvas based on visibleRows and show/hide instructions
+    // Measure & resize canvas based on visibleRows and zoomLevel and show/hide instructions
     const measured = measureLines(visibleRows, showInstructions.value);
     canvas.width  = padX * 2 + measured.maxCols * cellW;
     canvas.height = padY * 2 + visibleRows.length * cellH;
@@ -666,7 +667,6 @@
       .every(other => other.colIndexVis >= cell.colIndexVis);
   }
 
-
   // Get state from char in cell
   function charToState(ch) {
     let msg="";
@@ -707,6 +707,12 @@
     }
   });
 
+  watch(zoomLevel, () => {
+    if (timelineData.value) {
+      drawTimeline(timelineData.value);
+    }
+  });
+
 </script>
 
 
@@ -718,12 +724,14 @@
         <h3>Timeline</h3>
       </div>
       <div class="timeline-controls">
+        <button class="blue-button" @click="zoomLevel = Math.max(0.25, zoomLevel - 0.25)" :disabled="zoomLevel==0.25"><img src="/img/zoom-out.png"></button>
+        <button class="blue-button" @click="zoomLevel = Math.min(2, zoomLevel + 0.25)" :disabled="zoomLevel==2"><img src="/img/zoom-in.png"></button>
         <div class="simulation-results-controls-item">
           <label for="dependencies-num-iters" style="margin-right: 2px;">
             Iterations:
           </label>
           <div class="iterations-group">
-            <button type="button" class="gray-button" @click="changeIterations(-1)">−</button>
+            <button type="button" class="gray-button" @click="changeIterations(-1)">-</button>
             <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" @change="getTimelineAndDraw" v-model.number="iterations"/>
             <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
           </div>
@@ -749,9 +757,10 @@
   </div>
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
   text="The Timeline section shows the program execution over time. The iterations displayed can be
-  selected on the top-right section, as well as hiding or showing extra information. Hover over the grid
-  to see basic info about the selected cell, such as the cycle, the instruction type or the port it is
-  being executed in. You can also click on timeline cells to obtain more detailed information."
+  selected on the top-right section, as well as hiding or showing extra information and zooming in or out.
+  Hover over the grid to see basic info about the selected cell, such as the cycle, the instruction type
+  or the port it is being executed in. You can also click on timeline cells to obtain more detailed
+  information."
   title="Timeline"
   @close="closeTutorial"
   />
@@ -785,6 +794,7 @@
     background:white;
     width:100%;
     left:0;
+    padding-bottom:5px;
   }
   h3 {
   margin: 0;

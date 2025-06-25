@@ -108,7 +108,6 @@ const handlers = {
             document.getElementById('simulation-running').style.display = 'none';
             document.getElementById('graph-section').style.display = 'block';
             document.getElementById('critical-path-section').style.display = 'block';
-            document.getElementById('run-button').style.display = 'block';
             document.getElementById('run-simulation-button').disabled = false;
             return;
         }
@@ -136,7 +135,6 @@ const handlers = {
         document.getElementById('simulation-running').style.display = 'none';
         document.getElementById('graph-section').style.display = 'block';
         document.getElementById('critical-path-section').style.display = 'block';
-        document.getElementById('run-button').style.display = 'block';
         document.getElementById('run-simulation-button').disabled = false;
 
     },
@@ -434,7 +432,6 @@ function getSchedulerAnalysis() {
     document.getElementById('simulation-running').style.display = 'block';
     document.getElementById('graph-section').style.display = 'none';
     document.getElementById('critical-path-section').style.display = 'none';
-    document.getElementById('run-button').style.display = 'none';
     document.getElementById('run-simulation-button').disabled = true;
     executeCode(
         RVCAT_HEADER() + RUN_PROGRAM_ANALYSIS,

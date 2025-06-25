@@ -86,10 +86,7 @@
           <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="3000" v-model.number="iterations">
           <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
         </div>
-        <div id="run-simulation-button">
-          <button id="run-button" class="blue-button" onclick="getSchedulerAnalysis();">Run</button>
-          <div id="run-simulation-spinner" class="spinner-small" style="display: none;"></div>
-        </div>
+        <button id="run-simulation-button" class="blue-button" onclick="getSchedulerAnalysis();">Run</button>
       </div>
     </div>
 
@@ -116,7 +113,10 @@
       </div>
     </div>
     <div class="sim-running-msg">
-      <div id="simulation-running"><p>Simulation on course...</p></div>
+      <div class="running-group">
+        <div id="run-simulation-spinner" class="spinner" style="display: none;"></div>
+        <div id="simulation-running"><p>Simulation on course...</p></div>
+      </div>
     </div>
     <div class="critical-wrapper" id="critical-path-section" style="display: none;">
       <div class="critical-header" @click="toggleCriticalPath">
@@ -182,6 +182,7 @@
   .header{
     position:sticky;
     padding-top:2px;
+    padding-bottom:5px;
     top:-5px;
     left:0;
     background:white;
@@ -212,24 +213,30 @@
     width:70%;
     margin:auto;
   }
-  .spinner-small {
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #868686;
+  .running-group{
+    display:flex;
+    gap:10px;
+  }
+  .spinner {
+    border: 8px solid #f0f0f0;
+    border-top: 8px solid #0085dd;
     border-radius: 50%;
     width: 15px;
     height: 15px;
     animation: spin 1s linear infinite;
     margin: auto;
-}
+    width: 5vh;
+    height: 5vh;
+  }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
+  @keyframes spin {
+      0% {
+          transform: rotate(0deg);
+      }
+      100% {
+          transform: rotate(360deg);
+      }
+  }
 
   .scale-container {
     width: 50%;
