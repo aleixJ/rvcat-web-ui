@@ -724,8 +724,6 @@
         <h3>Timeline</h3>
       </div>
       <div class="timeline-controls">
-        <button class="blue-button" @click="zoomLevel = Math.max(0.25, zoomLevel - 0.25)" :disabled="zoomLevel==0.25"><img src="/img/zoom-out.png"></button>
-        <button class="blue-button" @click="zoomLevel = Math.min(2, zoomLevel + 0.25)" :disabled="zoomLevel==2"><img src="/img/zoom-in.png"></button>
         <div class="simulation-results-controls-item">
           <label for="dependencies-num-iters" style="margin-right: 2px;">
             Iterations:
@@ -736,6 +734,8 @@
             <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
           </div>
         </div>
+        <button class="blue-button" @click="zoomLevel = Math.max(0.25, zoomLevel - 0.25)" :disabled="zoomLevel==0.25"><img src="/img/zoom-out.png"></button>
+        <button class="blue-button" @click="zoomLevel = Math.min(2, zoomLevel + 0.25)" :disabled="zoomLevel==2"><img src="/img/zoom-in.png"></button>
         <button @click="toggleInstructions" class="blue-button">{{ showInstructions ? 'Hide' : 'Show' }} Instructions</button>
         <button @click="togglePorts" class="blue-button">{{ showPorts ? 'Hide' : 'Show' }} Ports</button>
       </div>
