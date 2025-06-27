@@ -15,7 +15,6 @@
   const tutorialPosition = ref({ top: '50%', left: '50%' });
   const infoIcon = ref(null);
   const clickedCellInfo = ref(null);
-  const zoomLevel = ref(1);
 
   function openTutorial() {
     nextTick(() => {
@@ -71,6 +70,14 @@
 
   const iterations = ref(parseInt(getCookie("timelineIterations")) || 1);
   watch(iterations, (v) => setCookie("timelineIterations", v));
+
+  const zoomLevel = ref(parseInt(getCookie("timelineZoom")) || 1);
+  watch(zoomLevel, (v) => {
+    if (timelineData.value) {
+      drawTimeline(timelineData.value);
+    }
+    setCookie("timelineZoom", v);
+  });
 
   const showPorts = useBooleanCookie('showPorts', true);
   const showInstructions = useBooleanCookie('showInstructions', true);
@@ -707,12 +714,6 @@
     }
   });
 
-  watch(zoomLevel, () => {
-    if (timelineData.value) {
-      drawTimeline(timelineData.value);
-    }
-  });
-
 </script>
 
 
@@ -760,7 +761,7 @@
   selected on the top-right section, as well as hiding or showing extra information and zooming in or out.
   Hover over the grid to see basic info about the selected cell, such as the cycle, the instruction type
   or the port it is being executed in. You can also click on timeline cells to obtain more detailed
-  information."
+  information. fdshbfhsdfbsdfnsdfnsd"
   title="Timeline"
   @close="closeTutorial"
   />
