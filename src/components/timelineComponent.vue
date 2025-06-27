@@ -761,7 +761,7 @@
   selected on the top-right section, as well as hiding or showing extra information and zooming in or out.
   Hover over the grid to see basic info about the selected cell, such as the cycle, the instruction type
   or the port it is being executed in. You can also click on timeline cells to obtain more detailed
-  information. fdshbfhsdfbsdfnsdfnsd"
+  information."
   title="Timeline"
   @close="closeTutorial"
   />
