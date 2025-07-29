@@ -30,7 +30,7 @@
     <div class="pipeline-header">
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
-        <h3>Processor Pipeline</h3>
+        <h3>Processor MicroArchitecture</h3>
       </div>
       <div id="settings-div">
         <select id="processors-list" name="processor-name" onchange="reloadRvcat();">
@@ -40,7 +40,6 @@
           <input type="number" id="rob-size" name="rob-size" min="1" max="1000" value="100" onchange="reloadRvcat();">
         </div>
         <!-- added info icon -->
-
       </div>
     </div>
     <div class="content">
