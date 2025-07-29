@@ -214,14 +214,6 @@ function programShowDependencies() {
     lastExecutedCommand = programShowDependencies;
 }
 
-function programShowExecution() {
-    executeCode(
-        RVCAT_HEADER() + PROG_SHOW_EXECUTION,
-        'print_output'
-    )
-    lastExecutedCommand = programShowExecution;
-}
-
 function programShowMemtrace() {
     executeCode(
         RVCAT_HEADER() + PROG_SHOW_MEMORY,
