@@ -1,6 +1,6 @@
 <script setup>
   import { ref, onMounted, onUnmounted, nextTick } from "vue";
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import TutorialComponent                         from '@/components/tutorialComponent.vue';
 
   let processorsListHandler = null;
 
@@ -23,21 +23,21 @@
 
   // Modal logic
   const showModalUp = ref(false);
-  const modalName = ref("");
-  const nameError = ref("");
+  const modalName   = ref("");
+  const nameError   = ref("");
   let uploadedProgramObject = null;
 
   async function confirmModal() {
-    const name = modalName.value.trim();
+    const name     = modalName.value.trim();
     const selectEl = document.getElementById("programs-list");
 
     const nameExists = Array.from(selectEl.options).some(opt => opt.value === name);
     if (nameExists) {
-      nameError.value = "A program with this name already exists. Please choose another one.";
+      nameError.value = "A program with this name already exists. Please, choose another one.";
       return;
     }
 
-    nameError.value = "";
+    nameError.value   = "";
     showModalUp.value = false;
 
     uploadedProgramObject.name = name;
@@ -58,8 +58,8 @@
 
   function cancelModal() {
     showModalUp.value = false;
-    modalName.value = "";
-    nameError.value = "";
+    modalName.value   = "";
+    nameError.value   = "";
     uploadedProgramObject = null;
   }
 
@@ -79,8 +79,8 @@
       await writable.close();
     } else {
       const blob = new Blob([jsonText], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
       a.href = url;
       a.download = `${document.getElementById('programs-list').value}.json`;
       document.body.appendChild(a);
@@ -91,15 +91,15 @@
   }
 
   function uploadProgram() {
-    const input = document.createElement("input");
-    input.type = "file";
+    const input  = document.createElement("input");
+    input.type   = "file";
     input.accept = "application/json";
     input.style.display = "none";
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       try {
-        const text = await file.text();
+        const text   = await file.text();
         const parsed = JSON.parse(text);
 
         if (!parsed.name) {
@@ -108,8 +108,8 @@
         }
 
         uploadedProgramObject = parsed;
-        modalName.value = parsed.name;
-        showModalUp.value = true;
+        modalName.value       = parsed.name;
+        showModalUp.value     = true;
       } catch (err) {
         console.error("Failed to parse JSON file:", err);
         alert("Could not load program file.");
@@ -143,7 +143,6 @@
   }
 </script>
 
-
 <template>
   <div class="program_info">
     <div class="program-header">
@@ -153,13 +152,13 @@
       </div>
       <div id="settings-div">
         <button id="download-button" class="blue-button" @click="downloadProgram">Download</button>
-        <button id="upload-button" class="blue-button" @click="uploadProgram">Upload</button>
+        <button id="upload-button"   class="blue-button" @click="uploadProgram">Upload</button>
         <select id="programs-list" name="assembly-code" onchange="reloadRvcat();">
         </select>
       </div>
     </div>
     <section class="main-box code-block">
-        <pre><code id="rvcat-asm-code">LOADING</code></pre>
+        <pre><code id="rvcat-asm-code">LOADING ...</code></pre>
     </section>
   </div>
   <div v-if="showModalUp" class="modal-overlay">
@@ -176,14 +175,13 @@
   </div>
 
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="This is the Program section. Use it to select a program to simulate.
-  You can also download the selected program in JSON format, or upload new custom ones.
-  The program and information about the instructions is displayed in the main box."
-  title="Program"
+  text="The simulated program consists of a fixed-iteration loop executing a sequence of machine instructions, each described in a high-level, informal language.
+        The simulation tracks data dependencies but omits detailed architectural state: it does not model processor registers, memory states, branch outcomes, or memory dependencies (e.g., store-load interactions).
+        &#13;The type, execution latency and eligible execution ports are shown for each instruction.
+        &#13;Programs can be uploaded or downloaded in JSON format."
+  title="Program Loop"
   @close="closeTutorial"
   />
-
-
 </template>
 
 <style scoped>
