@@ -177,8 +177,8 @@
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
   text="The simulated program consists of a fixed-iteration loop executing a sequence of machine instructions, each described in a high-level, informal language.
         The simulation tracks data dependencies but omits detailed architectural state: it does not model processor registers, memory states, branch outcomes, or memory dependencies (e.g., store-load interactions).
-        &#13;The type, execution latency and eligible execution ports are shown for each instruction.
-        &#13;Programs can be uploaded or downloaded in JSON format."
+        The type, execution latency and eligible execution ports are shown for each instruction.
+        Programs can be uploaded or downloaded in JSON format."
   title="Program Loop"
   @close="closeTutorial"
   />
