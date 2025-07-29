@@ -1,14 +1,14 @@
 <script setup>
 import { ref, shallowRef, onMounted, nextTick } from 'vue';
-import headerComponent from '@/components/headerComponent.vue';
-import loadingComponent from '@/components/loadingComponent.vue';
-import processorComponent from '@/components/processorComponent.vue';
-import programComponent from '@/components/programComponent.vue';
-import timelineComponent from '@/components/timelineComponent.vue';
-import aboutComponent from '@/components/aboutComponent.vue';
+import headerComponent         from '@/components/headerComponent.vue';
+import loadingComponent        from '@/components/loadingComponent.vue';
+import processorComponent      from '@/components/processorComponent.vue';
+import programComponent        from '@/components/programComponent.vue';
+import timelineComponent       from '@/components/timelineComponent.vue';
+import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
-import procSettingsComponent from '@/components/procSettingsComponent.vue';
-import simulationComponent from '@/components/simulationComponent.vue';
+import procSettingsComponent   from '@/components/procSettingsComponent.vue';
+import simulationComponent     from '@/components/simulationComponent.vue';
 
 // Modal & navigation state
 const showLeaveModal    = ref(false);
@@ -60,7 +60,7 @@ function cancelLeave() {
 onMounted(() => {
   nextTick(() => {
     if (typeof openLoadingOverlay === 'function') openLoadingOverlay();
-    if (typeof initPyodide === 'function') initPyodide();
+    if (typeof initPyodide        === 'function') initPyodide();
   });
 });
 </script>
@@ -94,10 +94,7 @@ onMounted(() => {
 
       <div v-if="showLeaveModal" class="modal-overlay">
         <div class="modal">
-          <p>
-            Your processor settings have been modified. They will not be saved if
-            you leave this page without applying your changes.
-          </p>
+          <p> You should apply (save) the changes on the processor settings before leaving this page. </p>
           <p><b>Do you want to continue?</b></p>
           <div class="modal-actions">
             <button @click="confirmLeave" class="blue-button">OK</button>
@@ -134,7 +131,4 @@ onMounted(() => {
 .processor { grid-column: 1; grid-row: 1; }
 .program   { grid-column: 1; grid-row: 2; }
 .results   { grid-column: 2; grid-row: 1 / 3; width: 99%; max-width: 99%; padding-bottom: 25px; }
-
-
-
 </style>
