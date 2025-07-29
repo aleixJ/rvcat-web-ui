@@ -2,9 +2,9 @@
   import { ref, nextTick } from 'vue'
   import TutorialComponent from '@/components/tutorialComponent.vue';
 
-  const showTutorial = ref(false);
+  const showTutorial     = ref(false);
   const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon = ref(null);
+  const infoIcon         = ref(null);
 
   function openTutorial() {
     nextTick(() => {
@@ -51,9 +51,10 @@
     </div>
 
     <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-    text="This is the Processor Pipeline section. Here you can select a processor from the list,
-    change its ROB and visualize a graph of its pipeline."
-    title="Processor Pipeline"
+    text="Provides graphical visualization of the processor microarchitecture (pipeline) characteristics.
+          Modify the size of the ROB (ReOrder Buffer) or select a new processor configuration file from the list.
+          Use the 'Settings' tab to modify the microarchitectural parameters."
+    title="Processor MicroArchitecture"
     @close="closeTutorial"
     />
   </div>
