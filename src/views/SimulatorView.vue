@@ -106,8 +106,6 @@ onMounted(() => {
   </body>
 </template>
 
-
-
 <style scoped>
 .container {
   position:relative;
