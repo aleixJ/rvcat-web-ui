@@ -2,23 +2,23 @@
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick} from "vue";
   import TutorialComponent from '@/components/tutorialComponent.vue';
 
-  const dispatch = ref(0);
-  const retire = ref(0);
-  const resources = reactive({});
-  const name = ref("");
-  const ports = ref({});
-  const nBlocks = ref(0);
-  const blkSize = ref(0);
-  const mPenalty = ref(0);
-  const mIssueTime = ref(0);
-  const showTooltip = ref(false);
+  const dispatch        = ref(0);
+  const retire          = ref(0);
+  const resources       = reactive({});
+  const name            = ref("");
+  const ports           = ref({});
+  const nBlocks         = ref(0);
+  const blkSize         = ref(0);
+  const mPenalty        = ref(0);
+  const mIssueTime      = ref(0);
+  const showTooltip     = ref(false);
   const showModalChange = ref(false);
-  const prevProcessor = ref(null);
+  const prevProcessor   = ref(null);
+  
   let prevProcessorHandler;
   let processorsListHandler;
-  let lastRequestId = 0;
+  let lastRequestId         = 0;
   let modalConfirmOperation = null;
-
 
   const originalSettings = reactive({
     dispatch: 0,
@@ -36,14 +36,14 @@
 
   // --- computed lists ---
   const availableInstructions = computed(() => Object.keys(resources));
-  const portList = computed(() => Object.keys(ports.value));
+  const portList              = computed(() => Object.keys(ports.value));
 
   // --- modal state ---
   const showModalDown = ref(false);
-  const showModalUp = ref(false);
-  const modalName = ref("");
+  const showModalUp   = ref(false);
+  const modalName     = ref("");
   const modalDownload = ref(true);
-  const nameError = ref("");
+  const nameError     = ref("");
 
   // --- load & update processor settings ---
   const updateProcessorSettings = async () => {
@@ -53,14 +53,14 @@
       const cfg = await getProcessorJSON();
       if (thisId !== lastRequestId) return;
 
-      dispatch.value = cfg.stages.dispatch;
-      retire.value = cfg.stages.retire;
-      name.value = cfg.name;
-      ports.value = cfg.ports || {};
-      nBlocks.value = cfg.nBlocks;
-      blkSize.value = cfg.blkSize;
+      dispatch.value   = cfg.stages.dispatch;
+      retire.value     = cfg.stages.retire;
+      name.value       = cfg.name;
+      ports.value      = cfg.ports || {};
+      nBlocks.value    = cfg.nBlocks;
+      blkSize.value    = cfg.blkSize;
       mIssueTime.value = cfg.mIssueTime;
-      mPenalty.value = cfg.mPenalty;
+      mPenalty.value   = cfg.mPenalty;
 
       // refresh resources
       Object.keys(resources).forEach(k => delete resources[k]);
@@ -70,16 +70,16 @@
 
       // stash original
       Object.assign(originalSettings, {
-        dispatch: cfg.stages.dispatch,
-        retire: cfg.stages.retire,
-        name: cfg.name,
-        resources: JSON.parse(JSON.stringify(cfg.resources || {})),
-        ports: JSON.parse(JSON.stringify(cfg.ports || {})),
-        rports: JSON.parse(JSON.stringify(cfg.rports || {})),
-        cache: cfg.cache,
-        nBlocks: cfg.nBlocks,
-        blkSize: cfg.blkSize,
-        mPenalty: cfg.mPenalty,
+        dispatch:   cfg.stages.dispatch,
+        retire:     cfg.stages.retire,
+        name:       cfg.name,
+        resources:  JSON.parse(JSON.stringify(cfg.resources || {})),
+        ports:      JSON.parse(JSON.stringify(cfg.ports || {})),
+        rports:     JSON.parse(JSON.stringify(cfg.rports || {})),
+        cache:      cfg.cache,
+        nBlocks:    cfg.nBlocks,
+        blkSize:    cfg.blkSize,
+        mPenalty:   cfg.mPenalty,
         mIssueTime: cfg.mIssueTime,
       });
     } catch(e) {
@@ -128,6 +128,7 @@
     }
     return true;
   }
+  
   function portsEq(a, b) {
     const ka = Object.keys(a), kb = Object.keys(b);
     if (ka.length !== kb.length) return false;
@@ -150,15 +151,16 @@
     }
     return true;
   }
+  
   const isModified = computed(() => {
-    if (dispatch.value !== originalSettings.dispatch) return true;
-    if (retire.value   !== originalSettings.retire)   return true;
-    if (nBlocks.value   !== originalSettings.nBlocks)   return true;
-    if (blkSize.value   !== originalSettings.blkSize)   return true;
-    if (mPenalty.value   !== originalSettings.mPenalty)   return true;
-    if (mIssueTime.value   !== originalSettings.mIssueTime)   return true;
-    if (!shallowEq(resources, originalSettings.resources)) return true;
-    if (!portsEq(ports.value, originalSettings.ports)) return true;
+    if (dispatch.value !== originalSettings.dispatch)       return true;
+    if (retire.value   !== originalSettings.retire)         return true;
+    if (nBlocks.value   !== originalSettings.nBlocks)       return true;
+    if (blkSize.value   !== originalSettings.blkSize)       return true;
+    if (mPenalty.value   !== originalSettings.mPenalty)     return true;
+    if (mIssueTime.value   !== originalSettings.mIssueTime) return true;
+    if (!shallowEq(resources, originalSettings.resources))  return true;
+    if (!portsEq(ports.value, originalSettings.ports))      return true;
     return false;
   });
 
@@ -181,39 +183,38 @@
       name: modalName.value,
       stages: {
         dispatch: dispatch.value,
-        execute:Object.keys(ports.value).length,
-        retire: retire.value,
+        execute:  Object.keys(ports.value).length,
+        retire:   retire.value,
       },
-      resources: { ...resources },
-      ports: ports.value,
-      rports: rports,
-      cache: originalSettings.cache,
-      nBlocks: nBlocks.value,
-      blkSize: blkSize.value,
-      mPenalty: mPenalty.value,
+      resources:  { ...resources },
+      ports:      ports.value,
+      rports:     rports,
+      cache:      originalSettings.cache,
+      nBlocks:    nBlocks.value,
+      blkSize:    blkSize.value,
+      mPenalty:   mPenalty.value,
       mIssueTime: mIssueTime.value,
     };
   }
 
   function openModal() {
-    modalName.value = name.value + "*";
+    modalName.value     = name.value + "*";
     modalDownload.value = true;
-    nameError.value = "";
+    nameError.value     = "";
     showModalDown.value = true;
   }
 
   function closeModal() {
     showModalDown.value = false;
-    showModalUp.value = false;
+    showModalUp.value   = false;
   }
-
 
   async function confirmModal() {
     const list = document.getElementById("processors-list");
     if (list) {
       for (const opt of list.options) {
         if (opt.value === modalName.value) {
-          nameError.value = "A processor with this name already exists. Please choose another one.";
+          nameError.value = "A processor configuration with this name already exists. Please, choose another one.";
           return;
         }
       }
@@ -222,17 +223,17 @@
     await saveModifiedProcessor(data);
 
     Object.assign(originalSettings, {
-      dispatch: data.stages.dispatch,
-      retire:   data.stages.retire,
-      name:     data.name,
-      resources: JSON.parse(JSON.stringify(data.resources)),
-      ports:     JSON.parse(JSON.stringify(data.ports)),
-      rports:    JSON.parse(JSON.stringify(data.rports)),
-      cache:     data.cache,
-      nBlocks:   data.nBlocks,
-      blkSize:   data.blkSize,
-      mPenalty:  data.mPenalty,
-      mIssueTime:data.mIssueTime,
+      dispatch:   data.stages.dispatch,
+      retire:     data.stages.retire,
+      name:       data.name,
+      resources:  JSON.parse(JSON.stringify(data.resources)),
+      ports:      JSON.parse(JSON.stringify(data.ports)),
+      rports:     JSON.parse(JSON.stringify(data.rports)),
+      cache:      data.cache,
+      nBlocks:    data.nBlocks,
+      blkSize:    data.blkSize,
+      mPenalty:   data.mPenalty,
+      mIssueTime: data.mIssueTime,
     });
 
     //download JSON file
@@ -281,6 +282,7 @@
     for (; existing.includes(next); next++);
     ports.value[next] = [];
   }
+  
   function removePort(port) {
     const idx = Number(port);
     delete ports.value[idx];
@@ -314,16 +316,15 @@
     const reader = new FileReader();
     reader.onload = e => {
       try {
-
         const data = JSON.parse(e.target.result);
         // === apply JSON to your reactive state ===
-        dispatch.value = data.stages?.dispatch ?? dispatch.value;
-        retire.value   = data.stages?.retire   ?? retire.value;
-        name.value     = data.name             ?? name.value;
-        nBlocks.value = data.nBlocks;
-        blkSize.value = data.blkSize;
+        dispatch.value   = data.stages?.dispatch ?? dispatch.value;
+        retire.value     = data.stages?.retire   ?? retire.value;
+        name.value       = data.name             ?? name.value;
+        nBlocks.value    = data.nBlocks;
+        blkSize.value    = data.blkSize;
         mIssueTime.value = data.mIssueTime;
-        mPenalty.value = data.mPenalty;
+        mPenalty.value   = data.mPenalty;
 
         // update resources
         Object.keys(resources).forEach(k => delete resources[k]);
@@ -336,29 +337,29 @@
 
         // stash originalSettings if needed...
         Object.assign(originalSettings, {
-          dispatch: data.stages?.dispatch ?? 0,
-          retire:   data.stages?.retire   ?? 0,
-          name:     data.name             ?? "",
-          resources: JSON.parse(JSON.stringify(data.resources||{})),
-          ports:     JSON.parse(JSON.stringify(data.ports||{})),
-          rports:    JSON.parse(JSON.stringify(data.rports||{})),
-          cache:     data.cache,
-          nBlocks:   data.nBlocks,
-          blkSize:   data.blkSize,
-          mPenalty:  data.mPenalty,
-          mIssueTime:data.mIssueTime,
+          dispatch:   data.stages?.dispatch ?? 0,
+          retire:     data.stages?.retire   ?? 0,
+          name:       data.name             ?? "",
+          resources:  JSON.parse(JSON.stringify(data.resources||{})),
+          ports:      JSON.parse(JSON.stringify(data.ports||{})),
+          rports:     JSON.parse(JSON.stringify(data.rports||{})),
+          cache:      data.cache,
+          nBlocks:    data.nBlocks,
+          blkSize:    data.blkSize,
+          mPenalty:   data.mPenalty,
+          mIssueTime: data.mIssueTime,
         });
 
         // === now pop up the Save‐As dialog ===
         // strip extension from filename for default
-        modalName.value = file.name.replace(/\.[^.]+$/, "");
+        modalName.value     = file.name.replace(/\.[^.]+$/, "");
         modalDownload.value = false;
-        nameError.value = "";
-        showModalUp.value = true;
+        nameError.value     = "";
+        showModalUp.value   = true;
 
       } catch (err) {
         console.error("Invalid JSON:", err);
-        alert("Failed to load processor config. Please check the file.");
+        alert("Failed to load processor config. Please, check the file.");
       }
       inputEl.value = "";
     };
@@ -368,7 +369,6 @@
   function noPortAssigned(instr) {
     if (!portList.value.some(p => ports.value[p]?.includes(instr))) {
       ports.value[0].push(instr)
-
       showTooltip.value = true
       setTimeout(() => { showTooltip.value = false }, 2000)
     }
@@ -381,9 +381,7 @@
       document.getElementById('file-upload').click();
     }
     else if(modalConfirmOperation=='change') {
-
       updateProcessorSettings();
-
     }
   }
 
@@ -395,22 +393,19 @@
     showModalChange.value = false;
   }
 
-
   function openUploadModal() {
     if(isModified.value){
-
       showModalChange.value = true;
       modalConfirmOperation = 'upload';
     }
     else{
       document.getElementById('file-upload').click();
     }
-
   }
 
-  const showTutorial = ref(false)
+  const showTutorial     = ref(false)
   const tutorialPosition = ref({ top: '50%', left: '50%' })
-  const infoIcon = ref(null)
+  const infoIcon         = ref(null)
 
   function openTutorial() {
     nextTick(() => {
@@ -502,7 +497,7 @@
               <span>Miss Penalty:</span>
               <div class="latency-group">
                 <button class="gray-button" @click="mPenalty = Math.max(1, mPenalty - 1)">−</button>
-                <input type="number" v-model.number="mPenalty" min="1" :max="nBlocks" class="latency-input"/>
+                <input type="number" v-model.number="mPenalty" min="1" :max="99" class="latency-input"/>
                 <button class="gray-button" @click="mPenalty = Math.min(99, mPenalty + 1);">+</button>
               </div>
             </div>
@@ -511,7 +506,7 @@
               <span>Miss Issue Time:</span>
               <div class="latency-group">
                 <button class="gray-button" @click="mIssueTime = Math.max(1, mIssueTime - 1)">−</button>
-                <input type="number" v-model.number="mIssueTime" min="1" :max="nBlocks" class="latency-input"/>
+                <input type="number" v-model.number="mIssueTime" min="1" :max="99" class="latency-input"/>
                 <button class="gray-button" @click="mIssueTime = Math.min(99, mIssueTime + 1);">+</button>
               </div>
             </div>
@@ -569,16 +564,14 @@
           </tr>
         </tbody>
       </table>
-
     </div>
   </div>
 
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="In the Processor Settings section you can create new processor configurations
-     to use in simulations. Dispatch and Retire widths can be modified in Stage Width Settings,
-     and cache memory can be added or modified in the Cache settings section. Ports can be added
-     (up to a maximum of 10) and deleted in the toolbar above the table. Use the table below to change
-     instruction latencies and the ports they are assigned to."
+  text="
+    "This section allows you to adjust the simulated processor’s configuration settings, including: (1) Dispatch & Retire Widths; (2) Cache Memory (Note: Setting Number of Blocks = 0 means all data accesses will always hit in the cache);
+(3) Execution Ports (Add or remove execution ports, up to a maximum of 10). Each instruction type can be assigned a latency and a set of eligible execution ports (only one is used per execution); 
+If a port is deleted, P0 is automatically assigned to any instruction types left without a valid port."
   title="Processor Settings"
   @close="closeTutorial"/>
 
@@ -600,7 +593,6 @@
           </div>
         </span>
       </label>
-
 
       <div class="modal-actions">
         <button class="blue-button" @click="confirmModal">Apply</button>
@@ -624,10 +616,7 @@
 
   <div v-if="showModalChange" class="modal-overlay">
     <div class="modal">
-      <p>
-        Your processor settings have been modified. They will not be saved if
-        you change the selected processor or upload a new one.
-      </p>
+      <p> The processor settings have been modified, but not saved. Changes will be lost if you select or upload a new processor configuration.</p>
       <p><b>Do you want to continue?</b></p>
       <div class="modal-actions">
         <button class="blue-button" @click="confirmLeave">OK</button>
@@ -637,7 +626,7 @@
   </div>
 
   <span id="auto-tooltip" ref="tooltip" class="auto-tooltip" :class="{ 'slide-in': showTooltip }">
-    Each instruction must have at least one assigned port. Defaulting to P0.
+    Each instruction type must have at least one assigned execution port; default is P0.
   </span>
 </template>
 
@@ -728,8 +717,6 @@
     font-size: 2.5vh;
   }
 
-
-
   .widths {
     display: flex;
     justify-content: space-between;
@@ -758,7 +745,6 @@
     align-items: center;
     margin-right: 8px;
   }
-
 
   /* Chrome, Safari, Edge, Opera */
   input[type=number]::-webkit-outer-spin-button,
