@@ -18,8 +18,8 @@ const PROG_SHOW              = 'str(rvcat._program)'
 const PROG_SHOW_DEPENDENCIES = `rvcat._program.show_dependencies()`
 const PROG_SHOW_EXECUTION    = `rvcat._program.show_code()`
 const PROG_SHOW_MEMORY       = `rvcat._program.show_memory_trace()`
-const PROG_SHOW_STATIC_PERFORMANCE      = `rvcat._program.show_static_performance_analysis()`
-const PROG_SHOW_CRITICAL_PATHS_GRAPHVIZ = `rvcat._program.get_recurrent_paths_graphviz()`
+const PROG_SHOW_STATIC_PERFORMANCE      = `rvcat._program.show_performance_analysis()`
+const PROG_SHOW_CRITICAL_PATHS_GRAPHVIZ = `rvcat._program.show_graphviz()`
 const GET_AVAIL_PROGRAMS = `import rvcat
 rvcat._program.list_programs_json()
 `
