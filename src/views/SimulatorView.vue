@@ -94,7 +94,7 @@ onMounted(() => {
 
       <div v-if="showLeaveModal" class="modal-overlay">
         <div class="modal">
-          <p> You should apply (save) the changes on the processor settings before leaving this page. </p>
+          <p>You should apply (save) the changes on the processor settings before leaving this page. </p>
           <p><b>Do you want to continue?</b></p>
           <div class="modal-actions">
             <button @click="confirmLeave" class="blue-button">OK</button>
