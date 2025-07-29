@@ -16,7 +16,7 @@
     }
   });
 
-  const emit = defineEmits(['close']);
+  const emit    = defineEmits(['close']);
   const visible = ref(true);
 
   const positionStyle = computed(() => ({
