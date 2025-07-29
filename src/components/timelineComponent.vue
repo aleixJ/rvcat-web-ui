@@ -1,19 +1,18 @@
-
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted, watch} from 'vue';
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import TutorialComponent                               from '@/components/tutorialComponent.vue';
 
   let processorsListHandler;
   let programsListHandler;
-  const canvasWidth = 1200;
-  const canvasHeight = 10000;
-  const hoverInfo = ref(null);
+  const canvasWidth    = 1200;
+  const canvasHeight   = 10000;
+  const hoverInfo      = ref(null);
   const timelineCanvas = ref(null);
-  const tooltipRef = ref(null);
-  let timelineData = ref(null);
-  const showTutorial = ref(false);
+  const tooltipRef     = ref(null);
+  let timelineData     = ref(null);
+  const showTutorial   = ref(false);
   const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon = ref(null);
+  const infoIcon        = ref(null);
   const clickedCellInfo = ref(null);
 
   function openTutorial() {
@@ -22,7 +21,7 @@
       if (el) {
         const r = el.getBoundingClientRect()
         tutorialPosition.value = {
-          top: `${r.bottom}px`,
+          top:  `${r.bottom}px`,
           left: `${r.right}px`
         }
         showTutorial.value = true
@@ -79,7 +78,7 @@
     setCookie("timelineZoom", v);
   });
 
-  const showPorts = useBooleanCookie('showPorts', true);
+  const showPorts        = useBooleanCookie('showPorts', true);
   const showInstructions = useBooleanCookie('showInstructions', true);
 
   onMounted(() => {
@@ -107,10 +106,10 @@
   });
 
    function changeIterations(delta) {
-    const input = document.getElementById("dependencies-num-iters");
+    const input  = document.getElementById("dependencies-num-iters");
     const newVal = Math.min(Math.max(iterations.value + delta, 1), 50);
     iterations.value = newVal;
-    input.value = newVal;
+    input.value      = newVal;
 
     getTimelineAndDraw();
   }
@@ -130,8 +129,8 @@
   }
 
   function drawTimeline(data) {
-    const canvas = timelineCanvas.value;
-    const ctx    = canvas.getContext('2d');
+    const canvas  = timelineCanvas.value;
+    const ctx     = canvas.getContext('2d');
     const cellW   = 14 * zoomLevel.value;
     const cellH   = 20 * zoomLevel.value;
     const padX    = 20 * zoomLevel.value;
@@ -191,7 +190,6 @@
     attachHover(canvas, interactiveCells, headerStart);
   }
 
-
   // get the esecution port of each instruction
   function extractRowInfo(rawLines) {
     const idToType = {};    // will map instrID → mnemonic string
@@ -224,8 +222,6 @@
       return { instrID, portNumber, type };
     });
   }
-
-
 
   // Parse header to get its beggining, end and deleted whitespaces
   function parseHeader(lines) {
@@ -324,7 +320,7 @@
       // Collect exactly headerLen visible chars, tracking red ANSI
       const chars = [];
       const isRed = [];
-      let idx = 0;
+      let idx       = 0;
       let currColor = null;
       while (idx < timelineRaw.length && chars.length < headerLen) {
         if (timelineRaw[idx] === "\x1b") {
@@ -398,7 +394,6 @@
     return line;
   }
 
-
   function filterVisibleRows(processedLines, rowInfo, showPorts) {
     const visible = [];
     for (let i = 0; i < processedLines.length; i++) {
@@ -412,7 +407,7 @@
         }
       }
       visible.push({
-        raw:        line,
+        raw:  line,
         instrID,
         portNumber,
         type
@@ -421,13 +416,10 @@
     return visible;
   }
 
-
-
-
   // Remove instructions if necessary and compute canvas size
   function measureLines(visibleRows, showInstructions) {
     const cleaned = visibleRows.map(({ raw }) => {
-      let line = raw;
+      let line    = raw;
       if (!showInstructions) {
         const rIdx = line.indexOf("R");
         if (rIdx > -1) line = line.slice(0, rIdx + 1);
@@ -437,7 +429,6 @@
     const maxCols = cleaned.reduce((mx, l) => Math.max(mx, l.length), 0);
     return { maxCols, lines: cleaned };
   }
-
 
   // Draw row of timeline canvas element
   function drawOneRow({
@@ -457,8 +448,8 @@
 
     // Draw each character
     let visCol = 0;
-    let x = padX;
-    const y = padY + rowIndex * cellH;
+    let x      = padX;
+    const y    = padY + rowIndex * cellH;
     let currColor = "#000";
 
     for (let i = 0; i < raw.length; ) {
@@ -476,7 +467,7 @@
 
       visCol++;
       const colIdxVis = visCol - 1;
-      const ch = raw[i];
+      const ch        = raw[i];
 
       // Draw grid
       if (colIdxVis >= headerStart && colIdxVis < headerStart + cycleCount) {
@@ -520,13 +511,12 @@
     }
   }
 
-
   // Get index of D and R
   function computeDandRIdxs(raw) {
     let dVisIdx = Infinity;
     let rVisIdx = -1;
-    let tmpVis = 0;
-    let i = 0;
+    let tmpVis  = 0;
+    let i       = 0;
 
     while (i < raw.length) {
       if (raw[i] === "\x1b") {
@@ -548,10 +538,8 @@
       tmpVis++;
       i++;
     }
-
     return { dVisIdx, rVisIdx };
   }
-
 
   // Attach hover and click event to cells
   function attachHover(canvas, interactiveCells, headerStart) {
@@ -621,7 +609,7 @@
       };
 
       canvas.onclick = e => {
-        const rect = canvas.getBoundingClientRect();
+        const rect   = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
@@ -655,7 +643,6 @@
         if (tr.bottom > vh) {
           newY = e.clientY - tr.height - 10;
         }
-
         if (newX !== hoverInfo.value.x || newY !== hoverInfo.value.y) {
           hoverInfo.value = { ...hoverInfo.value, x: newX, y: newY };
         }
@@ -678,21 +665,19 @@
   function charToState(ch) {
     let msg="";
     switch (ch) {
-      case "E": msg += "Execution"; break;
-      case "R": msg += "Retire"; break;
-      case "D": msg += "Dispatch"; break;
+      case "E": msg += "Execution";    break;
+      case "R": msg += "Retire";       break;
+      case "D": msg += "Dispatch";     break;
       case "-": msg += "Waiting to retire"; break;
-      case "W": msg += "Write back"; break;
+      case "W": msg += "Write back";   break;
       case ".": msg += "Waiting to execute due to dependencies"; break;
-      case "*": msg += "Waiting to execute due to occupied ports."; break;
-      case "!": msg += "Cache miss"; break;
+      case "*": msg += "Waiting to execute due to occupied ports"; break;
+      case "!": msg += "Cache miss";   break;
       case "2": msg += "Secondary cache miss"; break;
-      default:  msg = "N/A"; break;
+      default:  msg = "N/A";                   break;
     }
     return msg;
   }
-
-
 
   async function getTimelineAndDraw() {
     if (typeof getTimeline === "function") {
@@ -700,7 +685,6 @@
       drawTimeline(timelineData.value);
     }
   }
-
 
   onUnmounted(() => {
     const processorsList = document.getElementById("processors-list");
@@ -715,7 +699,6 @@
   });
 
 </script>
-
 
 <template>
   <div class="main">
@@ -749,22 +732,20 @@
       <div v-if="hoverInfo" ref="tooltipRef" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
         <div v-if="hoverInfo.instr!='N/A'"><strong>Instruction:</strong> {{ hoverInfo.instr }}</div>
-        <div v-if="hoverInfo.type!='N/A'"><strong>Type: </strong> {{ hoverInfo.type }}</div>
-        <div v-if="hoverInfo.state!='N/A'"><strong>State: </strong> {{ hoverInfo.state }}</div>
-        <div v-if="hoverInfo.port!='N/A'"><strong>Port: </strong> P{{ hoverInfo.port }}</div>
+        <div v-if="hoverInfo.type!='N/A'"><strong>Type:</strong> {{ hoverInfo.type }}</div>
+        <div v-if="hoverInfo.state!='N/A'"><strong>State:</strong> {{ hoverInfo.state }}</div>
+        <div v-if="hoverInfo.port!='N/A'"><strong>Port:</strong> P{{ hoverInfo.port }}</div>
         <div v-if="hoverInfo.kind==='mem'">Block read from main memory</div>
       </div>
     </div>
   </div>
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="The Timeline section shows the program execution over time. The iterations displayed can be
-  selected on the top-right section, as well as hiding or showing extra information and zooming in or out.
-  Hover over the grid to see basic info about the selected cell, such as the cycle, the instruction type
-  or the port it is being executed in. You can also click on timeline cells to obtain more detailed
-  information."
+  text="The Timeline section shows the program execution over time. The number of loop iterations can be modified, and the timeline can be zoomed in/out. 
+    Hover over the grid to see basic info about the selected cell, and click to obtain more detailed information."
   title="Timeline"
   @close="closeTutorial"
   />
+  
   <div v-if="clickedCellInfo" class="modal-overlay" @click.self="clickedCellInfo = null">
     <div class="modal">
       <div class="modal-header">
@@ -777,7 +758,6 @@
     </div>
   </div>
 </template>
-
 
 <style scoped>
   .main{
