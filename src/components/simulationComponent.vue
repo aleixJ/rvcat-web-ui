@@ -1,11 +1,11 @@
 <script setup>
   import { onMounted, nextTick, ref, watch } from "vue";
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import TutorialComponent                   from '@/components/tutorialComponent.vue';
 
   const showCriticalPath = ref(false);
-  const showTutorial = ref(false);
+  const showTutorial     = ref(false);
   const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon = ref(null);
+  const infoIcon         = ref(null);
 
   function openTutorial() {
     nextTick(() => {
@@ -52,13 +52,11 @@
 
   onMounted(() => {
     nextTick(() => {
-
       if (typeof reloadRvcat === "function") {
         reloadRvcat();
       } else {
         console.error("simulation-graph element not found.");
       }
-
     });
   });
 
@@ -83,7 +81,7 @@
         <div class="iterations-group">
           Iterations:
           <button type="button" class="gray-button" @click="changeIterations(-1)">−</button>
-          <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="3000" v-model.number="iterations">
+          <input type="number" id="num-iters" class="iterations-input" name="iterations" min="1" max="2000" v-model.number="iterations">
           <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
         </div>
         <button id="run-simulation-button" class="blue-button" onclick="getSchedulerAnalysis();">Run</button>
@@ -146,16 +144,12 @@
     </div>
   </div>
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="In the Simulation section, you can run simulations of the selected program and processor. The
-  number of iterations can be selected on the top-right input, and pressing the 'Run' button launches the
-  simulation. The results are displayed down below, including the instructions' percentage of the
-  Critical Execution Path and the usage of the different parts of the processor pipeline. Hover over the
-  ports to see their usage."
-  title="Simulation"
+  text="Simulate a specified number of program loop iterations and display aggregate performance metrics.
+   Hover over processor execution ports to inspect their utilization, or open the corresponding tab to visualize the time distribution of instructions along the critical path."
+  title="Overall Simulation Results"
   @close="closeTutorial"
   />
 </template>
-
 
 <style scoped>
   .main{
