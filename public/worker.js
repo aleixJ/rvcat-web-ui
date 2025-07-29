@@ -1,17 +1,15 @@
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js')
 
+async function loadPackage(pkg) {
+    await self.pyodide.loadPackage(pkg);
+}
+
 async function initialize() {
-    // console.log("Initializing Pyodide...");
     if (self.pyodide === undefined) {
         self.pyodide = await loadPyodide();
         await loadPackage('numpy')
         await loadPackage('rvcat-0.1-py3-none-any.whl')
-        //await loadPackage('http://0.0.0.0:8000/rvcat-0.1-py3-none-any.whl')
     }
-}
-
-async function loadPackage(pkg) {
-    await self.pyodide.loadPackage(pkg);
 }
 
 self.onmessage = async function(message) {
@@ -43,8 +41,5 @@ self.onmessage = async function(message) {
                 self.postMessage({action: 'executed', result: err.toString(), data_type: 'error'});
             }
         }
-        //let res = await self.pyodide.runPythonAsync(message.data.code);
-        //console.log('Result:', res);
-        //self.postMessage({action: 'rendered', result: res, data_type: 'png'});
     }
 }
