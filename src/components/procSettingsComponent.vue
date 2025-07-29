@@ -426,7 +426,6 @@
   }
 
 </script>
-
 <template>
   <div class="main">
     <div class="header">
@@ -444,12 +443,12 @@
     </div>
     <br/>
     <div>
-
       <div class="settings-sections">
         <!-- Stage Widths Group -->
         <div class="settings-group">
           <h4 class="section-title">Stage Width Settings</h4>
           <div class="widths">
+            
             <div class="width-group">
               <span>Dispatch:</span>
               <div class="latency-group">
@@ -474,6 +473,7 @@
         <div class="settings-group">
           <h4 class="section-title">Cache Settings</h4>
           <div class="widths">
+            
             <div class="width-group">
               <span>Number of Blocks:</span>
               <div class="latency-group">
@@ -491,7 +491,6 @@
                 <button class="gray-button" @click="blkSize = Math.min(2048, blkSize*2);">+</button>
               </div>
             </div>
-
 
             <div class="width-group">
               <span>Miss Penalty:</span>
@@ -516,7 +515,6 @@
 
       <br>
       <h4>Instruction Latencies & Execution Ports</h4>
-
       <!-- Ports toolbar: show existing ports and add/delete -->
       <div class="ports-toolbar">
         <span v-for="port in portList" :key="port" class="port-tag">
@@ -615,7 +613,7 @@ If a port is deleted, P0 is automatically assigned to any instruction types left
 
   <div v-if="showModalChange" class="modal-overlay">
     <div class="modal">
-      <p> The processor settings have been modified, but not saved. Changes will be lost if you select or upload a new processor configuration.</p>
+      <p>The processor settings have been modified, but not saved. Changes will be lost if you select or upload a new processor configuration.</p>
       <p><b>Do you want to continue?</b></p>
       <div class="modal-actions">
         <button class="blue-button" @click="confirmLeave">OK</button>
