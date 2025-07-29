@@ -16,8 +16,7 @@ const RVCAT_HEADER = function() {
 const GET_PROGRAM_JSON       = 'rvcat._program.json()'
 const PROG_SHOW              = 'str(rvcat._program)'
 const PROG_SHOW_DEPENDENCIES = `rvcat._program.show_dependencies()`
-const PROG_SHOW_ANNOTATED    = `rvcat._program.annotate_action()`
-const PROG_SHOW_EXECUTION    = `rvcat._program.annotate_execution()`
+const PROG_SHOW_EXECUTION    = `rvcat._program.show_code()`
 const PROG_SHOW_MEMORY       = `rvcat._program.show_memory_trace()`
 const PROG_SHOW_STATIC_PERFORMANCE      = `rvcat._program.show_static_performance_analysis()`
 const PROG_SHOW_CRITICAL_PATHS_GRAPHVIZ = `rvcat._program.get_recurrent_paths_graphviz()`
@@ -40,11 +39,7 @@ function addModifiedProcessor(config){
 }
 
 // RUN program
-const SHOW_TIMELINE        = 'rvcat._scheduler.format_timeline()'
-const RUN_PROGRAM_TIMELINE = 'rvcat._scheduler.format_timeline()'
 const RUN_PROGRAM_ANALYSIS = 'rvcat._scheduler.format_analysis_json()'
-const RUN_PROGRAM_MEMTRACE = 'rvcat._scheduler.format_memtrace()'
-
 function show_timeline(num_iters) {
     return `rvcat._scheduler.format_timeline(niters=${num_iters})`
 }
