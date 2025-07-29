@@ -3,7 +3,7 @@
     <div class="overlay" id="loading-overlay">
       <div class="spinner"></div>
       <p id="loading-overlay-message">Initializing</p>
-      <p>Please wait, this process can take several seconds</p>
+      <p>Please wait. Loading can take several seconds</p>
   </div>
 </template>
 
