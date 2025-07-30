@@ -42,8 +42,8 @@ const handlers = {
       }
     },
   
-    'prog_show_annotations': (data) => {
-      let item         = document.getElementById('performance-annotations');
+    'prog_show_performance': (data) => {
+      let item         = document.getElementById('performance-limits');
       item.textContent = data;
     },
   
@@ -58,7 +58,7 @@ const handlers = {
     },
    
     'generate_critical_paths_graph': (data) => {
-        let item = document.getElementById('simulation-output');
+        let item = document.getElementById('dependence-graph');
         item.innerHTML = '';
         createGraphVizGraph(data, item);
     },
@@ -199,10 +199,10 @@ function programShow() {
     )
 }
 
-function programShowPerfAnnotations() {
+function programShowPerformanceLimits() {
   executeCode(
-    RVCAT_HEADER() + PROG_SHOW_EXECUTION,
-    'prog_show_annotations'
+    RVCAT_HEADER() + PROG_SHOW_STATIC_PERFORMANCE,
+    'prog_show_performance'
   )
 }
 
