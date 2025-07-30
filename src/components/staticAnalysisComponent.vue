@@ -4,7 +4,7 @@
 
   let processorsListHandler;
   let programsListHandler;
-  const showAnnotations  = ref(false);
+  const showPerformance  = ref(false);
   const showFullScreen   = ref(false);
   const showTutorial     = ref(false);
   const tutorialPosition = ref({ top: '50%', left: '50%' });
@@ -30,10 +30,9 @@
 
   function openFullScreen() {
     showFullScreen.value = true;
-    // after DOM updates, clone the existing SVG into the popup
     nextTick(() => {
-      const src = document.getElementById("simulation-output");
-      const dst = document.getElementById("simulation-output-full");
+      const src = document.getElementById("dependence-graph");
+      const dst = document.getElementById("dependence-graph-full");
       if (src && dst) {
         dst.innerHTML = "";
         dst.appendChild(src.querySelector("svg").cloneNode(true));
@@ -46,16 +45,11 @@
   }
 
   function toggleAnnotations() {
-    showAnnotations.value = !showAnnotations.value;
-
-    if (showAnnotations.value) {
-      if (typeof programShowPerfAnnotations === "function") {
-        nextTick(() => {
-          programShowPerfAnnotations();
-        });
-      } else {
-        console.error("programShowPerfAnnotations function not found.");
-      }
+    showPerformance.value = !showPerformance.value;
+    if (showPerformance.value) {
+      nextTick(() => {
+        programShowPerformanceLimits();
+      });
     }
   }
 
@@ -65,8 +59,8 @@
       if (processorsList) {
         processorsListHandler = () => {
           setTimeout(() => {
-            if (showAnnotations.value && typeof programShowPerfAnnotations === "function") {
-              programShowPerfAnnotations();
+            if (showPerformance.value) {
+              programShowPerformanceLimits();
             }
           }, 100);
         };
@@ -76,19 +70,14 @@
       if (programsList) {
         programsListHandler = () => {
           setTimeout(() => {
-            if (showAnnotations.value && typeof programShowPerfAnnotations === "function") {
-              programShowPerfAnnotations();
+            if (showAnnotations.value) {
+              programShowPerformanceLimits();
             }
           }, 100);
         };
         programsList.addEventListener("change", programsListHandler);
       }
-
-      if (typeof showCriticalPathsGraph === "function") {
-        showCriticalPathsGraph();
-      } else {
-        console.error("simulation-output element not found.");
-      }
+      showCriticalPathsGraph();
     });
   });
 
@@ -131,7 +120,7 @@
         </button>
         <h4>Data Dependence Graph & Circular Dependence Paths (in red)</h4>
       </div>
-      <div class="output-block" id="simulation-output"></div>
+      <div class="output-block" id="dependence-graph"></div>
     </div>
   </div>
   <div v-if="showFullScreen" class="fullscreen-overlay">
@@ -140,7 +129,7 @@
         <h3>Data Dependence Graph & Circular Dependence Paths (in red)</h3>
         <button class="close-btn" @click="closeFullScreen">x</button>
       </div>
-      <div class="output-block" id="simulation-output-full"></div>
+      <div class="output-block" id="dependence-graph-full"></div>
     </div>
   </div>
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
@@ -227,7 +216,6 @@
     flex-direction: column;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   }
-
 
   .fullscreen-content .close-btn {
     align-self: flex-end;
