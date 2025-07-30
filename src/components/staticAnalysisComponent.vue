@@ -70,7 +70,7 @@
       if (programsList) {
         programsListHandler = () => {
           setTimeout(() => {
-            if (showAnnotations.value) {
+            if (showPerformance.value) {
               programShowPerformanceLimits();
             }
           }, 100);
@@ -105,12 +105,12 @@
 
     <div class="annotations-wrapper">
       <div class="annotations-header" @click="toggleAnnotations">
-        <span class="arrow">{{ showAnnotations ? '▼' : '▶' }}</span>
+        <span class="arrow">{{ showPerformance ? '▼' : '▶' }}</span>
         <span class="title"><b>Analysis of Performance limits</b></span>
       </div>
 
       <Transition name="fold" appear>
-        <pre v-show="showAnnotations" id="performance-annotations" class="annotations-box"></pre>
+        <pre v-show="showPerformance" id="performance-annotations" class="annotations-box"></pre>
       </Transition>
     </div>
     <div class="output-block-wrapper" id="simulation-output-container">
