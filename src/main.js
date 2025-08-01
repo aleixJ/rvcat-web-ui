@@ -2,7 +2,7 @@ import { createApp }   from 'vue'
 import { createPinia } from 'pinia'
 import App             from './App.vue'
 import router          from './router'
-import * as Viz        from "@viz-js/viz";
+import * as Viz        from "@viz-js/viz"
 
 const app = createApp(App)
 
