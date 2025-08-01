@@ -274,6 +274,9 @@ function setLoadingOverlayMessage(message) {
     document.getElementById('loading-overlay-message').innerHTML = message;
 }
 
+
+import * as Viz from "@viz-js/viz";
+
 function createGraphVizGraph(dotCode, targetElement, callback=null) {
   // Create an instance of Viz.js
   const viz = new Viz();
