@@ -52,7 +52,6 @@ const handlers = {
   
     'save_processor_info': (data) => {
         processorInfo = JSON.parse(data);
-        showProcessor();
         getSchedulerAnalysis();
     },
    
@@ -193,7 +192,7 @@ function currentROBSize() {
 // Commands
 function reloadRvcat() {
     programShow();
-    getProcessorInformation();
+    // getProcessorInformation();
 }
 
 function programShow() {
