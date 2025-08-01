@@ -1,14 +1,8 @@
 const RVCAT_HEADER = function() {
-    let proc = currentProcessor();
-    let prog = currentProgram();
     let res = `import rvcat\n`;
-    if (proc !== undefined) {
-      res += `rvcat._processor.load('${currentProcessor()}')\n`
-    }
-    if (prog !== undefined) {
-      res += `rvcat._program.load('${currentProgram()}')\n`
-      res += `rvcat._scheduler.init_scheduler(iterations=${currentIterations()}, window_size=${currentROBSize()})\n`
-    }
+    res += `rvcat._processor.load('${currentProcessor()}')\n`
+    res += `rvcat._program.load('${currentProgram()}')\n`
+    res += `rvcat._scheduler.init_scheduler(iterations=${currentIterations()}, window_size=${currentROBSize()})\n`
     return res;
 }
 
