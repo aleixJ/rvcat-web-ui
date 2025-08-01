@@ -8,7 +8,6 @@ const RVCAT_HEADER = function() {
 
 // PROGRAM
 const GET_PROGRAM_JSON       = 'rvcat._program.json()'
-const PROG_SHOW              = 'str(rvcat._program)'
 const PROG_SHOW_DEPENDENCIES = `rvcat._program.show_dependencies()`
 const PROG_SHOW_EXECUTION    = `rvcat._program.show_code()`
 const PROG_SHOW_MEMORY       = `rvcat._program.show_memory_trace()`
