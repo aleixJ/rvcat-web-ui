@@ -192,7 +192,7 @@ function currentROBSize() {
 // Commands
 function reloadRvcat() {
     programShow();
-    // getProcessorInformation();
+    getProcessorInformation();
 }
 
 function programShow() {
