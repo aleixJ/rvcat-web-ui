@@ -1,4 +1,8 @@
 const RVCAT_HEADER = function() {
+    let proc = currentProcessor();
+    let prog = currentProgram();
+    if (proc == "" || prog == "") 
+       return "";
     let res = `import rvcat\n`;
     res += `rvcat._processor.load('${currentProcessor()}')\n`
     res += `rvcat._program.load('${currentProgram()}')\n`
