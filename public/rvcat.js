@@ -29,8 +29,7 @@ const handlers = {
             document.getElementById('processors-list').appendChild(option);
         }
         // Once the processors and programs are loaded show the program in the UI
-        programShow();
-        getProcessorInformation();
+        reloadRvcat();
         closeLoadingOverlay();
     },
   
@@ -192,6 +191,11 @@ function currentROBSize() {
 }
 
 // Commands
+function reloadRvcat() {
+    programShow();
+    getProcessorInformation();
+}
+
 function programShow() {
     executeCode(
         RVCAT_HEADER() + PROG_SHOW_EXECUTION,
@@ -269,11 +273,6 @@ function closeLoadingOverlay() {
 
 function setLoadingOverlayMessage(message) {
     document.getElementById('loading-overlay-message').innerHTML = message;
-}
-
-function reloadRvcat() {
-    programShow();
-    getProcessorInformation();
 }
 
 function createGraphVizGraph(dotCode, targetElement, callback=null) {
