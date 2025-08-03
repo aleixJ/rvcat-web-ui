@@ -69,22 +69,22 @@
   
   function toggleConst() {
     showConst.value = !showConst.value;
-    showCriticalPathsGraph();
+    showCriticalPathsGraph(false,true,true,true);
   }
 
   function toggleRdOnly() {
     showRdOnly.value = !showRdOnly.value;
-    showCriticalPathsGraph();
+    showCriticalPathsGraph(false,true,true,true);
   }
 
   function toggleIntern() {
     showInter.value = !showIntern.value;
-    showCriticalPathsGraph();
+    showCriticalPathsGraph(false,true,true,true);
   }
 
   function toggleLaten() {
     showLaten.value = !showLaten.value;
-    showCriticalPathsGraph();
+    showCriticalPathsGraph(false,true,true,true);
   }
   
   function openFullScreen() {
@@ -136,7 +136,7 @@
         };
         programsList.addEventListener("change", programsListHandler);
       }
-      showCriticalPathsGraph();
+      showCriticalPathsGraph(false,true,true,true);
     });
   });
 
@@ -177,6 +177,8 @@
           <img src="/img/fullscreen.png" class="fs-img">
         </button>
         <h4>Data Dependence Graph & Circular Dependence Paths (in red)</h4>
+        <button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
+        <button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>
       </div>
       <div class="output-block" id="dependence-graph"></div>
     </div>
