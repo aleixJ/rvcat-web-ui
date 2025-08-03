@@ -62,28 +62,32 @@
     return val;
   }
 
-  const showConst  = useBooleanCookie('showConst', true);
-  const showRdOnly = useBooleanCookie('showRdOnly', true);
-  const showIntern = useBooleanCookie('showIntern', true);
-  const showLaten  = useBooleanCookie('showLaten', true);
+  const showConst  = true
+  // useBooleanCookie('showConst', true);
+  const showRdOnly = true
+  // useBooleanCookie('showRdOnly', true);
+  const showIntern = true
+  // useBooleanCookie('showIntern', true);
+  const showLaten  = true 
+  // useBooleanCookie('showLaten', true);
   
   function toggleConst() {
-    showConst.value = !showConst.value;
+    showConst = !showConst;
     showCriticalPathsGraph(false,true,true,true);
   }
 
   function toggleRdOnly() {
-    showRdOnly.value = !showRdOnly.value;
+    showRdOnly = !showRdOnly;
     showCriticalPathsGraph(false,true,true,true);
   }
 
   function toggleIntern() {
-    showInter.value = !showIntern.value;
+    showInter = !showIntern;
     showCriticalPathsGraph(false,true,true,true);
   }
 
   function toggleLaten() {
-    showLaten.value = !showLaten.value;
+    showLaten = !showLaten;
     showCriticalPathsGraph(false,true,true,true);
   }
   
@@ -153,6 +157,10 @@
   });
 </script>
 
+//        <!--<button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>-->
+//        <!--<button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>-->
+
+
 <template>
   <div class="main">
     <div class="header">
@@ -177,8 +185,6 @@
           <img src="/img/fullscreen.png" class="fs-img">
         </button>
         <h4>Data Dependence Graph & Circular Dependence Paths (in red)</h4>
-        <!--<button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>-->
-        <!--<button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>-->
       </div>
       <div class="output-block" id="dependence-graph"></div>
     </div>
