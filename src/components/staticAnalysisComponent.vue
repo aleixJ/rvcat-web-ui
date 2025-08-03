@@ -27,7 +27,66 @@
   function closeTutorial() {
     showTutorial.value = false
   }
+  
+  function getCookie(name) {
+    const re = new RegExp(
+      "(?:^|; )" +
+        name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
+        "=([^;]*)"
+    );
+    const match = document.cookie.match(re);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
 
+  function setCookie(name, value, days = 30) {
+    const maxAge = days * 24 * 60 * 60;
+    document.cookie = `${name}=${encodeURIComponent(
+      value
+    )}; max-age=${maxAge}; path=/`;
+  }
+
+  function useBooleanCookie(key, defaultValue = false) {
+    const val = ref(defaultValue);
+
+    onMounted(() => {
+      const c = getCookie(key);
+      if (c !== null) {
+        val.value = c === '1';
+      }
+    });
+
+    watch(val, (v) => {
+      setCookie(key, v ? '1' : '0');
+    });
+
+    return val;
+  }
+
+  const showConst  = useBooleanCookie('showConst', true);
+  const showRdOnly = useBooleanCookie('showRdOnly', true);
+  const showIntern = useBooleanCookie('showIntern', true);
+  const showLaten  = useBooleanCookie('showLaten', true);
+  
+  function toggleConst() {
+    showConst.value = !showConst.value;
+    showCriticalPathsGraph();
+  }
+
+  function toggleRdOnly() {
+    showRdOnly.value = !showRdOnly.value;
+    showCriticalPathsGraph();
+  }
+
+  function toggleIntern() {
+    showInter.value = !showIntern.value;
+    showCriticalPathsGraph();
+  }
+
+  function toggleLaten() {
+    showLaten.value = !showLaten.value;
+    showCriticalPathsGraph();
+  }
+  
   function openFullScreen() {
     showFullScreen.value = true;
     nextTick(() => {
