@@ -177,8 +177,8 @@
           <img src="/img/fullscreen.png" class="fs-img">
         </button>
         <h4>Data Dependence Graph & Circular Dependence Paths (in red)</h4>
-        <button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
-        <button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>
+        <!--<button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>-->
+        <!--<button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>-->
       </div>
       <div class="output-block" id="dependence-graph"></div>
     </div>
