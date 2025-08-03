@@ -157,9 +157,7 @@
   });
 </script>
 
-//        <!--<button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>-->
 //        <!--<button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>-->
-
 
 <template>
   <div class="main">
@@ -167,6 +165,7 @@
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Static Performance Analysis</h3>
+        <button @click="toggleConst" class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
       </div>
     </div>
 
