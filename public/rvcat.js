@@ -326,11 +326,12 @@ function showProcessor() {
     createProcessorGraph(dispatch_width, num_ports, retire_width, cache);
 }
 
-function showCriticalPathsGraph() {
+function showCriticalPathsGraph(c,r,i,l) {
     let constant = "True";
     let read_only= "True";
     let internal = "True";
     let latency  = "True";
+    if (!c) {constant = "False"}
     executeCode(
         RVCAT_HEADER() + get_graph(constant, read_only, internal, latency),
         'generate_critical_paths_graph'
