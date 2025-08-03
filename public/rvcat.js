@@ -327,10 +327,10 @@ function showProcessor() {
 }
 
 function showCriticalPathsGraph() {
-    let constant = true;
-    let read_only= true;
-    let internal = true;
-    let latency  = true;
+    let constant = "True";
+    let read_only= "True";
+    let internal = "True";
+    let latency  = "True";
     executeCode(
         RVCAT_HEADER() + get_graph(constant, read_only, internal, latency),
         'generate_critical_paths_graph'
