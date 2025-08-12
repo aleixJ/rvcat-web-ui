@@ -73,22 +73,22 @@
   
   function toggleConst() {
     showConst = !showConst;
-    showCriticalPathsGraph(false,true,true,true);
+    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
 
   function toggleRdOnly() {
     showRdOnly = !showRdOnly;
-    showCriticalPathsGraph(false,true,true,true);
+    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
 
   function toggleIntern() {
     showIntern = !showIntern;
-    showCriticalPathsGraph(false,true,true,true);
+    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
 
   function toggleLaten() {
     showLaten = !showLaten;
-    showCriticalPathsGraph(false,true,true,true);
+    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
   
   function openFullScreen() {
@@ -140,7 +140,7 @@
         };
         programsList.addEventListener("change", programsListHandler);
       }
-      showCriticalPathsGraph(false,true,true,true);
+    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
     });
   });
 
