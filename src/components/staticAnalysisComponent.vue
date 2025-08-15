@@ -73,22 +73,22 @@
   
   function toggleConst() {
     showConst = !showConst;
-    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
 
   function toggleRdOnly() {
     showRdOnly = !showRdOnly;
-    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
 
   function toggleIntern() {
     showIntern = !showIntern;
-    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
 
   function toggleLaten() {
     showLaten = !showLaten;
-    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
   }
   
   function openFullScreen() {
@@ -168,9 +168,6 @@
         <button @click="toggleIntern"  class="blue-button">{{ showIntern ? 'Hide' : 'Show' }} Intern</button>
         <button @click="toggleLaten"  class="blue-button">{{ showLaten ? 'Hide' : 'Show' }} Laten</button>
       </div>
-      <Transition name="fold" appear>
-        <pre v-show="showPerformance" id="performance-limits" class="annotations-box"></pre>
-      </Transition>
     </div>
 
     <div class="annotations-wrapper">
