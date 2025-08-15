@@ -162,12 +162,15 @@
     <div class="header">
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
-        <h3>Static Performance Analysis</h3>
+        <h3>Static Performance Analysis    </h3>
         <button @click="toggleConst"  class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
         <button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>
         <button @click="toggleIntern"  class="blue-button">{{ showIntern ? 'Hide' : 'Show' }} Intern</button>
         <button @click="toggleLaten"  class="blue-button">{{ showLaten ? 'Hide' : 'Show' }} Laten</button>
       </div>
+      <Transition name="fold" appear>
+        <pre v-show="showPerformance" id="performance-limits" class="annotations-box"></pre>
+      </Transition>
     </div>
 
     <div class="annotations-wrapper">
