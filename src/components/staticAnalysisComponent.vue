@@ -62,6 +62,7 @@
     return val;
   }
 
+  let num_iterations = 1
   let showConst  = true
   // useBooleanCookie('showConst', true);
   let showRdOnly = true
@@ -73,22 +74,22 @@
   
   function toggleConst() {
     showConst = !showConst;
-    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleRdOnly() {
     showRdOnly = !showRdOnly;
-    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleIntern() {
     showIntern = !showIntern;
-    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleLaten() {
     showLaten = !showLaten;
-    // showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
   }
   
   function openFullScreen() {
@@ -140,7 +141,7 @@
         };
         programsList.addEventListener("change", programsListHandler);
       }
-    showCriticalPathsGraph(showConst,showRdOnly,showIntern,showLaten);
+    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
     });
   });
 
