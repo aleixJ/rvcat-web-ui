@@ -66,13 +66,13 @@
   // watch(iters, (v) => setCookie("graphIterations", v));
 
   let iters = 1
-  let showConst  = true
+  let showConst  = false
   // useBooleanCookie('showConst', true);
-  let showRdOnly = true
+  let showRdOnly = false
   // useBooleanCookie('showRdOnly', true);
   let showIntern = true
   // useBooleanCookie('showIntern', true);
-  let showLaten  = true 
+  let showLaten  = false
   // useBooleanCookie('showLaten', true);
   
   function changeIters(delta) {
@@ -175,7 +175,7 @@
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Static Performance Analysis</h3>
-        Iters:
+        <span class="title"><b> Iters</b></span>
         <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
         <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="10" v-model.number="iters">
         <button type="button" class="gray-button" @click="changeIters(1)">+</button>
