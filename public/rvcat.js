@@ -62,7 +62,7 @@ const handlers = {
     },
   
     'generate_scheduler_analysis': (data) => {
-         let d = JSON.parse(data);
+        let d = JSON.parse(data);
         if (d['data_type'] === 'error') {
             alert('Error running simulation');
             document.getElementById('run-simulation-spinner').style.display = 'none';
@@ -326,14 +326,17 @@ function showProcessor() {
     createProcessorGraph(dispatch_width, num_ports, retire_width, cache);
 }
 
-function showCriticalPathsGraph(c,r,i,l) {
+function showCriticalPathsGraph(n,c,r,i,l) {
     let constant = "True";
     let read_only= "True";
     let internal = "True";
     let latency  = "True";
     if (!c) {constant = "False"}
+    if (!r) {read_only= "False"}
+    if (!i) {internal = "False"}
+    if (!l) {latency  = "False"}
     executeCode(
-        RVCAT_HEADER() + get_graph(constant, read_only, internal, latency),
+        RVCAT_HEADER() + get_graph(n, constant, read_only, internal, latency),
         'generate_critical_paths_graph'
     )
     lastExecutedCommand = showCriticalPathsGraph;
