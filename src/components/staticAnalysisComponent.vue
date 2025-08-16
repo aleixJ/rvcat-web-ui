@@ -62,7 +62,9 @@
     return val;
   }
 
-  let num_iterations = 1
+  const iters = ref(parseInt(getCookie("graphIterations")) || 1);
+  watch(iters, (v) => setCookie("graphIterations", v));
+  
   let showConst  = true
   // useBooleanCookie('showConst', true);
   let showRdOnly = true
@@ -72,24 +74,34 @@
   let showLaten  = true 
   // useBooleanCookie('showLaten', true);
   
+  function changeIters(delta) {
+    const min = 1;
+    const max = 10;
+    let v = iters.value + delta;
+    if (v < min) v = min;
+    if (v > max) v = max;
+    iters.value = v;
+    showCriticalPathsGraph(v, showConst, showRdOnly, showIntern, showLaten);
+  }
+  
   function toggleConst() {
     showConst = !showConst;
-    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleRdOnly() {
     showRdOnly = !showRdOnly;
-    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleIntern() {
     showIntern = !showIntern;
-    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleLaten() {
     showLaten = !showLaten;
-    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
   }
   
   function openFullScreen() {
@@ -141,7 +153,7 @@
         };
         programsList.addEventListener("change", programsListHandler);
       }
-    showCriticalPathsGraph(num_iterations, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
     });
   });
 
@@ -163,7 +175,17 @@
     <div class="header">
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
-        <h3>Static Performance Analysis    </h3>
+        <h3>Static Performance Analysis</h3>
+      </div>
+      <div class="iters-graph">
+        <div class="iter-group">
+          Iterations:
+          <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
+          <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="2000" v-model.number="iters">
+          <button type="button" class="gray-button" @click="changeIters(1)">+</button>
+        </div>
+      </div>
+      <div>
         <button @click="toggleConst"  class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
         <button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>
         <button @click="toggleIntern"  class="blue-button">{{ showIntern ? 'Hide' : 'Show' }} Intern</button>
