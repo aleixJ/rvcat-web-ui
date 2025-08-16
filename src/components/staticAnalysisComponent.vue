@@ -175,14 +175,14 @@
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Static Performance Analysis</h3>
-        <h4>Iters:</h4>
+        Iters:
         <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
         <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="10" v-model.number="iters">
         <button type="button" class="gray-button" @click="changeIters(1)">+</button>
-        <button @click="toggleConst"  class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
-        <button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>
-        <button @click="toggleIntern"  class="blue-button">{{ showIntern ? 'Hide' : 'Show' }} Intern</button>
-        <button @click="toggleLaten"  class="blue-button">{{ showLaten ? 'Hide' : 'Show' }} Laten</button>
+        <button @click="toggleConst"  class="blue-button">Constants</button>
+        <button @click="toggleRdOnly" class="blue-button">ReadOnly</button>
+        <button @click="toggleIntern" class="blue-button">Internal</button>
+        <button @click="toggleLaten"  class="blue-button">Latencies</button>
       </div>
     </div>
 
