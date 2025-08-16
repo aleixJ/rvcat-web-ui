@@ -22,8 +22,8 @@ rvcat.files.list_json(False)
 function addNewProgram(config){
   return `rvcat._program.save(${JSON.stringify(config)})`;
 }
-function get_graph (constants, read_only, internal, latency) {
-    return `rvcat._program.show_graphviz(${constants}, ${read_only}, ${internal}, ${latency})`
+function get_graph (num_iters, constants, read_only, internal, latency) {
+    return `rvcat._program.show_graphviz(${num_iters}, ${constants}, ${read_only}, ${internal}, ${latency})`
 }
 
 // PROCESSOR
