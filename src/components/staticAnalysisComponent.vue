@@ -76,10 +76,9 @@
   // useBooleanCookie('showLaten', true);
   
   function changeIters(delta) {
-    let v = iters
-    v = v + delta;
-    if (v < min) v = min;
-    if (v > max) v = max;
+    let v = iters + delta;
+    if (v < 1) v = 1;
+    if (v > 10) v = 10;
     iters = v;
     showCriticalPathsGraph(v, showConst, showRdOnly, showIntern, showLaten);
   }
@@ -176,16 +175,10 @@
       <div class="section-title-and-info">
         <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Static Performance Analysis</h3>
-      </div>
-      <div class="iters-graph">
-        <div class="iter-group">
-          Iterations:
-          <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
-          <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="10" v-model.number="iters">
-          <button type="button" class="gray-button" @click="changeIters(1)">+</button>
-        </div>
-      </div>
-      <div>
+        Iterations:
+        <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
+        <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="10" v-model.number="iters">
+        <button type="button" class="gray-button" @click="changeIters(1)">+</button>
         <button @click="toggleConst"  class="blue-button">{{ showConst ? 'Hide' : 'Show' }} Consts</button>
         <button @click="toggleRdOnly" class="blue-button">{{ showRdOnly ? 'Hide' : 'Show' }} RdOnly</button>
         <button @click="toggleIntern"  class="blue-button">{{ showIntern ? 'Hide' : 'Show' }} Intern</button>
