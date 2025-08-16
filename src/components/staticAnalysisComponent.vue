@@ -62,9 +62,10 @@
     return val;
   }
 
-  const iters = ref(parseInt(getCookie("graphIterations")) || 1);
-  watch(iters, (v) => setCookie("graphIterations", v));
-  
+  // const iters = ref(parseInt(getCookie("graphIterations")) || 1);
+  // watch(iters, (v) => setCookie("graphIterations", v));
+
+  let iters = 1
   let showConst  = true
   // useBooleanCookie('showConst', true);
   let showRdOnly = true
@@ -75,33 +76,32 @@
   // useBooleanCookie('showLaten', true);
   
   function changeIters(delta) {
-    const min = 1;
-    const max = 10;
-    let v = iters.value + delta;
+    let v = iters
+    v = v + delta;
     if (v < min) v = min;
     if (v > max) v = max;
-    iters.value = v;
+    iters = v;
     showCriticalPathsGraph(v, showConst, showRdOnly, showIntern, showLaten);
   }
   
   function toggleConst() {
     showConst = !showConst;
-    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleRdOnly() {
     showRdOnly = !showRdOnly;
-    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleIntern() {
     showIntern = !showIntern;
-    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
   }
 
   function toggleLaten() {
     showLaten = !showLaten;
-    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
   }
   
   function openFullScreen() {
@@ -153,7 +153,7 @@
         };
         programsList.addEventListener("change", programsListHandler);
       }
-    showCriticalPathsGraph(iters.value, showConst, showRdOnly, showIntern, showLaten);
+    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
     });
   });
 
@@ -181,7 +181,7 @@
         <div class="iter-group">
           Iterations:
           <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
-          <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="2000" v-model.number="iters">
+          <input type="number" id="num-iters" class="iter-input" name="iters" min="1" max="10" v-model.number="iters">
           <button type="button" class="gray-button" @click="changeIters(1)">+</button>
         </div>
       </div>
