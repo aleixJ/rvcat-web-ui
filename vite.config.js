@@ -13,5 +13,5 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  base:'https://hpca4se-uab.github.io/rvcat-web-ui/'
+  base: '/rvcat-web-ui/'
 })
