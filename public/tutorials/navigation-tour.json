@@ -1,0 +1,47 @@
+{
+  "id": "navigation-tour",
+  "name": "Navigation Tour",
+  "description": "A tour through all the application tabs",
+  "steps": [
+    {
+      "title": "Welcome to RVCAT-WEB!",
+      "description": "This tutorial will show you the different parts of the application. Let's start with the Simulation tab.",
+      "selector": ".header-title",
+      "position": "bottom"
+    },
+    {
+      "title": "Simulation Tab",
+      "description": "Here you can run simulations of your code. This is the main tab of the application.",
+      "selector": "button[class*=\"active\"]",
+      "position": "bottom",
+      "action": "switchTo:simulationComponent"
+    },
+    {
+      "title": "Static Analysis",
+      "description": "In this tab you can perform static analysis of your code to detect potential issues.",
+      "selector": "button:contains(\"Static Analysis\")",
+      "position": "bottom",
+      "action": "switchTo:staticAnalysisComponent"
+    },
+    {
+      "title": "Timeline",
+      "description": "The Timeline tab allows you to see the temporal evolution of program execution.",
+      "selector": "button:contains(\"Timeline\")",
+      "position": "bottom",
+      "action": "switchTo:timelineComponent"
+    },
+    {
+      "title": "Processor Settings",
+      "description": "Here you can configure processor parameters for simulations.",
+      "selector": "button:contains(\"Processor Settings\")",
+      "position": "bottom",
+      "action": "switchTo:procSettingsComponent"
+    },
+    {
+      "title": "Tutorial Complete!",
+      "description": "You have completed the navigation tour. Now you know all the main parts of the application.",
+      "selector": ".header-title",
+      "position": "bottom"
+    }
+  ]
+}

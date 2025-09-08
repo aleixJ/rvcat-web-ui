@@ -9,6 +9,7 @@ import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
 import procSettingsComponent   from '@/components/procSettingsComponent.vue';
 import simulationComponent     from '@/components/simulationComponent.vue';
+import tutorialComponent       from '@/components/tutorialComponent.vue';
 
 // Modal & navigation state
 const showLeaveModal    = ref(false);
@@ -102,6 +103,12 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- Tutorial System -->
+      <tutorialComponent 
+        :activeView="currentKey"
+        @requestSwitch="onRequestSwitch"
+      />
     </main>
   </body>
 </template>
