@@ -3,8 +3,16 @@
     <div class="tutorial-editor">
       <!-- Simple header with title and close -->
       <div class="editor-header">
-        <h2>Tutorial Editor</h2>
-        <button @click="$emit('close')" class="close-btn">&times;</button>
+        <div class="header-left">
+          <h2>Tutorial Editor</h2>
+          <span v-if="hasSavedContent" class="draft-indicator"></span>
+        </div>
+        <div class="header-right">
+          <button v-if="hasSavedContent" @click="clearDraft" class="clear-btn" title="Clear draft and start fresh">
+            Clear Draft
+          </button>
+          <button @click="$emit('close')" class="close-btn">&times;</button>
+        </div>
       </div>
       
       <!-- Main content area -->
@@ -140,8 +148,9 @@
         <!-- Actions -->
         <div class="actions">
           <button @click="previewTutorial" class="btn-primary">Preview</button>
-          <button @click="exportAsJSON" class="btn-secondary">Export JSON</button>
+          <button @click="uploadTutorial" class="btn-secondary">Upload</button>
           <button @click="downloadJSON" class="btn-secondary">Download</button>
+          <button @click="finishTutorial" class="btn-success">Finish</button>
         </div>
 
         <!-- Export result -->
@@ -156,10 +165,10 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 
 // Emits
-const emit = defineEmits(['close', 'preview'])
+const emit = defineEmits(['close', 'preview', 'tutorialFinished'])
 
 // State
 const tutorial = reactive({
@@ -169,6 +178,62 @@ const tutorial = reactive({
 })
 
 const exportedContent = ref('')
+
+// Auto-save functionality
+const STORAGE_KEY = 'tutorial-editor-draft'
+
+// Save tutorial data to localStorage whenever it changes
+watch(tutorial, (newTutorial) => {
+  if (newTutorial.name || newTutorial.description || newTutorial.steps.length > 0) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTutorial))
+  }
+}, { deep: true })
+
+// Load saved tutorial data on mount
+onMounted(() => {
+  const savedTutorial = localStorage.getItem(STORAGE_KEY)
+  if (savedTutorial) {
+    try {
+      const parsedTutorial = JSON.parse(savedTutorial)
+      tutorial.name = parsedTutorial.name || ''
+      tutorial.description = parsedTutorial.description || ''
+      tutorial.steps = parsedTutorial.steps || []
+      
+      // If no steps exist, add an empty one
+      if (tutorial.steps.length === 0) {
+        addStep()
+      }
+    } catch (err) {
+      console.error('Failed to load saved tutorial:', err)
+      addStep() // Add empty step as fallback
+    }
+  } else {
+    addStep() // Add empty step for new tutorial
+  }
+})
+
+// Clear saved data when tutorial is finished or explicitly cleared
+const clearSavedData = () => {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
+// Computed property to check if there's saved content
+const hasSavedContent = computed(() => {
+  return tutorial.name || tutorial.description || tutorial.steps.some(step => 
+    step.title || step.description || step.selector
+  )
+})
+
+// Clear draft and start fresh
+const clearDraft = () => {
+  if (confirm('Are you sure you want to clear the current draft? This action cannot be undone.')) {
+    tutorial.name = ''
+    tutorial.description = ''
+    tutorial.steps = []
+    addStep() // Add one empty step
+    clearSavedData()
+  }
+}
 
 // Methods
 const addStep = () => {
@@ -249,9 +314,73 @@ const previewTutorial = () => {
   emit('preview', tutorialData)
 }
 
-const exportAsJSON = () => {
+const uploadTutorial = () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  input.style.display = 'none'
+  
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    try {
+      const text = await file.text()
+      const tutorialData = JSON.parse(text)
+      
+      // Validate the uploaded tutorial
+      if (!tutorialData.name || !tutorialData.steps || !Array.isArray(tutorialData.steps)) {
+        alert('Invalid tutorial file format')
+        return
+      }
+      
+      // Load the tutorial data into the editor
+      tutorial.name = tutorialData.name || ''
+      tutorial.description = tutorialData.description || ''
+      tutorial.steps = []
+      
+      // Convert steps to editor format
+      tutorialData.steps.forEach(step => {
+        const editorStep = {
+          title: step.title || '',
+          description: step.description || '',
+          selector: step.selector || '',
+          position: step.position || 'bottom',
+          action: step.action || '',
+          validationType: '',
+          validationValue: '',
+          validationSelector: '',
+          validationMinValue: '',
+          validationMessage: ''
+        }
+        
+        // Handle validation if present
+        if (step.validation) {
+          editorStep.validationType = step.validation.type || ''
+          editorStep.validationMessage = step.validation.message || ''
+          editorStep.validationValue = step.validation.value || ''
+          editorStep.validationSelector = step.validation.selector || ''
+          editorStep.validationMinValue = step.validation.minValue || ''
+        }
+        
+        tutorial.steps.push(editorStep)
+      })
+      
+      alert('Tutorial loaded successfully!')
+    } catch (err) {
+      console.error('Failed to load tutorial:', err)
+      alert('Failed to load tutorial file. Please check the file format.')
+    }
+  }
+  
+  document.body.appendChild(input)
+  input.click()
+  document.body.removeChild(input)
+}
+
+const finishTutorial = () => {
   if (!tutorial.name || tutorial.steps.length === 0) {
-    alert('Add at least a name and one step before exporting')
+    alert('Add at least a name and one step before finishing')
     return
   }
   
@@ -260,7 +389,7 @@ const exportAsJSON = () => {
     name: tutorial.name,
     description: tutorial.description,
     steps: tutorial.steps.filter(step => step.title && step.selector).map(step => {
-      const exportStep = {
+      const finishedStep = {
         title: step.title,
         description: step.description,
         selector: step.selector,
@@ -268,39 +397,46 @@ const exportAsJSON = () => {
       }
       
       if (step.action) {
-        exportStep.action = step.action
+        finishedStep.action = step.action
       }
       
-        if (step.validationType) {
-          exportStep.validation = {
-            type: step.validationType,
-            message: step.validationMessage || 'Complete this action to continue'
-          }
-          
-          switch (step.validationType) {
+      if (step.validationType) {
+        finishedStep.validation = {
+          type: step.validationType,
+          message: step.validationMessage || 'Complete this action to continue'
+        }
+        
+        switch (step.validationType) {
           case 'program_selected':
           case 'architecture_selected':
-            exportStep.validation.value = step.validationValue
+            finishedStep.validation.value = step.validationValue
             break
           case 'input_value':
-            exportStep.validation.selector = step.validationSelector
-            exportStep.validation.value = step.validationValue
+            finishedStep.validation.selector = step.validationSelector
+            finishedStep.validation.value = step.validationValue
             break
           case 'input_value_min':
-            exportStep.validation.selector = step.validationSelector
-            exportStep.validation.minValue = parseInt(step.validationMinValue)
+            finishedStep.validation.selector = step.validationSelector
+            finishedStep.validation.minValue = parseInt(step.validationMinValue)
             break
           case 'button_clicked':
-            exportStep.validation.selector = step.validationSelector
+            finishedStep.validation.selector = step.validationSelector
             break
         }
       }
       
-      return exportStep
+      return finishedStep
     })
   }
   
-  exportedContent.value = JSON.stringify(tutorialData, null, 2)
+  // Emit the finished tutorial to add it to the menu
+  emit('tutorialFinished', tutorialData)
+  
+  // Clear saved data since tutorial is finished
+  clearSavedData()
+  
+  alert('Tutorial finished! It has been added to the tutorial menu.')
+  emit('close')
 }
 
 const downloadJSON = () => {
@@ -366,9 +502,6 @@ const downloadJSON = () => {
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
-
-// Initialize with one empty step
-addStep()
 </script>
 
 <style scoped>
@@ -408,11 +541,59 @@ addStep()
   background: #f9fafb;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .editor-header h2 {
   margin: 0;
   font-size: 22px;
   font-weight: 600;
   color: #111827;
+}
+
+.draft-indicator {
+  background: #10b981;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.clear-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clear-btn:hover {
+  background: #dc2626;
 }
 
 .close-btn {
@@ -629,6 +810,22 @@ addStep()
 
 .btn-secondary:hover {
   background: #4b5563;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-success:hover {
+  background: #059669;
 }
 
 .export-section {

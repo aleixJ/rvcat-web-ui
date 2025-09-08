@@ -92,6 +92,7 @@
       v-if="showEditor" 
       @close="showEditor = false"
       @preview="previewCustomTutorial"
+      @tutorialFinished="addFinishedTutorial"
     />
   </div>
 </template>
@@ -582,6 +583,25 @@ const previewCustomTutorial = (tutorialData) => {
   nextTick(() => {
     highlightCurrentStep()
   })
+}
+
+const addFinishedTutorial = (tutorialData) => {
+  // Process actions in the finished tutorial
+  tutorialData.steps = tutorialData.steps.map(step => {
+    if (step.action && typeof step.action === 'string') {
+      const [actionType, param] = step.action.split(':')
+      if (actionType === 'switchTo') {
+        step.action = () => emit('requestSwitch', param)
+      }
+    }
+    return step
+  })
+  
+  // Add the tutorial to the available tutorials list
+  availableTutorials.value.push(tutorialData)
+  
+  console.log(`Added new tutorial: ${tutorialData.name}`)
+  console.log('Available tutorials:', availableTutorials.value.map(t => t.name))
 }
 
 const closeTutorial = () => {
