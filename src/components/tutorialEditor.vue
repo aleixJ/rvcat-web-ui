@@ -384,6 +384,9 @@ const finishTutorial = () => {
     return
   }
   
+  // Download the tutorial file before finishing
+  downloadJSON()
+  
   const tutorialData = {
     id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
     name: tutorial.name,

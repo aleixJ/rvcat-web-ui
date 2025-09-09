@@ -529,7 +529,12 @@ const highlightCurrentStep = async () => {
   }
 }
 
-const completeTutorial = () => {
+const completeTutorial = async () => {
+  // Check validation if exists for current step (last step)
+  if (currentStep.value.validation && !await validateCurrentStep()) {
+    return // Don't complete if validation fails
+  }
+  
   closeTutorial()
   // You could emit an event here to track tutorial completion
 }
