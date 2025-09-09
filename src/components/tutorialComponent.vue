@@ -9,7 +9,14 @@
           <h3>{{ currentStep?.title }}</h3>
           <p>{{ currentStep?.description }}</p>
           <div class="tutorial-actions">
-            <button @click="pauseTutorial" class="tutorial-btn tutorial-btn-pause" title="Pause Tutorial">
+            <button @click="pauseTutorial" class="tutorial-btn tutorial-bconst previousStep = () => {
+  if (stepIndex.value > 0) {
+    stepIndex.value--
+    nextTick(async () => {
+      await highlightCurrentStep()
+    })
+  }
+}e" title="Pause Tutorial">
               ⏸️
             </button>
             <button @click="previousStep" :disabled="stepIndex === 0" class="tutorial-btn">
@@ -305,8 +312,8 @@ const startTutorial = (tutorialId) => {
   isActive.value = true
   showTutorialMenu.value = false
   
-  nextTick(() => {
-    highlightCurrentStep()
+  nextTick(async () => {
+    await highlightCurrentStep()
   })
 }
 
@@ -317,16 +324,9 @@ const nextStep = async () => {
       return // Don't advance if validation fails
     }
     
-    // Execute step action if exists
-    if (currentStep.value.action) {
-      await currentStep.value.action()
-      await nextTick()
-      await new Promise(resolve => setTimeout(resolve, 500)) // Wait for transition
-    }
-    
     stepIndex.value++
     await nextTick()
-    highlightCurrentStep()
+    await highlightCurrentStep()
   }
 }
 
@@ -484,12 +484,23 @@ const previousStep = async () => {
   if (stepIndex.value > 0) {
     stepIndex.value--
     await nextTick()
-    highlightCurrentStep()
+    await highlightCurrentStep()
   }
 }
 
-const highlightCurrentStep = () => {
+const highlightCurrentStep = async () => {
   if (!currentStep.value?.selector) return
+  
+  // Execute step action if exists (for current step)
+  if (currentStep.value.action) {
+    try {
+      await currentStep.value.action()
+      await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 300)) // Wait for transition
+    } catch (error) {
+      console.error('Error executing step action:', error)
+    }
+  }
   
   // Remove previous highlights
   document.querySelectorAll('.tutorial-highlighted').forEach(el => {
