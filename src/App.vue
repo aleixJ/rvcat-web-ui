@@ -183,20 +183,17 @@
     border: 3px solid #007acc !important;
     border-radius: 6px !important;
     box-shadow: 0 0 20px rgba(0, 122, 204, 0.5) !important;
-    background: rgba(255, 255, 255, 0.1) !important;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     transform: scale(1.02) !important;
   }
 
   /* Specific styles for different element types in tutorials */
   .tutorial-highlighted.header-title {
-    background: rgba(0, 122, 204, 0.1) !important;
     color: #333 !important;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   }
 
   .tutorial-highlighted button {
-    background: rgba(0, 122, 204, 0.2) !important;
     color: #333 !important;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     transform: scale(1.05) !important;

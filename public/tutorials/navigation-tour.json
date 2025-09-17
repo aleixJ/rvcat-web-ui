@@ -33,7 +33,7 @@
     {
       "title": "Processor Settings",
       "description": "Here you can configure processor parameters for simulations.",
-      "selector": "button:contains(\"Processor Settings\")",
+      "selector": "button:contains(\"Settings\")",
       "position": "bottom",
       "action": "switchTo:procSettingsComponent"
     },
