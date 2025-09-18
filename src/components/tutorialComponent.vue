@@ -9,16 +9,6 @@
           <h3>{{ currentStep?.title }}</h3>
           <p>{{ currentStep?.description }}</p>
           <div class="tutorial-actions">
-            <button @click="pauseTutorial" class="tutorial-btn tutorial-bconst previousStep = () => {
-  if (stepIndex.value > 0) {
-    stepIndex.value--
-    nextTick(async () => {
-      await highlightCurrentStep()
-    })
-  }
-}e" title="Pause Tutorial">
-              ⏸️
-            </button>
             <button @click="previousStep" :disabled="stepIndex === 0" class="tutorial-btn">
               Previous
             </button>
@@ -51,18 +41,29 @@
         
         <!-- Show resume option if there's a paused tutorial -->
         <div v-if="currentTutorial" class="tutorial-paused-section">
-          <button @click="resumeTutorial" class="tutorial-menu-item tutorial-resume-item">
-            <div class="tutorial-item-content">
-              <strong>▶️ Resume: {{ currentTutorial.name }}</strong>
-              <p>Continue from step {{ stepIndex + 1 }} of {{ currentTutorial.steps.length }}</p>
-            </div>
-          </button>
-          <button @click="closeTutorial" class="tutorial-menu-item tutorial-stop-item">
-            <div class="tutorial-item-content">
-              <strong>⏹️ Stop Current Tutorial</strong>
-              <p>End the current tutorial and start fresh</p>
-            </div>
-          </button>
+          <div class="tutorial-paused-header">
+            <h5>📚 Tutorial in Progress</h5>
+            <p class="tutorial-paused-info">{{ currentTutorial.name }}</p>
+          </div>
+          
+          <div class="tutorial-action-buttons">
+            <button @click="resumeTutorial" class="tutorial-action-btn tutorial-resume-btn">
+              <div class="tutorial-action-icon">▶️</div>
+              <div class="tutorial-action-content">
+                <strong>Resume</strong>
+                <span>Step {{ stepIndex + 1 }} of {{ currentTutorial.steps.length }}</span>
+              </div>
+            </button>
+            
+            <button @click="stopTutorial" class="tutorial-action-btn tutorial-stop-btn">
+              <div class="tutorial-action-icon">⏹️</div>
+              <div class="tutorial-action-content">
+                <strong>Stop</strong>
+                <span>Start fresh</span>
+              </div>
+            </button>
+          </div>
+          
           <div class="tutorial-menu-separator"></div>
         </div>
         
@@ -116,6 +117,9 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['requestSwitch'])
 
+// Local storage key for tutorial progress
+const TUTORIAL_PROGRESS_KEY = 'rvcat-tutorial-progress'
+
 // State
 const isActive = ref(false)
 const showTutorialMenu = ref(false)
@@ -125,6 +129,49 @@ const stepIndex = ref(0)
 const highlightElement = ref(null)
 const availableTutorials = ref([])
 const isLoading = ref(false)
+
+// Local Storage functions
+const saveTutorialProgress = () => {
+  if (currentTutorial.value) {
+    const progressData = {
+      tutorialId: currentTutorial.value.id,
+      tutorialName: currentTutorial.value.name,
+      stepIndex: stepIndex.value,
+      totalSteps: currentTutorial.value.steps.length,
+      timestamp: new Date().toISOString()
+    }
+    
+    try {
+      localStorage.setItem(TUTORIAL_PROGRESS_KEY, JSON.stringify(progressData))
+      console.log('✅ Tutorial progress saved:', progressData)
+    } catch (error) {
+      console.error('❌ Error saving tutorial progress:', error)
+    }
+  }
+}
+
+const loadTutorialProgress = () => {
+  try {
+    const savedData = localStorage.getItem(TUTORIAL_PROGRESS_KEY)
+    if (savedData) {
+      const progressData = JSON.parse(savedData)
+      console.log('Loaded tutorial progress:', progressData)
+      return progressData
+    }
+  } catch (error) {
+    console.error('❌ Error loading tutorial progress:', error)
+  }
+  return null
+}
+
+const clearTutorialProgress = () => {
+  try {
+    localStorage.removeItem(TUTORIAL_PROGRESS_KEY)
+    console.log('Tutorial progress cleared')
+  } catch (error) {
+    console.error('❌ Error clearing tutorial progress:', error)
+  }
+}
 
 // Load tutorials
 const loadTutorials = async () => {
@@ -140,7 +187,7 @@ const loadTutorials = async () => {
     
     for (const basePath of basePaths) {
       try {
-        console.log(`🔍 Trying base path: "${basePath}"`)
+        console.log(`Trying base path: "${basePath}"`)
         const indexResponse = await fetch(`${basePath}/tutorials/index.json`)
         console.log(`Index response status: ${indexResponse.status}`)
         
@@ -159,12 +206,12 @@ const loadTutorials = async () => {
       throw new Error('Could not load tutorial index from any base path')
     }
     
-    console.log('📚 Index loaded:', indexData)
+    console.log('Index loaded:', indexData)
     
     // Load each tutorial
     const tutorials = []
     for (const tutorialFile of indexData.tutorials) {
-      console.log(`📖 Loading tutorial file: ${tutorialFile}`)
+      console.log(`Loading tutorial file: ${tutorialFile}`)
       
       try {
         const tutorialResponse = await fetch(`${workingBasePath}/tutorials/${tutorialFile}`)
@@ -216,7 +263,7 @@ const loadTutorials = async () => {
       },
       {
         id: 'test-basic',
-        name: '🧪 Basic Test',
+        name: 'Basic Test',
         description: 'Test tutorial to verify functionality',
         steps: [
           {
@@ -308,9 +355,24 @@ const startTutorial = (tutorialId) => {
   if (!tutorial) return
   
   currentTutorial.value = tutorial
-  stepIndex.value = 0
+  
+  // Check if there's saved progress for this tutorial
+  const savedProgress = loadTutorialProgress()
+  if (savedProgress && savedProgress.tutorialId === tutorialId) {
+    // Resume from saved step
+    stepIndex.value = savedProgress.stepIndex
+    console.log(`Auto-resuming tutorial "${tutorial.name}" from step ${savedProgress.stepIndex + 1}`)
+  } else {
+    // Start from beginning
+    stepIndex.value = 0
+    console.log(`Starting tutorial "${tutorial.name}" from the beginning`)
+  }
+  
   isActive.value = true
   showTutorialMenu.value = false
+  
+  // Save current progress
+  saveTutorialProgress()
   
   nextTick(async () => {
     await highlightCurrentStep()
@@ -325,6 +387,10 @@ const nextStep = async () => {
     }
     
     stepIndex.value++
+    
+    // Save progress after advancing to next step
+    saveTutorialProgress()
+    
     await nextTick()
     await highlightCurrentStep()
   }
@@ -483,6 +549,10 @@ const showValidationMessage = (message) => {
 const previousStep = async () => {
   if (stepIndex.value > 0) {
     stepIndex.value--
+    
+    // Save progress after going to previous step
+    saveTutorialProgress()
+    
     await nextTick()
     await highlightCurrentStep()
   }
@@ -535,24 +605,31 @@ const completeTutorial = async () => {
     return // Don't complete if validation fails
   }
   
-  closeTutorial()
+  // Clear progress when tutorial is completed
+  clearTutorialProgress()
+  
+  // Reset tutorial state
+  isActive.value = false
+  currentTutorial.value = null
+  stepIndex.value = 0
+  highlightElement.value = null
+  
+  // Remove highlights
+  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
+    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
+  })
+  
   // You could emit an event here to track tutorial completion
 }
 
 const toggleTutorial = () => {
   if (isActive.value) {
-    // Pausar tutorial
-    pauseTutorial()
+    // Close tutorial (save state)
+    closeTutorial()
   } else if (currentTutorial.value) {
     // Continue tutorial from where it left off
     resumeTutorial()
   }
-}
-
-const pauseTutorial = () => {
-  isActive.value = false
-  clearHighlight()
-  // Don't clear currentTutorial or stepIndex to maintain state
 }
 
 const clearHighlight = () => {
@@ -626,6 +703,24 @@ const closeTutorial = () => {
     el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
   })
   
+  // Save tutorial progress when closing with X button
+  saveTutorialProgress()
+  
+  isActive.value = false
+  clearHighlight()
+  // Don't clear currentTutorial or stepIndex to maintain state for resume
+}
+
+const stopTutorial = () => {
+  // Remove highlights from all elements
+  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
+    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
+  })
+  
+  // Clear saved progress when stopping tutorial
+  clearTutorialProgress()
+  
+  // Completely stop and reset tutorial
   isActive.value = false
   currentTutorial.value = null
   stepIndex.value = 0
@@ -645,10 +740,34 @@ const handleClickOutside = (event) => {
   }
 }
 
-onMounted(() => {
+const restoreTutorialProgress = async () => {
+  const savedProgress = loadTutorialProgress()
+  if (savedProgress && availableTutorials.value.length > 0) {
+    // Find the tutorial by ID
+    const tutorial = availableTutorials.value.find(t => t.id === savedProgress.tutorialId)
+    if (tutorial) {
+      console.log(`🔄 Restoring tutorial progress: ${savedProgress.tutorialName} (Step ${savedProgress.stepIndex + 1}/${savedProgress.totalSteps})`)
+      
+      currentTutorial.value = tutorial
+      stepIndex.value = savedProgress.stepIndex
+      // Don't set isActive to true - let the user decide to resume
+      
+      return true
+    } else {
+      console.log('⚠️ Saved tutorial not found in available tutorials, clearing progress')
+      clearTutorialProgress()
+    }
+  }
+  return false
+}
+
+onMounted(async () => {
   console.log('🎯 TutorialComponent mounted successfully!')
   document.addEventListener('click', handleClickOutside)
-  loadTutorials()
+  await loadTutorials()
+  
+  // Restore progress after tutorials are loaded
+  await restoreTutorialProgress()
 })
 
 onUnmounted(() => {
@@ -897,30 +1016,92 @@ onUnmounted(() => {
 
 .tutorial-paused-section {
   border-bottom: 2px solid #eee;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
 }
 
-.tutorial-resume-item {
+.tutorial-paused-header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.tutorial-paused-header h5 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tutorial-paused-info {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.tutorial-action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.tutorial-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tutorial-action-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.tutorial-action-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tutorial-action-content strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tutorial-action-content span {
+  font-size: 11px;
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+.tutorial-resume-btn {
   background: linear-gradient(135deg, #28a745, #20893e);
   color: white;
-  border-color: #28a745;
 }
 
-.tutorial-resume-item:hover {
+.tutorial-resume-btn:hover {
   background: linear-gradient(135deg, #218838, #1e7e34);
-  border-color: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
 }
 
-.tutorial-stop-item {
+.tutorial-stop-btn {
   background: linear-gradient(135deg, #dc3545, #c82333);
   color: white;
-  border-color: #dc3545;
 }
 
-.tutorial-stop-item:hover {
+.tutorial-stop-btn:hover {
   background: linear-gradient(135deg, #c82333, #bd2130);
-  border-color: #bd2130;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
 }
 
 .tutorial-create-item .tutorial-item-content strong {
