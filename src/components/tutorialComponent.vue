@@ -129,6 +129,37 @@ const stepIndex = ref(0)
 const highlightElement = ref(null)
 const availableTutorials = ref([])
 const isLoading = ref(false)
+const originalScrollPosition = ref({ x: 0, y: 0 })
+
+// Utility functions
+const isElementVisible = (element) => {
+  const rect = element.getBoundingClientRect()
+  const windowHeight = window.innerHeight || document.documentElement.clientHeight
+  const windowWidth = window.innerWidth || document.documentElement.clientWidth
+  
+  // Check if element is at least partially visible
+  return (
+    rect.top < windowHeight &&
+    rect.bottom > 0 &&
+    rect.left < windowWidth &&
+    rect.right > 0
+  )
+}
+
+const saveScrollPosition = () => {
+  originalScrollPosition.value = {
+    x: window.pageXOffset || document.documentElement.scrollLeft,
+    y: window.pageYOffset || document.documentElement.scrollTop
+  }
+}
+
+const restoreScrollPosition = () => {
+  window.scrollTo({
+    left: originalScrollPosition.value.x,
+    top: originalScrollPosition.value.y,
+    behavior: 'smooth'
+  })
+}
 
 // Local Storage functions
 const saveTutorialProgress = () => {
@@ -354,6 +385,9 @@ const startTutorial = (tutorialId) => {
   const tutorial = availableTutorials.value.find(t => t.id === tutorialId)
   if (!tutorial) return
   
+  // Save current scroll position before starting tutorial
+  saveScrollPosition()
+  
   currentTutorial.value = tutorial
   
   // Check if there's saved progress for this tutorial
@@ -361,11 +395,11 @@ const startTutorial = (tutorialId) => {
   if (savedProgress && savedProgress.tutorialId === tutorialId) {
     // Resume from saved step
     stepIndex.value = savedProgress.stepIndex
-    console.log(`Auto-resuming tutorial "${tutorial.name}" from step ${savedProgress.stepIndex + 1}`)
+    console.log(`🔄 Auto-resuming tutorial "${tutorial.name}" from step ${savedProgress.stepIndex + 1}`)
   } else {
     // Start from beginning
     stepIndex.value = 0
-    console.log(`Starting tutorial "${tutorial.name}" from the beginning`)
+    console.log(`🎯 Starting tutorial "${tutorial.name}" from the beginning`)
   }
   
   isActive.value = true
@@ -595,7 +629,11 @@ const highlightCurrentStep = async () => {
   if (element) {
     highlightElement.value = element
     element.classList.add('tutorial-highlighted', 'tutorial-highlight-pulse')
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    
+    // Only scroll if element is not visible
+    if (!isElementVisible(element)) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
   }
 }
 
@@ -608,16 +646,19 @@ const completeTutorial = async () => {
   // Clear progress when tutorial is completed
   clearTutorialProgress()
   
+  // Remove highlights
+  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
+    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
+  })
+  
+  // Restore original scroll position
+  restoreScrollPosition()
+  
   // Reset tutorial state
   isActive.value = false
   currentTutorial.value = null
   stepIndex.value = 0
   highlightElement.value = null
-  
-  // Remove highlights
-  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-  })
   
   // You could emit an event here to track tutorial completion
 }
@@ -642,6 +683,9 @@ const clearHighlight = () => {
 
 const resumeTutorial = () => {
   if (currentTutorial.value) {
+    // Save current scroll position before resuming tutorial
+    saveScrollPosition()
+    
     isActive.value = true
     showTutorialMenu.value = false
     nextTick(() => {
@@ -706,6 +750,9 @@ const closeTutorial = () => {
   // Save tutorial progress when closing with X button
   saveTutorialProgress()
   
+  // Restore original scroll position
+  restoreScrollPosition()
+  
   isActive.value = false
   clearHighlight()
   // Don't clear currentTutorial or stepIndex to maintain state for resume
@@ -719,6 +766,9 @@ const stopTutorial = () => {
   
   // Clear saved progress when stopping tutorial
   clearTutorialProgress()
+  
+  // Restore original scroll position
+  restoreScrollPosition()
   
   // Completely stop and reset tutorial
   isActive.value = false
