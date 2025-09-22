@@ -17,10 +17,14 @@
             </span>
             <button v-if="stepIndex < currentTutorial.steps.length - 1" 
                     @click="nextStep" 
-                    class="tutorial-btn tutorial-btn-primary">
+                    :disabled="!canProceed"
+                    :class="['tutorial-btn', canProceed ? 'tutorial-btn-primary' : 'tutorial-btn-disabled']">
               Next
             </button>
-            <button v-else @click="completeTutorial" class="tutorial-btn tutorial-btn-primary">
+            <button v-else 
+                    @click="completeTutorial" 
+                    :disabled="!canProceed"
+                    :class="['tutorial-btn', canProceed ? 'tutorial-btn-primary' : 'tutorial-btn-disabled']">
               Finish
             </button>
           </div>
@@ -321,6 +325,45 @@ const currentStep = computed(() => {
     return null
   }
   return currentTutorial.value.steps[stepIndex.value]
+})
+
+const canProceed = computed(() => {
+  if (!currentStep.value || !currentStep.value.validation) return true
+  
+  // This is a simplified check - the actual validation happens in validateCurrentStep
+  // For UI purposes, we'll check basic conditions synchronously
+  const validation = currentStep.value.validation
+  
+  try {
+    switch (validation.type) {
+      case 'program_selected': {
+        const selectedProgram = document.querySelector('#programs-list select')?.value
+        return selectedProgram === validation.value
+      }
+      case 'architecture_selected': {
+        const selectedArch = document.querySelector('#processors-list select')?.value
+        return selectedArch === validation.value
+      }
+      case 'input_value': {
+        const input = document.querySelector(validation.selector)
+        return input?.value === validation.value
+      }
+      case 'input_value_min': {
+        const input = document.querySelector(validation.selector)
+        const value = parseInt(input?.value)
+        return !isNaN(value) && value >= validation.minValue
+      }
+      case 'button_clicked': {
+        // For button validation, we assume it can proceed until clicked
+        return true
+      }
+      default:
+        return true
+    }
+  } catch (error) {
+    console.warn('Error checking validation state:', error)
+    return true // Default to allowing progression if check fails
+  }
 })
 
 const tooltipStyle = computed(() => {
@@ -915,6 +958,20 @@ onUnmounted(() => {
   background: #005999;
   transform: translateY(-1px);
   box-shadow: 0 2px 12px rgba(0, 122, 204, 0.3);
+}
+
+.tutorial-btn-disabled {
+  background: #cccccc !important;
+  color: #666666 !important;
+  border-color: #cccccc !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.tutorial-btn-disabled:hover {
+  background: #cccccc !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .tutorial-progress {
