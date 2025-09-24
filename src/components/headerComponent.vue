@@ -48,6 +48,15 @@ const emit = defineEmits([ 'requestSwitch' ]);
         <li>
           <button
             class="blue-button"
+            :class="{ active: activeView === 'comparisonComponent' }"
+            @click="emit('requestSwitch', 'comparisonComponent')"
+          >
+            Comparison
+          </button>
+        </li>
+        <li>
+          <button
+            class="blue-button"
             :class="{ active: activeView === 'procSettingsComponent' }"
             @click="emit('requestSwitch', 'procSettingsComponent')"
           >

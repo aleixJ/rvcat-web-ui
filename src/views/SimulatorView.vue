@@ -9,6 +9,7 @@ import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
 import procSettingsComponent   from '@/components/procSettingsComponent.vue';
 import simulationComponent     from '@/components/simulationComponent.vue';
+import comparisonComponent     from '@/components/comparisonComponent.vue';
 import tutorialComponent       from '@/components/tutorialComponent.vue';
 
 // Modal & navigation state
@@ -22,6 +23,7 @@ const components = {
   staticAnalysisComponent,
   aboutComponent,
   simulationComponent,
+  comparisonComponent,
   procSettingsComponent
 };
 

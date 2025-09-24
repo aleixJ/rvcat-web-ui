@@ -1,6 +1,7 @@
 <script setup>
-  import { onMounted, nextTick, ref, watch } from "vue";
+  import { onMounted, onUnmounted, nextTick, ref, watch } from "vue";
   import TutorialComponent                   from '@/components/tutorialComponent.vue';
+  import { saveExecution }                   from '@/utils/simulationStorage.js';
 
   const showCriticalPath = ref(false);
   const showTutorial     = ref(false);
@@ -47,7 +48,81 @@
   }
 
   const iterations = ref(parseInt(getCookie("simulationIterations")) || 200);
-  watch(iterations, (v) => setCookie("simulationIterations", v));
+  watch(iterations, (v) => {
+    setCookie("simulationIterations", v);
+    // Disable save button when iterations change (until new simulation is run)
+    checkSaveAvailability();
+  });
+
+  // State for save functionality
+  const canSave = ref(false);
+  const lastSimulationIterations = ref(null);
+
+  // Function to check if we have valid simulation data to save
+  function checkSaveAvailability() {
+    const instructionsEl = document.getElementById('instructions-output');
+    const cyclesEl = document.getElementById('cycles-output');
+    const ipcEl = document.getElementById('IPC-output');
+    const cyclesPerIterEl = document.getElementById('cycles-per-iteration-output');
+    
+    const hasValidData = instructionsEl && instructionsEl.innerHTML !== '?' &&
+                        cyclesEl && cyclesEl.innerHTML !== '?' &&
+                        ipcEl && ipcEl.innerHTML !== '?' &&
+                        cyclesPerIterEl && cyclesPerIterEl.innerHTML !== '?';
+    
+    // Only allow saving if we have valid data AND the current iterations match the last simulation
+    canSave.value = hasValidData && lastSimulationIterations.value === iterations.value;
+  }
+
+  // Function to handle simulation completion detection
+  function onSimulationComplete() {
+    // Update the last simulation iterations to current value
+    lastSimulationIterations.value = iterations.value;
+    checkSaveAvailability();
+  }
+
+  // Set up global callback for simulation completion
+  function setupSimulationCallback() {
+    // Make the callback available globally so it can be called from rvcat.js
+    window.onRvcatSimulationComplete = onSimulationComplete;
+  }
+
+  // Function to save current simulation execution
+  function saveCurrentExecution() {
+    try {
+      const instructionsEl = document.getElementById('instructions-output');
+      const cyclesEl = document.getElementById('cycles-output');
+      const ipcEl = document.getElementById('IPC-output');
+      const cyclesPerIterEl = document.getElementById('cycles-per-iteration-output');
+      
+      if (!instructionsEl || !cyclesEl || !ipcEl || !cyclesPerIterEl) {
+        alert('No simulation data available to save');
+        return;
+      }
+
+      // Get current data
+      const processor = typeof currentProcessor === 'function' ? currentProcessor() : 'Unknown Processor';
+      const program = typeof currentProgram === 'function' ? currentProgram() : 'Unknown Program';
+      const rob = typeof currentROBSize === 'function' ? currentROBSize() : 'N/A';
+      
+      const executionData = {
+        processor: processor,
+        program: program,
+        rob: rob,
+        iterations: lastSimulationIterations.value || iterations.value,
+        instructions: parseInt(instructionsEl.innerHTML) || 0,
+        cycles: parseInt(cyclesEl.innerHTML) || 0,
+        ipc: parseFloat(ipcEl.innerHTML) || 0,
+        cyclesPerIteration: parseFloat(cyclesPerIterEl.innerHTML) || 0
+      };
+
+      saveExecution(executionData);
+      alert('Execution saved successfully!');
+    } catch (error) {
+      console.error('Error saving execution:', error);
+      alert('Error saving execution. Please try again.');
+    }
+  }
 
 
   onMounted(() => {
@@ -57,6 +132,63 @@
       } else {
         console.error("simulation-graph element not found.");
       }
+      
+      // Set up simulation completion callback
+      setupSimulationCallback();
+      
+      // Set up mutation observer to detect simulation result changes
+      const setupObserver = () => {
+        const instructionsEl = document.getElementById('instructions-output');
+        if (instructionsEl) {
+          const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                // Delay check to ensure all elements are updated
+                setTimeout(() => {
+                  const newInstructions = document.getElementById('instructions-output')?.innerHTML;
+                  if (newInstructions && newInstructions !== '?' && lastSimulationIterations.value !== iterations.value) {
+                    onSimulationComplete();
+                  } else {
+                    checkSaveAvailability();
+                  }
+                }, 100);
+              }
+            });
+          });
+          
+          // Observe all result elements
+          ['instructions-output', 'cycles-output', 'IPC-output', 'cycles-per-iteration-output'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              observer.observe(el, { childList: true, characterData: true, subtree: true });
+            }
+          });
+          
+          // Cleanup observer on unmount
+          onUnmounted(() => {
+            observer.disconnect();
+            // Clean up global callback
+            if (window.onRvcatSimulationComplete) {
+              delete window.onRvcatSimulationComplete;
+            }
+          });
+        } else {
+          // Retry if elements not ready yet
+          setTimeout(setupObserver, 500);
+        }
+      };
+      
+      setupObserver();
+      
+      // Check save availability periodically as backup
+      const checkInterval = setInterval(() => {
+        checkSaveAvailability();
+      }, 2000);
+      
+      // Cleanup interval on unmount
+      onUnmounted(() => {
+        clearInterval(checkInterval);
+      });
     });
   });
 
@@ -85,6 +217,18 @@
           <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
         </div>
         <button id="run-simulation-button" class="blue-button" onclick="getSchedulerAnalysis();">Run</button>
+        <button 
+          id="save-execution-button" 
+          class="green-button" 
+          :disabled="!canSave"
+          @click="saveCurrentExecution"
+          :title="canSave ? 'Save current execution for comparison' : 
+                  (lastSimulationIterations === null || lastSimulationIterations !== iterations) ? 
+                  'Run simulation first to save results' : 
+                  'No simulation data available to save'"
+        >
+          Save
+        </button>
       </div>
     </div>
 
@@ -269,11 +413,34 @@
     padding: 2px;
     text-align: center;
     -moz-appearance: textfield;
+    appearance: textfield;
   }
   .iterations-input::-webkit-outer-spin-button,
   .iterations-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
+    appearance: none;
     margin: 0;
+  }
+
+  .green-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+  }
+
+  .green-button:hover:not(:disabled) {
+    background-color: #218838;
+  }
+
+  .green-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 
   .results-info {
