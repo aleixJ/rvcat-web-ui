@@ -134,6 +134,7 @@ const highlightElement = ref(null)
 const availableTutorials = ref([])
 const isLoading = ref(false)
 const originalScrollPosition = ref({ x: 0, y: 0 })
+const validationState = ref({})
 
 // Utility functions
 const isElementVisible = (element) => {
@@ -330,18 +331,21 @@ const currentStep = computed(() => {
 const canProceed = computed(() => {
   if (!currentStep.value || !currentStep.value.validation) return true
   
-  // This is a simplified check - the actual validation happens in validateCurrentStep
-  // For UI purposes, we'll check basic conditions synchronously
+  // Use reactive validation state that updates in real-time
   const validation = currentStep.value.validation
+  const stepKey = `${currentTutorial.value?.id || 'unknown'}-${stepIndex.value}`
+  
+  // Force reactivity by accessing validationState
+  validationState.value
   
   try {
     switch (validation.type) {
       case 'program_selected': {
-        const selectedProgram = document.querySelector('#programs-list select')?.value
+        const selectedProgram = document.querySelector('#programs-list')?.value
         return selectedProgram === validation.value
       }
       case 'architecture_selected': {
-        const selectedArch = document.querySelector('#processors-list select')?.value
+        const selectedArch = document.querySelector('#processors-list')?.value
         return selectedArch === validation.value
       }
       case 'input_value': {
@@ -678,6 +682,10 @@ const highlightCurrentStep = async () => {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }
+  
+  // Set up validation listeners for this step
+  await nextTick() // Wait for DOM updates
+  setupValidationListeners()
 }
 
 const completeTutorial = async () => {
@@ -685,6 +693,9 @@ const completeTutorial = async () => {
   if (currentStep.value.validation && !await validateCurrentStep()) {
     return // Don't complete if validation fails
   }
+  
+  // Clean up validation listeners
+  cleanupValidationListeners()
   
   // Clear progress when tutorial is completed
   clearTutorialProgress()
@@ -790,6 +801,9 @@ const closeTutorial = () => {
     el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
   })
   
+  // Clean up validation listeners
+  cleanupValidationListeners()
+  
   // Save tutorial progress when closing with X button
   saveTutorialProgress()
   
@@ -806,6 +820,9 @@ const stopTutorial = () => {
   document.querySelectorAll('.tutorial-highlighted').forEach(el => {
     el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
   })
+  
+  // Clean up validation listeners
+  cleanupValidationListeners()
   
   // Clear saved progress when stopping tutorial
   clearTutorialProgress()
@@ -854,6 +871,56 @@ const restoreTutorialProgress = async () => {
   return false
 }
 
+// Validation state management
+let validationEventListeners = []
+
+const setupValidationListeners = () => {
+  // Clean up existing listeners first
+  cleanupValidationListeners()
+  
+  if (!currentStep.value?.validation) return
+  
+  const validation = currentStep.value.validation
+  const triggerValidationUpdate = () => {
+    // Force reactivity by updating validationState
+    validationState.value = { ...validationState.value, timestamp: Date.now() }
+  }
+  
+  let selectors = []
+  
+  switch (validation.type) {
+    case 'program_selected':
+      selectors = ['#programs-list']
+      break
+    case 'architecture_selected':
+      selectors = ['#processors-list']
+      break
+    case 'input_value':
+    case 'input_value_min':
+      selectors = [validation.selector]
+      break
+  }
+  
+  // Add event listeners to relevant elements
+  selectors.forEach(selector => {
+    const element = document.querySelector(selector)
+    if (element) {
+      const events = ['change', 'input', 'keyup']
+      events.forEach(eventType => {
+        element.addEventListener(eventType, triggerValidationUpdate)
+        validationEventListeners.push({ element, eventType, handler: triggerValidationUpdate })
+      })
+    }
+  })
+}
+
+const cleanupValidationListeners = () => {
+  validationEventListeners.forEach(({ element, eventType, handler }) => {
+    element.removeEventListener(eventType, handler)
+  })
+  validationEventListeners = []
+}
+
 onMounted(async () => {
   console.log('🎯 TutorialComponent mounted successfully!')
   document.addEventListener('click', handleClickOutside)
@@ -865,6 +932,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  cleanupValidationListeners()
 })
 </script>
 
