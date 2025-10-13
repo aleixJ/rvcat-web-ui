@@ -79,22 +79,21 @@ const emit = defineEmits([ 'requestSwitch' ]);
 
 <style scoped>
 #top {
-  max-height: 5vh;
   width: 100vw;
-  padding: 0.6%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: #007acc;
   color: white;
-  padding: 15px 20px;
+  padding: 12px 25px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
+  min-height: 60px;
 }
 
 h1 {
   margin: 0;
-  font-size: 4vh;
+  font-size: 32px;
 }
 
 nav ul {
@@ -107,11 +106,11 @@ nav ul li {
   margin: 0 5px;
 }
 .title-img {
-  height: 4vh;
-  margin-top: 0.25vh;
+  height: 40px;
 }
 .header-title {
-  display:flex;
-  gap: 5px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 </style>

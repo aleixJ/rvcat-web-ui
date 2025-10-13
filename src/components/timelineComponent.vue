@@ -1,6 +1,6 @@
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted, watch} from 'vue';
-  import TutorialComponent                               from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
 
   let processorsListHandler;
   let programsListHandler;
@@ -10,27 +10,27 @@
   const timelineCanvas = ref(null);
   const tooltipRef     = ref(null);
   let timelineData     = ref(null);
-  const showTutorial   = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon        = ref(null);
+  const showHelp = ref(false);
+  const helpPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
   const clickedCellInfo = ref(null);
 
-  function openTutorial() {
+  function openHelp() {
     nextTick(() => {
       const el = infoIcon.value
       if (el) {
         const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
+        helpPosition.value = {
           top:  `${r.bottom}px`,
           left: `${r.right}px`
         }
-        showTutorial.value = true
+        showHelp.value = true
       }
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  function closeHelp() {
+    showHelp.value = false
   }
 
   function getCookie(name) {
@@ -704,7 +704,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Timeline</h3>
       </div>
       <div class="timeline-controls">
@@ -739,11 +739,11 @@
       </div>
     </div>
   </div>
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  <HelpDialog v-if="showHelp" :position="helpPosition"
   text="The Timeline section shows the program execution over time. The number of loop iterations can be modified, and the timeline can be zoomed in/out. 
     Hover over the grid to see basic info about the selected cell, and click to obtain more detailed information."
   title="Timeline"
-  @close="closeTutorial"
+  @close="closeHelp"
   />
   
   <div v-if="clickedCellInfo" class="modal-overlay" @click.self="clickedCellInfo = null">

@@ -9,7 +9,7 @@
     max-width: 100vf;
     max-height: 100vh;
     font-family: 'Trebuchet MS', sans-serif;
-    font-size: 2.5vh;
+    font-size: 16px;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -17,8 +17,8 @@
     background: #e3e3e3;
   }
   ::-webkit-scrollbar {
-    width: 0.75vh;
-    height:0.75vh;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     width:10px;
@@ -27,7 +27,7 @@
   ::-webkit-scrollbar-thumb {
     background:rgb(167, 167, 167);
     border-radius:10px;
-    height:0.75vh;
+    height: 8px;
   }
 
   /* Handle on hover */
@@ -52,20 +52,20 @@
 
   h3 {
     margin: 0;
-    font-size: 3.5vh;
+    font-size: 20px;
   }
 
   h4{
-    font-size: 2.75vh;
+    font-size: 18px;
   }
 
   .blue-button {
     background: #0085dd;
     color: white;
     border: none;
-    padding: 0.5vh 1vh;
-    font-size: 2.5vh;
-    border-radius: 1vh;
+    padding: 8px 20px;
+    font-size: 22px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
   }
@@ -84,11 +84,11 @@
     background: #e0e0e0;
     border: 1px solid #b0b0b0;
     border-radius: 4px;
-    width: 3.5vh;
-    height: 3.5vh;
+    width: 32px;
+    height: 32px;
     line-height: 1;
     text-align: center;
-    font-size: 2.5vh;
+    font-size: 16px;
     cursor: pointer;
     user-select: none;
   }
@@ -98,7 +98,7 @@
   }
 
   input {
-    font-size: 2.5vh;
+    font-size: 14px;
   }
 
   /* Modal styles */
@@ -147,13 +147,13 @@
   }
 
   .info-img {
-    height:2.5vh;
+    height: 18px;
   }
 
   .info-icon {
     cursor: pointer;
     user-select: none;
-    margin-top:0.75vh;
+    margin-top: 6px;
   }
   .section-title-and-info{
     display:flex;

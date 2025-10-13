@@ -1,27 +1,27 @@
 <script setup>
   import { ref, nextTick } from 'vue'
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
 
-  const showTutorial     = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon         = ref(null);
+  const showHelp = ref(false);
+  const helpPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
 
-  function openTutorial() {
+  function openHelp() {
     nextTick(() => {
       const el = infoIcon.value
       if (el) {
         const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
+        helpPosition.value = {
           top: `${r.bottom}px`,
           left: `${r.right}px`
         }
-        showTutorial.value = true
+        showHelp.value = true
       }
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  function closeHelp() {
+    showHelp.value = false
   }
 </script>
 
@@ -29,7 +29,7 @@
   <div class="pipeline-display">
     <div class="pipeline-header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Processor Pipeline</h3>
       </div>
       <div id="settings-div">
@@ -49,12 +49,12 @@
       </div>
     </div>
 
-    <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+    <HelpDialog v-if="showHelp" :position="helpPosition"
     text="Provides graphical visualization of the processor microarchitecture (pipeline) characteristics.
           Modify the size of the ROB (ReOrder Buffer) or select a new processor configuration file from the list.
           Use the 'Settings' tab to modify the microarchitectural parameters."
     title="Processor MicroArchitecture"
-    @close="closeTutorial"
+    @close="closeHelp"
     />
   </div>
 </template>

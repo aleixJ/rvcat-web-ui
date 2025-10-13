@@ -1,31 +1,31 @@
 <script setup>
   import { ref, onMounted, nextTick, onUnmounted } from "vue";
-  import TutorialComponent                         from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
 
   let processorsListHandler;
   let programsListHandler;
   const showPerformance  = ref(false);
   const showFullScreen   = ref(false);
-  const showTutorial     = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
+  const showHelp = ref(false);
+  const helpPosition = ref({ top: '50%', left: '50%' });
   const infoIcon         = ref(null);
 
-  function openTutorial() {
+  function openHelp() {
     nextTick(() => {
       const el = infoIcon.value
       if (el) {
         const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
+        helpPosition.value = {
           top: `${r.bottom}px`,
           left: `${r.right}px`
         }
-        showTutorial.value = true
+        showHelp.value = true
       }
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  function closeHelp() {
+    showHelp.value = false
   }
   
   function getCookie(name) {
@@ -173,7 +173,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Static Performance Analysis </h3>
         <span class="title"><b> Iters</b></span>
         <button type="button" class="gray-button" @click="changeIters(-1)">−</button>
@@ -214,11 +214,11 @@
       <div class="output-block" id="dependence-graph-full"></div>
     </div>
   </div>
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  <HelpDialog v-if="showHelp" :position="helpPosition"
   text="The data dependency graph highlights circular dependencies (shown in red) that determine latency-bound execution time.
    Click the fullscreen button to enlarge the graph. Expand the performance analysis tab for a detailed breakdown of statically-determined throughput and latency bottlenecks."
   title="Static Performance Analysis"
-  @close="closeTutorial"/>
+  @close="closeHelp"/>
 </template>
 
 <style scoped>

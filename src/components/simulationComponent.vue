@@ -1,29 +1,29 @@
 <script setup>
   import { onMounted, onUnmounted, nextTick, ref, watch } from "vue";
-  import TutorialComponent                   from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
   import { saveExecution }                   from '@/utils/simulationStorage.js';
 
   const showCriticalPath = ref(false);
-  const showTutorial     = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon         = ref(null);
+  const showHelp = ref(false);
+  const helpPosition = ref({ top: '50%', left: '50%' });
+  const infoIcon = ref(null);
 
-  function openTutorial() {
+  function openHelp() {
     nextTick(() => {
       const el = infoIcon.value
       if (el) {
         const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
+        helpPosition.value = {
           top: `${r.bottom}px`,
           left: `${r.right}px`
         }
-        showTutorial.value = true
+        showHelp.value = true
       }
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  function closeHelp() {
+    showHelp.value = false
   }
 
   function toggleCriticalPath() {
@@ -206,7 +206,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Simulation</h3>
       </div>
       <div class="iters-run">
@@ -287,11 +287,11 @@
       </div>
     </div>
   </div>
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  <HelpDialog v-if="showHelp" :position="helpPosition"
   text="Simulate a specified number of program loop iterations and display aggregate performance metrics.
    Hover over processor execution ports to inspect their utilization, or open the corresponding tab to visualize the time distribution of instructions along the critical path."
   title="Overall Simulation Results"
-  @close="closeTutorial"
+  @close="closeHelp"
   />
 </template>
 

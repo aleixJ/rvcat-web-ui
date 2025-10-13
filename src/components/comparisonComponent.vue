@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted, computed } from 'vue';
+  import { ref, onMounted, computed, nextTick } from 'vue';
   import { 
     getStoredExecutions, 
     deleteExecution, 
@@ -7,7 +7,7 @@
     clearAllExecutions,
     getExecutionStats 
   } from '@/utils/simulationStorage.js';
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
 
   // Component state
   const executions = ref([]);
@@ -18,8 +18,8 @@
   const filterBy = ref('');
   const editingNameId = ref(null);
   const tempName = ref('');
-  const showTutorial = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
+  const showHelp = ref(false);
+  const helpPosition = ref({ top: '50%', left: '50%' });
   const infoIcon = ref(null);
 
   // Computed properties
@@ -128,20 +128,22 @@
     return new Date(dateString).toLocaleString();
   }
 
-  function openTutorial() {
-    const el = infoIcon.value;
-    if (el) {
-      const r = el.getBoundingClientRect();
-      tutorialPosition.value = {
-        top: `${r.bottom}px`,
-        left: `${r.right}px`
-      };
-      showTutorial.value = true;
-    }
+  function openHelp() {
+    nextTick(() => {
+      const el = infoIcon.value;
+      if (el) {
+        const r = el.getBoundingClientRect();
+        helpPosition.value = {
+          top: `${r.bottom}px`,
+          left: `${r.right}px`
+        };
+        showHelp.value = true;
+      }
+    });
   }
 
-  function closeTutorial() {
-    showTutorial.value = false;
+  function closeHelp() {
+    showHelp.value = false;
   }
 
   // Lifecycle
@@ -154,7 +156,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help">
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help">
           <img src="/img/info.png" class="info-img">
         </span>
         <h3>Execution Comparison</h3>
@@ -314,12 +316,12 @@
     </div>
   </div>
 
-  <TutorialComponent 
-    v-if="showTutorial" 
-    :position="tutorialPosition"
+  <HelpDialog 
+    v-if="showHelp" 
+    :position="helpPosition"
     text="Compare saved simulation executions side by side. Click on column headers to sort, use the filter box to search, and click on execution names to rename them. Save executions from the Simulation tab to build your comparison dataset."
     title="Execution Comparison"
-    @close="closeTutorial"
+    @close="closeHelp"
   />
 </template>
 

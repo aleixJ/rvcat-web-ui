@@ -1,6 +1,6 @@
 <script setup>
   import { ref, onMounted, onUnmounted, nextTick } from "vue";
-  import TutorialComponent                         from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
 
   let processorsListHandler = null;
 
@@ -120,26 +120,26 @@
     input.remove();
   }
 
-  const showTutorial = ref(false)
-  const tutorialPosition = ref({ top: '50%', left: '50%' })
+  const showHelp = ref(false)
+  const helpPosition = ref({ top: '50%', left: '50%' })
   const infoIcon = ref(null)
 
-  function openTutorial() {
+  function openHelp() {
     nextTick(() => {
       const el = infoIcon.value
       if (el) {
         const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
+        helpPosition.value = {
           top: `${r.bottom}px`,
           left: `${r.right}px`
         }
-        showTutorial.value = true
+        showHelp.value = true
       }
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  function closeHelp() {
+    showHelp.value = false
   }
 </script>
 
@@ -147,7 +147,7 @@
   <div class="program_info">
     <div class="program-header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Program</h3>
       </div>
       <div id="settings-div">
@@ -174,13 +174,13 @@
     </div>
   </div>
 
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
+  <HelpDialog v-if="showHelp" :position="helpPosition"
   text="The simulated program consists of a fixed-iteration loop executing a sequence of machine instructions, each described in a high-level, informal language.
         The simulation tracks data dependencies but omits detailed architectural state: it does not model processor registers, memory states, branch outcomes, or memory dependencies (e.g., store-load interactions).
         The type, execution latency and eligible execution ports are shown for each instruction.
         Programs can be uploaded or downloaded in JSON format."
   title="Program Loop"
-  @close="closeTutorial"
+  @close="closeHelp"
   />
 </template>
 

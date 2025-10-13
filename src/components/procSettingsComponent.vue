@@ -1,6 +1,6 @@
 <script setup>
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick} from "vue";
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import HelpDialog from '@/components/helpDialog.vue';
 
   const dispatch        = ref(0);
   const retire          = ref(0);
@@ -13,7 +13,7 @@
   const mIssueTime      = ref(0);
   const showTooltip     = ref(false);
   const showModalChange = ref(false);
-  const prevProcessor   = ref(null);
+  const prevProcessor    = ref(null);
   
   let prevProcessorHandler;
   let processorsListHandler;
@@ -403,26 +403,26 @@
     }
   }
 
-  const showTutorial     = ref(false)
-  const tutorialPosition = ref({ top: '50%', left: '50%' })
-  const infoIcon         = ref(null)
+  const showHelp = ref(false)
+  const helpPosition = ref({ top: '50%', left: '50%' })
+  const infoIcon = ref(null)
 
-  function openTutorial() {
+  function openHelp() {
     nextTick(() => {
       const el = infoIcon.value
       if (el) {
         const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
+        helpPosition.value = {
           top: `${r.bottom}px`,
           left: `${r.right}px`
         }
-        showTutorial.value = true
+        showHelp.value = true
       }
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  function closeHelp() {
+    showHelp.value = false
   }
 
 </script>
@@ -430,7 +430,7 @@
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
+        <span ref="infoIcon" class="info-icon" @click="openHelp" title="Show help"><img src="/img/info.png" class="info-img"></span>
         <h3>Processor Settings - {{ name }}</h3>
       </div>
       <div class="buttons">
@@ -565,13 +565,6 @@
     </div>
   </div>
 
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="This section allows you to adjust the simulated processor’s configuration settings, including: (1) Dispatch & Retire Widths; (2) Cache Memory (Note: Setting Number of Blocks = 0 means all data accesses will always hit in the cache);
-(3) Execution Ports (Add or remove execution ports, up to a maximum of 10). Each instruction type can be assigned a latency and a set of eligible execution ports (only one is used per execution); 
-If a port is deleted, P0 is automatically assigned to any instruction types left without a valid port."
-  title="Processor Settings"
-  @close="closeTutorial"/>
-
   <!-- Modal Dialog -->
   <div v-if="showModalDown" class="modal-overlay">
     <div class="modal">
@@ -625,6 +618,13 @@ If a port is deleted, P0 is automatically assigned to any instruction types left
   <span id="auto-tooltip" ref="tooltip" class="auto-tooltip" :class="{ 'slide-in': showTooltip }">
     Each instruction type must have at least one assigned execution port; default is P0.
   </span>
+
+  <HelpDialog v-if="showHelp" :position="helpPosition"
+  text="This section allows you to adjust the simulated processor's configuration settings, including: (1) Dispatch & Retire Widths; (2) Cache Memory (Note: Setting Number of Blocks = 0 means all data accesses will always hit in the cache);
+(3) Execution Ports (Add or remove execution ports, up to a maximum of 10). Each instruction type can be assigned a latency and a set of eligible execution ports (only one is used per execution); 
+If a port is deleted, P0 is automatically assigned to any instruction types left without a valid port."
+  title="Processor Settings"
+  @close="closeHelp"/>
 </template>
 
 <style scoped>
