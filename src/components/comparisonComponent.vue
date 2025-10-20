@@ -189,7 +189,7 @@
         <span>{{ stats.avgCycles }}</span>
       </div>
       <div class="stat-item">
-        <label>Average Cycles/Iteration:</label>
+        <label>Average Cyc/Iter:</label>
         <span>{{ stats.avgCyclesPerIteration }}</span>
       </div>
     </div>
@@ -210,6 +210,7 @@
       <table class="executions-table">
         <thead>
           <tr>
+            <th></th>
             <th @click="setSortBy('name')" class="sortable">
               Name 
               <span v-if="sortBy === 'name'" class="sort-indicator">
@@ -259,7 +260,7 @@
               </span>
             </th>
             <th @click="setSortBy('cyclesPerIteration')" class="sortable">
-              Cycles/Iteration
+              Cyc/Iter
               <span v-if="sortBy === 'cyclesPerIteration'" class="sort-indicator">
                 {{ sortOrder === 'asc' ? '▲' : '▼' }}
               </span>
@@ -270,11 +271,15 @@
                 {{ sortOrder === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
-            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="execution in filteredAndSortedExecutions" :key="execution.id">
+            <td>
+              <button @click="handleDelete(execution.id)" class="delete-btn" title="Delete execution">
+                <img src="/img/delete.png" alt="Delete" class="delete-icon">
+              </button>
+            </td>
             <td>
               <div v-if="editingNameId === execution.id" class="edit-name-container">
                 <input 
@@ -287,8 +292,9 @@
                 <button @click="saveNewName(execution.id)" class="save-btn">✓</button>
                 <button @click="cancelEditName" class="cancel-btn">✕</button>
               </div>
-              <div v-else @click="startEditName(execution)" class="editable-name">
+              <div v-else @click="startEditName(execution)" class="editable-name" title="Click to edit name">
                 {{ execution.name }}
+                <span class="edit-icon">✎</span>
               </div>
             </td>
             <td>{{ execution.processor }}</td>
@@ -300,11 +306,6 @@
             <td>{{ execution.ipc.toFixed(2) }}</td>
             <td>{{ execution.cyclesPerIteration.toFixed(2) }}</td>
             <td>{{ formatDate(execution.timestamp) }}</td>
-            <td>
-              <button @click="handleDelete(execution.id)" class="delete-btn" title="Delete execution">
-                <img src="/img/delete.png" alt="Delete" class="delete-icon">
-              </button>
-            </td>
           </tr>
         </tbody>
       </table>
@@ -319,7 +320,7 @@
   <HelpDialog 
     v-if="showHelp" 
     :position="helpPosition"
-    text="Compare saved simulation executions side by side. Click on column headers to sort, use the filter box to search, and click on execution names to rename them. Save executions from the Simulation tab to build your comparison dataset."
+    text="Compare saved simulation executions side by side. Click on column headers to sort, use the filter box to search, and click on execution names to rename them (look for the edit icon ✎). Save executions from the Simulation tab to build your comparison dataset."
     title="Execution Comparison"
     @close="closeHelp"
   />
@@ -500,10 +501,27 @@ h3 {
   padding: 2px 4px;
   border-radius: 3px;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed transparent;
 }
 
 .editable-name:hover {
   background: #e9ecef;
+  border-bottom: 1px dashed #007acc;
+}
+
+.edit-icon {
+  opacity: 0;
+  margin-left: 8px;
+  font-size: 12px;
+  color: #007acc;
+  transition: opacity 0.2s;
+}
+
+.editable-name:hover .edit-icon {
+  opacity: 1;
 }
 
 .edit-name-container {

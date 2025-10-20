@@ -117,7 +117,7 @@
       };
 
       saveExecution(executionData);
-      alert('Execution saved successfully!');
+      alert('Execution saved successfully!\nYou can compare it in the "Comparison" tab.');
     } catch (error) {
       console.error('Error saving execution:', error);
       alert('Error saving execution. Please try again.');
