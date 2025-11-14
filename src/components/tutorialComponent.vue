@@ -371,6 +371,9 @@ const canProceed = computed(() => {
 })
 
 const tooltipStyle = computed(() => {
+  // Force reactivity on window changes (resize, zoom, scroll)
+  tooltipPositionTrigger.value
+  
   if (!highlightElement.value || !currentStep.value) return { display: 'none' }
   
   const rect = highlightElement.value.getBoundingClientRect()
@@ -921,9 +924,25 @@ const cleanupValidationListeners = () => {
   validationEventListeners = []
 }
 
+// Force tooltip position update
+const tooltipPositionTrigger = ref(0)
+const forceTooltipUpdate = () => {
+  tooltipPositionTrigger.value++
+}
+
+// Handle window resize and zoom changes
+const handleWindowChange = () => {
+  if (isActive.value && highlightElement.value) {
+    forceTooltipUpdate()
+  }
+}
+
 onMounted(async () => {
   console.log('🎯 TutorialComponent mounted successfully!')
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', handleWindowChange)
+  window.addEventListener('scroll', handleWindowChange, true) // Capture scroll events
+  
   await loadTutorials()
   
   // Restore progress after tutorials are loaded
@@ -932,6 +951,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', handleWindowChange)
+  window.removeEventListener('scroll', handleWindowChange, true)
   cleanupValidationListeners()
 })
 </script>
