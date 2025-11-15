@@ -21,6 +21,8 @@
   const showHelp = ref(false);
   const helpPosition = ref({ top: '50%', left: '50%' });
   const infoIcon = ref(null);
+  const showUploadModal = ref(false);
+  const uploadMode = ref('merge'); // 'merge' or 'replace'
 
   // Computed properties
   const filteredAndSortedExecutions = computed(() => {
@@ -42,9 +44,23 @@
       const bVal = b[sortBy.value];
       
       let comparison = 0;
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
+      
+      // Fields that should be sorted numerically even if stored as strings
+      const numericFields = ['rob', 'iterations', 'instructions', 'cycles', 'ipc', 'cyclesPerIteration'];
+      
+      if (numericFields.includes(sortBy.value)) {
+        // Parse as numbers for numeric sorting
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        comparison = aNum - bNum;
+      } else if (sortBy.value === 'timestamp') {
+        // Sort timestamps chronologically
+        comparison = new Date(aVal) - new Date(bVal);
+      } else if (typeof aVal === 'string' && typeof bVal === 'string') {
+        // String comparison for text fields
         comparison = aVal.localeCompare(bVal);
       } else {
+        // Default numeric comparison
         comparison = aVal - bVal;
       }
       
@@ -125,7 +141,40 @@
   }
 
   function formatDate(dateString) {
-    return new Date(dateString).toLocaleString();
+    const executionDate = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - executionDate;
+    
+    // Check if date is in the future
+    if (diffMs < 0) {
+      return 'Future date';
+    }
+    
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    
+    // Less than 1 minute
+    if (diffSeconds < 60) {
+      return `${diffSeconds} sec ago`;
+    }
+    
+    // Less than 1 hour
+    if (diffMinutes < 60) {
+      return `${diffMinutes} min ago`;
+    }
+    
+    // Less than 24 hours
+    if (diffHours < 24) {
+      return `${diffHours} hr ago`;
+    }
+    
+    // 24 hours or older - show date in dd/mm/yy format
+    const day = String(executionDate.getDate()).padStart(2, '0');
+    const month = String(executionDate.getMonth() + 1).padStart(2, '0');
+    const year = String(executionDate.getFullYear()).slice(-2);
+    
+    return `${day}/${month}/${year}`;
   }
 
   function openHelp() {
@@ -144,6 +193,118 @@
 
   function closeHelp() {
     showHelp.value = false;
+  }
+
+  async function downloadExecutions() {
+    try {
+      const jsonText = JSON.stringify(executions.value, null, 2);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const suggestedName = `executions_${timestamp}.json`;
+
+      // Use modern File System Access API if available
+      if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: suggestedName,
+          types: [{
+            description: 'JSON files',
+            accept: { 'application/json': ['.json'] }
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(jsonText);
+        await writable.close();
+      } else {
+        // Fallback: traditional anchor download
+        const blob = new Blob([jsonText], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = suggestedName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error downloading executions:', error);
+      alert('Error downloading executions. Please try again.');
+    }
+  }
+
+  function openUploadDialog() {
+    // If there are existing executions, show the modal to choose merge/replace
+    if (executions.value.length > 0) {
+      showUploadModal.value = true;
+    } else {
+      // No existing executions, just trigger file upload
+      document.getElementById('execution-file-upload').click();
+    }
+  }
+
+  function confirmUpload() {
+    showUploadModal.value = false;
+    document.getElementById('execution-file-upload').click();
+  }
+
+  function cancelUpload() {
+    showUploadModal.value = false;
+    uploadMode.value = 'merge';
+  }
+
+  function uploadExecutions(event) {
+    const inputEl = event.target;
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const uploadedExecutions = JSON.parse(e.target.result);
+        
+        // Validate that it's an array
+        if (!Array.isArray(uploadedExecutions)) {
+          alert('Invalid file format. Expected an array of executions.');
+          return;
+        }
+
+        // Merge or replace based on user choice
+        if (uploadMode.value === 'replace') {
+          // Replace all executions
+          localStorage.setItem('rvcat_simulation_executions', JSON.stringify(uploadedExecutions));
+        } else {
+          // Merge with existing executions, checking for duplicate IDs
+          const existingExecutions = getStoredExecutions();
+          
+          // Create a Set of existing IDs for fast lookup
+          const existingIds = new Set(existingExecutions.map(exec => exec.id));
+          
+          // Filter out uploaded executions that have duplicate IDs
+          const newExecutions = uploadedExecutions.filter(exec => !existingIds.has(exec.id));
+          
+          // Count how many were skipped
+          const skippedCount = uploadedExecutions.length - newExecutions.length;
+          
+          // Merge the non-duplicate executions
+          const mergedExecutions = [...existingExecutions, ...newExecutions];
+          localStorage.setItem('rvcat_simulation_executions', JSON.stringify(mergedExecutions));
+          
+          // Show info message if some were skipped
+          if (skippedCount > 0) {
+            alert(`Merged ${newExecutions.length} execution(s). Skipped ${skippedCount} duplicate(s) with existing IDs.`);
+          }
+        }
+
+        // Reload the executions list
+        loadExecutions();
+        uploadMode.value = 'merge'; // Reset to default
+
+      } catch (err) {
+        console.error('Invalid JSON:', err);
+        alert('Failed to load executions file. Please check the file format.');
+      }
+      inputEl.value = '';
+    };
+    reader.readAsText(file);
   }
 
   // Lifecycle
@@ -168,6 +329,13 @@
           placeholder="Filter by name, processor, or program..."
           class="filter-input"
         >
+        <input id="execution-file-upload" type="file" accept=".json" @change="uploadExecutions" style="display: none;"/>
+        <button @click="openUploadDialog" class="blue-button">
+          Upload
+        </button>
+        <button @click="downloadExecutions" class="green-button" :disabled="executions.length === 0">
+          Download
+        </button>
         <button @click="handleClearAll" class="red-button" :disabled="executions.length === 0">
           Clear All
         </button>
@@ -324,6 +492,37 @@
     title="Execution Comparison"
     @close="closeHelp"
   />
+
+  <!-- Upload Mode Modal -->
+  <div v-if="showUploadModal" class="modal-overlay" @click="cancelUpload">
+    <div class="modal-content" @click.stop>
+      <h3>Upload Executions</h3>
+      <p>You have {{ executions.length }} saved execution(s). How would you like to handle the uploaded data?</p>
+      
+      <div class="upload-options">
+        <label class="radio-option">
+          <input type="radio" v-model="uploadMode" value="merge" />
+          <div class="option-content">
+            <strong>Merge</strong>
+            <span>Add uploaded executions to existing ones</span>
+          </div>
+        </label>
+        
+        <label class="radio-option">
+          <input type="radio" v-model="uploadMode" value="replace" />
+          <div class="option-content">
+            <strong>Replace</strong>
+            <span>Delete existing executions and replace with uploaded ones</span>
+          </div>
+        </label>
+      </div>
+      
+      <div class="modal-actions">
+        <button @click="cancelUpload" class="cancel-button">Cancel</button>
+        <button @click="confirmUpload" class="confirm-button">Continue</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -331,10 +530,13 @@
   height: 100%;
   width: 100%;
   background: white;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   padding: 15px 40px 15px 15px;
   border-radius: 10px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -350,6 +552,8 @@
   padding-right: 20px;
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 15px;
+  z-index: 20;
+  flex-shrink: 0;
 }
 
 .section-title-and-info {
@@ -418,6 +622,7 @@ h3 {
   padding: 15px;
   background: #f8f9fa;
   border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .stat-item {
@@ -451,9 +656,13 @@ h3 {
 
 .executions-table-container {
   overflow-x: auto;
+  overflow-y: auto;
   border-radius: 6px;
   border: 1px solid #ddd;
   margin-right: 20px;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 300px);
 }
 
 .executions-table {
@@ -579,5 +788,156 @@ h3 {
   text-align: center;
   color: #666;
   font-size: 14px;
+  flex-shrink: 0;
+}
+
+.blue-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.blue-button:hover {
+  background-color: #0056b3;
+}
+
+.green-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.green-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.green-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.modal-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.upload-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radio-option:hover {
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.radio-option input[type="radio"] {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-content strong {
+  color: #333;
+  font-size: 15px;
+}
+
+.option-content span {
+  color: #666;
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+.confirm-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.confirm-button:hover {
+  background-color: #0056b3;
 }
 </style>
