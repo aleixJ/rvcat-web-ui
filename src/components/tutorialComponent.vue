@@ -1,8 +1,8 @@
 <template>
   <div class="tutorial-system">
     
-    <!-- Tutorial Overlay -->
-    <div v-if="currentTutorial && isActive" class="tutorial-overlay">
+    <!-- Tutorial Overlay for Steps -->
+    <div v-if="currentTutorial && isActive && !isQuestionStep" class="tutorial-overlay">
       <!-- Tooltip -->
       <div class="tutorial-tooltip" :style="tooltipStyle">
         <div class="tutorial-content">
@@ -30,6 +30,88 @@
           </div>
         </div>
         <button @click="closeTutorial" class="tutorial-close">&times;</button>
+      </div>
+    </div>
+
+    <!-- Question Overlay (centered like tutorial editor) -->
+    <div v-if="currentTutorial && isActive && isQuestionStep" class="question-overlay">
+      <div class="question-panel">
+        <button @click="closeTutorial" class="question-close">&times;</button>
+        
+        <div class="question-header">
+          <span class="question-badge">Question {{ stepIndex + 1 }} / {{ currentTutorial.steps.length }}</span>
+          <h2>{{ currentStep?.title }}</h2>
+        </div>
+        
+        <div class="question-body">
+          <p class="question-text">{{ currentStep?.questionText }}</p>
+          
+          <div class="question-mode-info">
+            <span v-if="currentStep?.answerMode === 'single'">Select ONE correct answer</span>
+            <span v-else>Select ALL correct answers</span>
+          </div>
+          
+          <div class="answers-list">
+            <div v-for="(answer, index) in currentStep?.answers" :key="index" class="answer-wrapper">
+              <button 
+                @click="selectAnswer(index)"
+                :class="getAnswerClass(index)"
+                :disabled="questionAnswered && isQuestionCorrect"
+              >
+                <span class="answer-letter">{{ String.fromCharCode(65 + index) }}</span>
+                <span class="answer-text">{{ answer.text }}</span>
+                <span v-if="questionAnswered && isQuestionCorrect && answer.isCorrect" class="answer-indicator correct">✓</span>
+                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(index) && !answer.isCorrect" class="answer-indicator wrong">✗</span>
+                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(index) && answer.isCorrect" class="answer-indicator partial-correct">✓</span>
+              </button>
+              <!-- Inline feedback below each answer -->
+              <div v-if="questionAnswered && selectedAnswers.includes(index) && answer.explanation" 
+                   :class="['answer-feedback', answer.isCorrect ? 'feedback-correct' : 'feedback-wrong']">
+                {{ answer.explanation }}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Summary message section -->
+          <div v-if="questionAnswered" class="feedback-section">
+            <div v-if="isQuestionCorrect" class="feedback-box feedback-correct">
+              <h4>✓ Correct!</h4>
+            </div>
+            <div v-else class="feedback-box feedback-wrong">
+              <h4>✗ {{ getErrorMessage() }}</h4>
+            </div>
+          </div>
+        </div>
+        
+        <div class="question-actions">
+          <button @click="previousStep" :disabled="stepIndex === 0" class="tutorial-btn">
+            Previous
+          </button>
+          
+          <button v-if="!questionAnswered" 
+                  @click="submitAnswer" 
+                  :disabled="selectedAnswers.length === 0"
+                  class="tutorial-btn tutorial-btn-primary">
+            Submit Answer
+          </button>
+          
+          <button v-else-if="!isQuestionCorrect"
+                  @click="retryQuestion"
+                  class="tutorial-btn tutorial-btn-retry">
+            Try Again
+          </button>
+          
+          <button v-else-if="stepIndex < currentTutorial.steps.length - 1" 
+                  @click="nextStep" 
+                  class="tutorial-btn tutorial-btn-primary">
+            Next
+          </button>
+          <button v-else 
+                  @click="completeTutorial" 
+                  class="tutorial-btn tutorial-btn-primary">
+            Finish
+          </button>
+        </div>
       </div>
     </div>
 
@@ -135,6 +217,10 @@ const availableTutorials = ref([])
 const isLoading = ref(false)
 const originalScrollPosition = ref({ x: 0, y: 0 })
 const validationState = ref({})
+
+// Question-specific state
+const selectedAnswers = ref([])
+const questionAnswered = ref(false)
 
 // Utility functions
 const isElementVisible = (element) => {
@@ -328,6 +414,30 @@ const currentStep = computed(() => {
   return currentTutorial.value.steps[stepIndex.value]
 })
 
+// Check if current step is a question
+const isQuestionStep = computed(() => {
+  return currentStep.value?.type === 'question'
+})
+
+// Check if question is answered correctly
+const isQuestionCorrect = computed(() => {
+  if (!currentStep.value || currentStep.value.type !== 'question') return false
+  
+  const answers = currentStep.value.answers || []
+  const correctIndices = answers.map((a, i) => a.isCorrect ? i : -1).filter(i => i !== -1)
+  
+  if (currentStep.value.answerMode === 'single') {
+    // Single mode: exactly one correct answer must be selected
+    return selectedAnswers.value.length === 1 && 
+           correctIndices.includes(selectedAnswers.value[0])
+  } else {
+    // Multiple mode: all correct answers must be selected and no wrong ones
+    const hasAllCorrect = correctIndices.every(i => selectedAnswers.value.includes(i))
+    const hasNoWrong = selectedAnswers.value.every(i => correctIndices.includes(i))
+    return hasAllCorrect && hasNoWrong
+  }
+})
+
 const canProceed = computed(() => {
   if (!currentStep.value || !currentStep.value.validation) return true
   
@@ -452,6 +562,10 @@ const startTutorial = (tutorialId) => {
     console.log(`🎯 Starting tutorial "${tutorial.name}" from the beginning`)
   }
   
+  // Reset question state
+  selectedAnswers.value = []
+  questionAnswered.value = false
+  
   isActive.value = true
   showTutorialMenu.value = false
   
@@ -465,18 +579,109 @@ const startTutorial = (tutorialId) => {
 
 const nextStep = async () => {
   if (stepIndex.value < currentTutorial.value.steps.length - 1) {
-    // Check validation if exists for current step
-    if (currentStep.value.validation && !await validateCurrentStep()) {
+    // Check validation if exists for current step (non-question steps)
+    if (currentStep.value.type !== 'question' && currentStep.value.validation && !await validateCurrentStep()) {
       return // Don't advance if validation fails
     }
     
     stepIndex.value++
+    
+    // Reset question state for new step
+    selectedAnswers.value = []
+    questionAnswered.value = false
     
     // Save progress after advancing to next step
     saveTutorialProgress()
     
     await nextTick()
     await highlightCurrentStep()
+  }
+}
+
+// Question handling methods
+const selectAnswer = (index) => {
+  if (questionAnswered.value) return
+  
+  if (currentStep.value.answerMode === 'single') {
+    // Single mode: replace selection
+    selectedAnswers.value = [index]
+  } else {
+    // Multiple mode: toggle selection
+    const idx = selectedAnswers.value.indexOf(index)
+    if (idx === -1) {
+      selectedAnswers.value.push(index)
+    } else {
+      selectedAnswers.value.splice(idx, 1)
+    }
+  }
+}
+
+const submitAnswer = () => {
+  if (selectedAnswers.value.length === 0) return
+  questionAnswered.value = true
+}
+
+const retryQuestion = () => {
+  // Reset question state to allow user to try again
+  selectedAnswers.value = []
+  questionAnswered.value = false
+}
+
+const getAnswerClass = (index) => {
+  const classes = ['answer-option']
+  
+  if (selectedAnswers.value.includes(index)) {
+    classes.push('selected')
+  }
+  
+  if (questionAnswered.value) {
+    const answer = currentStep.value.answers[index]
+    if (isQuestionCorrect.value) {
+      // Fully correct - show all correct answers in green
+      if (answer.isCorrect) {
+        classes.push('correct')
+      }
+    } else {
+      // Not fully correct
+      if (selectedAnswers.value.includes(index)) {
+        if (answer.isCorrect) {
+          // Selected a correct answer (partial correct for multiple mode)
+          classes.push('partial-correct')
+        } else {
+          // Selected a wrong answer
+          classes.push('wrong')
+        }
+      }
+    }
+  }
+  
+  return classes
+}
+
+const getErrorMessage = () => {
+  if (!currentStep.value || !questionAnswered.value || isQuestionCorrect.value) return ''
+  
+  const answers = currentStep.value.answers || []
+  const correctIndices = answers.map((a, i) => a.isCorrect ? i : -1).filter(i => i !== -1)
+  
+  // Check what went wrong
+  const selectedCorrect = selectedAnswers.value.filter(i => correctIndices.includes(i))
+  const selectedWrong = selectedAnswers.value.filter(i => !correctIndices.includes(i))
+  
+  if (currentStep.value.answerMode === 'single') {
+    // Single mode - wrong answer selected
+    return 'Incorrect answer. Try again!'
+  } else {
+    // Multiple mode
+    if (selectedWrong.length > 0 && selectedCorrect.length === 0) {
+      return 'Wrong answer selected. Try again!'
+    } else if (selectedWrong.length > 0 && selectedCorrect.length > 0) {
+      return 'You selected some correct answers, but also wrong ones. Try again!'
+    } else if (selectedCorrect.length > 0 && selectedCorrect.length < correctIndices.length) {
+      return 'Not all correct answers selected. Try again!'
+    } else {
+      return 'Try again!'
+    }
   }
 }
 
@@ -634,6 +839,10 @@ const previousStep = async () => {
   if (stepIndex.value > 0) {
     stepIndex.value--
     
+    // Reset question state for new step
+    selectedAnswers.value = []
+    questionAnswered.value = false
+    
     // Save progress after going to previous step
     saveTutorialProgress()
     
@@ -643,6 +852,16 @@ const previousStep = async () => {
 }
 
 const highlightCurrentStep = async () => {
+  // Skip highlighting for question steps (they show centered overlay)
+  if (currentStep.value?.type === 'question') {
+    // Clear any existing highlights
+    document.querySelectorAll('.tutorial-highlighted').forEach(el => {
+      el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
+    })
+    highlightElement.value = null
+    return
+  }
+  
   if (!currentStep.value?.selector) return
   
   // Execute step action if exists (for current step)
@@ -810,6 +1029,10 @@ const closeTutorial = () => {
   // Save tutorial progress when closing with X button
   saveTutorialProgress()
   
+  // Reset question state
+  selectedAnswers.value = []
+  questionAnswered.value = false
+  
   // Restore original scroll position
   restoreScrollPosition()
   
@@ -829,6 +1052,10 @@ const stopTutorial = () => {
   
   // Clear saved progress when stopping tutorial
   clearTutorialProgress()
+  
+  // Reset question state
+  selectedAnswers.value = []
+  questionAnswered.value = false
   
   // Restore original scroll position
   restoreScrollPosition()
@@ -1317,5 +1544,320 @@ onUnmounted(() => {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* Question Overlay Styles */
+.question-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.question-panel {
+  background: white;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 550px;
+  max-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.question-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+  z-index: 10;
+  transition: color 0.2s;
+}
+
+.question-close:hover {
+  color: #333;
+}
+
+.question-header {
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
+
+.question-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.question-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.question-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.question-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.question-mode-info {
+  background: #f5f3ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.answer-option:hover:not(:disabled) {
+  border-color: #8b5cf6;
+  background: #faf5ff;
+}
+
+.answer-option.selected {
+  border-color: #8b5cf6;
+  background: #f5f3ff;
+}
+
+.answer-option.correct {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.answer-option.partial-correct {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.answer-option.wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.answer-option:disabled {
+  cursor: default;
+}
+
+.answer-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.answer-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.answer-option.selected .answer-letter {
+  background: #8b5cf6;
+  color: white;
+}
+
+.answer-option.correct .answer-letter,
+.answer-option.partial-correct .answer-letter {
+  background: #10b981;
+  color: white;
+}
+
+.answer-option.wrong .answer-letter {
+  background: #ef4444;
+  color: white;
+}
+
+.answer-text {
+  flex: 1;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.answer-indicator {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.answer-indicator.correct {
+  color: #10b981;
+}
+
+.answer-indicator.partial-correct {
+  color: #10b981;
+}
+
+.answer-indicator.wrong {
+  color: #ef4444;
+}
+
+.answer-feedback {
+  margin-top: 6px;
+  margin-left: 40px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.answer-feedback.feedback-correct {
+  background: #ecfdf5;
+  color: #065f46;
+  border-left: 3px solid #10b981;
+}
+
+.answer-feedback.feedback-wrong {
+  background: #fef2f2;
+  color: #991b1b;
+  border-left: 3px solid #ef4444;
+}
+
+.feedback-section {
+  margin-top: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.feedback-box {
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.feedback-box h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feedback-correct {
+  background: #ecfdf5;
+  border: 1px solid #10b981;
+}
+
+.feedback-correct h4 {
+  color: #059669;
+}
+
+.feedback-wrong {
+  background: #fef2f2;
+  border: 1px solid #ef4444;
+}
+
+.feedback-wrong h4 {
+  color: #dc2626;
+}
+
+.feedback-item {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  padding-left: 14px;
+  position: relative;
+}
+
+.feedback-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #6b7280;
+}
+
+.feedback-item:last-child {
+  margin-bottom: 0;
+}
+
+.question-actions {
+  padding: 14px 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f9fafb;
+}
+
+.tutorial-btn-retry {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.tutorial-btn-retry:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.3);
 }
 </style>

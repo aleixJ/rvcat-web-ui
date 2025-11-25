@@ -31,56 +31,118 @@
 
         <!-- Steps section -->
         <div class="section">
-          <h3>Steps</h3>
-          <div v-for="(step, index) in tutorial.steps" :key="index" class="step-card">
+          <h3>Steps & Questions</h3>
+          <div v-for="(step, index) in tutorial.steps" :key="index" class="step-card" :class="{ 'question-card': step.type === 'question' }">
             <div class="step-header">
-              <span class="step-number">{{ index + 1 }}</span>
+              <span class="step-number" :class="{ 'question-number': step.type === 'question' }">{{ index + 1 }}</span>
+              <div class="step-type-selector">
+                <label class="type-radio">
+                  <input type="radio" v-model="step.type" value="step" @change="onStepTypeChange(step)">
+                  <span>Step</span>
+                </label>
+                <label class="type-radio">
+                  <input type="radio" v-model="step.type" value="question" @change="onStepTypeChange(step)">
+                  <span>Question</span>
+                </label>
+              </div>
               <button @click="removeStep(index)" class="remove-btn">×</button>
             </div>
             
             <div class="form-group">
               <label>Title</label>
-              <input v-model="step.title" type="text" placeholder="Step title">
+              <input v-model="step.title" type="text" :placeholder="step.type === 'question' ? 'Question title' : 'Step title'">
             </div>
             
-            <div class="form-group">
-              <label>Description</label>
-              <textarea v-model="step.description" placeholder="What happens in this step"></textarea>
-            </div>
-            
-            <div class="form-row">
+            <!-- Step-specific fields -->
+            <template v-if="step.type === 'step'">
               <div class="form-group">
-                <label>CSS Selector</label>
-                <input v-model="step.selector" type="text" placeholder=".button, #element">
+                <label>Description</label>
+                <textarea v-model="step.description" placeholder="What happens in this step"></textarea>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>CSS Selector</label>
+                  <input v-model="step.selector" type="text" placeholder=".button, #element">
+                </div>
+                
+                <div class="form-group">
+                  <label>Position</label>
+                  <select v-model="step.position">
+                    <option value="bottom">Bottom</option>
+                    <option value="top">Top</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                  </select>
+                </div>
               </div>
               
               <div class="form-group">
-                <label>Position</label>
-                <select v-model="step.position">
-                  <option value="bottom">Bottom</option>
-                  <option value="top">Top</option>
-                  <option value="left">Left</option>
-                  <option value="right">Right</option>
+                <label>Action (optional)</label>
+                <select v-model="step.action">
+                  <option value="">No action</option>
+                  <option value="switchTo:simulationComponent">Go to Simulation</option>
+                  <option value="switchTo:staticAnalysisComponent">Go to Static Analysis</option>
+                  <option value="switchTo:timelineComponent">Go to Timeline</option>
+                  <option value="switchTo:procSettingsComponent">Go to Settings</option>
                 </select>
               </div>
-            </div>
-            
-            <div class="form-group">
-              <label>Action (optional)</label>
-              <select v-model="step.action">
-                <option value="">No action</option>
-                <option value="switchTo:simulationComponent">Go to Simulation</option>
-                <option value="switchTo:staticAnalysisComponent">Go to Static Analysis</option>
-                <option value="switchTo:timelineComponent">Go to Timeline</option>
-                <option value="switchTo:procSettingsComponent">Go to Settings</option>
-              </select>
-            </div>
 
-            <!-- Validation Section -->
-            <div v-if="step.validationType" class="validation-card">
-              <h4>Validation</h4>
-              <div class="form-group">
-                <label>Type</label>
+              <!-- Validation Section -->
+              <div v-if="step.validationType" class="validation-card">
+                <h4>Validation</h4>
+                <div class="form-group">
+                  <label>Type</label>
+                  <select v-model="step.validationType">
+                    <option value="">No validation</option>
+                    <option value="program_selected">Program selected</option>
+                    <option value="architecture_selected">Architecture selected</option>
+                    <option value="input_value">Exact input value</option>
+                    <option value="input_value_min">Minimum input value</option>
+                    <option value="button_clicked">Button clicked</option>
+                  </select>
+                </div>
+
+                <div v-if="step.validationType" class="validation-details">
+                  <div v-if="step.validationType === 'program_selected'" class="form-group">
+                    <label>Program name</label>
+                    <input v-model="step.validationValue" type="text" placeholder="rec">
+                  </div>
+
+                  <div v-if="step.validationType === 'architecture_selected'" class="form-group">
+                    <label>Architecture name</label>
+                    <input v-model="step.validationValue" type="text" placeholder="baseline">
+                  </div>
+
+                  <div v-if="step.validationType === 'input_value'" class="form-group">
+                    <label>Expected value</label>
+                    <input v-model="step.validationValue" type="text" placeholder="200">
+                  </div>
+
+                  <div v-if="step.validationType === 'input_value' || step.validationType === 'input_value_min'" class="form-group">
+                    <label>Input selector</label>
+                    <input v-model="step.validationSelector" type="text" placeholder="input[name*='rob']">
+                  </div>
+
+                  <div v-if="step.validationType === 'input_value_min'" class="form-group">
+                    <label>Minimum value</label>
+                    <input v-model="step.validationMinValue" type="number" placeholder="100">
+                  </div>
+
+                  <div v-if="step.validationType === 'button_clicked'" class="form-group">
+                    <label>Button selector</label>
+                    <input v-model="step.validationSelector" type="text" placeholder="button:contains('Run')">
+                  </div>
+
+                  <div class="form-group">
+                    <label>Error message</label>
+                    <input v-model="step.validationMessage" type="text" placeholder="Complete this action to continue">
+                  </div>
+                </div>
+              </div>
+              
+              <div v-else class="form-group">
+                <label>Validation</label>
                 <select v-model="step.validationType">
                   <option value="">No validation</option>
                   <option value="program_selected">Program selected</option>
@@ -90,59 +152,64 @@
                   <option value="button_clicked">Button clicked</option>
                 </select>
               </div>
-
-              <div v-if="step.validationType" class="validation-details">
-                <div v-if="step.validationType === 'program_selected'" class="form-group">
-                  <label>Program name</label>
-                  <input v-model="step.validationValue" type="text" placeholder="rec">
-                </div>
-
-                <div v-if="step.validationType === 'architecture_selected'" class="form-group">
-                  <label>Architecture name</label>
-                  <input v-model="step.validationValue" type="text" placeholder="baseline">
-                </div>
-
-                <div v-if="step.validationType === 'input_value'" class="form-group">
-                  <label>Expected value</label>
-                  <input v-model="step.validationValue" type="text" placeholder="200">
-                </div>
-
-                <div v-if="step.validationType === 'input_value' || step.validationType === 'input_value_min'" class="form-group">
-                  <label>Input selector</label>
-                  <input v-model="step.validationSelector" type="text" placeholder="input[name*='rob']">
-                </div>
-
-                <div v-if="step.validationType === 'input_value_min'" class="form-group">
-                  <label>Minimum value</label>
-                  <input v-model="step.validationMinValue" type="number" placeholder="100">
-                </div>
-
-                <div v-if="step.validationType === 'button_clicked'" class="form-group">
-                  <label>Button selector</label>
-                  <input v-model="step.validationSelector" type="text" placeholder="button:contains('Run')">
-                </div>
-
-                <div class="form-group">
-                  <label>Error message</label>
-                  <input v-model="step.validationMessage" type="text" placeholder="Complete this action to continue">
+            </template>
+            
+            <!-- Question-specific fields -->
+            <template v-else-if="step.type === 'question'">
+              <div class="form-group">
+                <label>Question Text</label>
+                <textarea v-model="step.questionText" placeholder="Enter your question here..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Answer Mode</label>
+                <div class="answer-mode-selector">
+                  <label class="mode-radio">
+                    <input type="radio" v-model="step.answerMode" value="single">
+                    <span>Single Answer</span>
+                  </label>
+                  <label class="mode-radio">
+                    <input type="radio" v-model="step.answerMode" value="multiple">
+                    <span>Multiple Answers</span>
+                  </label>
                 </div>
               </div>
-            </div>
-            
-            <div v-else class="form-group">
-              <label>Validation</label>
-              <select v-model="step.validationType">
-                <option value="">No validation</option>
-                <option value="program_selected">Program selected</option>
-                <option value="architecture_selected">Architecture selected</option>
-                <option value="input_value">Exact input value</option>
-                <option value="input_value_min">Minimum input value</option>
-                <option value="button_clicked">Button clicked</option>
-              </select>
-            </div>
+              
+              <div class="answers-section">
+                <h4>Answers (up to 6) - At least one must be correct</h4>
+                <div v-for="(answer, ansIndex) in step.answers" :key="ansIndex" class="answer-card" :class="{ 'correct-answer': answer.isCorrect }">
+                  <div class="answer-header">
+                    <span class="answer-letter">{{ String.fromCharCode(65 + ansIndex) }}</span>
+                    <label class="correct-checkbox">
+                      <input type="checkbox" v-model="answer.isCorrect" @change="onCorrectAnswerChange(step, ansIndex)">
+                      <span>Correct</span>
+                    </label>
+                    <button v-if="step.answers.length > 2" @click="removeAnswer(step, ansIndex)" class="remove-answer-btn">×</button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Answer Text</label>
+                    <input v-model="answer.text" type="text" placeholder="Answer option...">
+                  </div>
+                  
+                  <div class="feedback-group">
+                    <div class="form-group">
+                      <label v-if="answer.isCorrect">✓ Explanation (shown when user selects this correct answer)</label>
+                      <label v-else>✗ Explanation (shown when user selects this wrong answer)</label>
+                      <input v-model="answer.explanation" type="text" :placeholder="answer.isCorrect ? 'Great! This is correct because...' : 'This is incorrect because...'">
+                    </div>
+                  </div>
+                </div>
+                
+                <button v-if="step.answers.length < 6" @click="addAnswer(step)" class="add-answer-btn">+ Add Answer</button>
+              </div>
+            </template>
           </div>
           
-          <button @click="addStep" class="add-step-btn">+ Add Step</button>
+          <div class="add-buttons">
+            <button @click="addStep('step')" class="add-step-btn">+ Add Step</button>
+            <button @click="addStep('question')" class="add-question-btn">+ Add Question</button>
+          </div>
         </div>
 
         <!-- Actions -->
@@ -220,7 +287,7 @@ const clearSavedData = () => {
 // Computed property to check if there's saved content
 const hasSavedContent = computed(() => {
   return tutorial.name || tutorial.description || tutorial.steps.some(step => 
-    step.title || step.description || step.selector
+    step.title || step.description || step.selector || step.questionText
   )
 })
 
@@ -236,19 +303,94 @@ const clearDraft = () => {
 }
 
 // Methods
-const addStep = () => {
-  tutorial.steps.push({
-    title: '',
-    description: '',
-    selector: '',
-    position: 'bottom',
-    action: '',
-    validationType: '',
-    validationValue: '',
-    validationSelector: '',
-    validationMinValue: '',
-    validationMessage: ''
-  })
+const addStep = (type = 'step') => {
+  if (type === 'question') {
+    tutorial.steps.push({
+      type: 'question',
+      title: '',
+      questionText: '',
+      answerMode: 'single',
+      answers: [
+        { text: '', isCorrect: true, explanation: '' },
+        { text: '', isCorrect: false, explanation: '' }
+      ]
+    })
+  } else {
+    tutorial.steps.push({
+      type: 'step',
+      title: '',
+      description: '',
+      selector: '',
+      position: 'bottom',
+      action: '',
+      validationType: '',
+      validationValue: '',
+      validationSelector: '',
+      validationMinValue: '',
+      validationMessage: ''
+    })
+  }
+}
+
+const onStepTypeChange = (step) => {
+  if (step.type === 'question') {
+    // Initialize question fields if not present
+    if (!step.questionText) step.questionText = ''
+    if (!step.answerMode) step.answerMode = 'single'
+    if (!step.answers || step.answers.length === 0) {
+      step.answers = [
+        { text: '', isCorrect: true, explanation: '' },
+        { text: '', isCorrect: false, explanation: '' }
+      ]
+    }
+  } else {
+    // Initialize step fields if not present
+    if (!step.description) step.description = ''
+    if (!step.selector) step.selector = ''
+    if (!step.position) step.position = 'bottom'
+    if (!step.action) step.action = ''
+    if (!step.validationType) step.validationType = ''
+  }
+}
+
+const onCorrectAnswerChange = (step, changedIndex) => {
+  if (step.answerMode === 'single' && step.answers[changedIndex].isCorrect) {
+    // For single answer mode, uncheck all other answers
+    step.answers.forEach((answer, index) => {
+      if (index !== changedIndex) {
+        answer.isCorrect = false
+      }
+    })
+  }
+  
+  // Ensure at least one answer is correct
+  ensureOneCorrectAnswer(step)
+}
+
+const ensureOneCorrectAnswer = (step) => {
+  const hasCorrect = step.answers.some(a => a.isCorrect)
+  if (!hasCorrect && step.answers.length > 0) {
+    // If no correct answer, make the first one correct
+    step.answers[0].isCorrect = true
+  }
+}
+
+const addAnswer = (step) => {
+  if (step.answers.length < 6) {
+    step.answers.push({
+      text: '',
+      isCorrect: false,
+      explanation: ''
+    })
+  }
+}
+
+const removeAnswer = (step, index) => {
+  if (step.answers.length > 2) {
+    step.answers.splice(index, 1)
+    // Ensure at least one answer remains correct after removal
+    ensureOneCorrectAnswer(step)
+  }
 }
 
 const removeStep = (index) => {
@@ -270,8 +412,25 @@ const previewTutorial = () => {
     id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
     name: tutorial.name,
     description: tutorial.description,
-    steps: tutorial.steps.filter(step => step.title && step.selector).map(step => {
+    steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
+      // Handle question type
+      if (step.type === 'question') {
+        return {
+          type: 'question',
+          title: step.title,
+          questionText: step.questionText,
+          answerMode: step.answerMode,
+          answers: step.answers.filter(a => a.text).map(answer => ({
+            text: answer.text,
+            isCorrect: answer.isCorrect,
+            explanation: answer.explanation || ''
+          }))
+        }
+      }
+      
+      // Handle step type
       const previewStep = {
+        type: 'step',
         title: step.title,
         description: step.description,
         selector: step.selector,
@@ -341,29 +500,62 @@ const uploadTutorial = () => {
       
       // Convert steps to editor format
       tutorialData.steps.forEach(step => {
-        const editorStep = {
-          title: step.title || '',
-          description: step.description || '',
-          selector: step.selector || '',
-          position: step.position || 'bottom',
-          action: step.action || '',
-          validationType: '',
-          validationValue: '',
-          validationSelector: '',
-          validationMinValue: '',
-          validationMessage: ''
+        if (step.type === 'question') {
+          // Handle question type
+          const editorStep = {
+            type: 'question',
+            title: step.title || '',
+            questionText: step.questionText || '',
+            answerMode: step.answerMode || 'single',
+            answers: (step.answers || []).map(answer => ({
+              text: answer.text || '',
+              isCorrect: answer.isCorrect || false,
+              explanation: answer.explanation || ''
+            }))
+          }
+          
+          // Ensure at least 2 answers
+          while (editorStep.answers.length < 2) {
+            editorStep.answers.push({
+              text: '',
+              isCorrect: false,
+              explanation: ''
+            })
+          }
+          
+          // Ensure at least one answer is correct
+          if (!editorStep.answers.some(a => a.isCorrect)) {
+            editorStep.answers[0].isCorrect = true
+          }
+          
+          tutorial.steps.push(editorStep)
+        } else {
+          // Handle step type
+          const editorStep = {
+            type: 'step',
+            title: step.title || '',
+            description: step.description || '',
+            selector: step.selector || '',
+            position: step.position || 'bottom',
+            action: step.action || '',
+            validationType: '',
+            validationValue: '',
+            validationSelector: '',
+            validationMinValue: '',
+            validationMessage: ''
+          }
+          
+          // Handle validation if present
+          if (step.validation) {
+            editorStep.validationType = step.validation.type || ''
+            editorStep.validationMessage = step.validation.message || ''
+            editorStep.validationValue = step.validation.value || ''
+            editorStep.validationSelector = step.validation.selector || ''
+            editorStep.validationMinValue = step.validation.minValue || ''
+          }
+          
+          tutorial.steps.push(editorStep)
         }
-        
-        // Handle validation if present
-        if (step.validation) {
-          editorStep.validationType = step.validation.type || ''
-          editorStep.validationMessage = step.validation.message || ''
-          editorStep.validationValue = step.validation.value || ''
-          editorStep.validationSelector = step.validation.selector || ''
-          editorStep.validationMinValue = step.validation.minValue || ''
-        }
-        
-        tutorial.steps.push(editorStep)
       })
       
       alert('Tutorial loaded successfully!')
@@ -391,8 +583,25 @@ const finishTutorial = () => {
     id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
     name: tutorial.name,
     description: tutorial.description,
-    steps: tutorial.steps.filter(step => step.title && step.selector).map(step => {
+    steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
+      // Handle question type
+      if (step.type === 'question') {
+        return {
+          type: 'question',
+          title: step.title,
+          questionText: step.questionText,
+          answerMode: step.answerMode,
+          answers: step.answers.filter(a => a.text).map(answer => ({
+            text: answer.text,
+            isCorrect: answer.isCorrect,
+            explanation: answer.explanation || ''
+          }))
+        }
+      }
+      
+      // Handle step type
       const finishedStep = {
+        type: 'step',
         title: step.title,
         description: step.description,
         selector: step.selector,
@@ -452,8 +661,25 @@ const downloadJSON = () => {
     id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
     name: tutorial.name,
     description: tutorial.description,
-    steps: tutorial.steps.filter(step => step.title && step.selector).map(step => {
+    steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
+      // Handle question type
+      if (step.type === 'question') {
+        return {
+          type: 'question',
+          title: step.title,
+          questionText: step.questionText,
+          answerMode: step.answerMode,
+          answers: step.answers.filter(a => a.text).map(answer => ({
+            text: answer.text,
+            isCorrect: answer.isCorrect,
+            explanation: answer.explanation || ''
+          }))
+        }
+      }
+      
+      // Handle step type
       const exportStep = {
+        type: 'step',
         title: step.title,
         description: step.description,
         selector: step.selector,
@@ -765,12 +991,210 @@ const downloadJSON = () => {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  display: block;
-  margin: 20px auto 0 auto;
 }
 
 .add-step-btn:hover {
   background: #059669;
+}
+
+.add-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.add-question-btn {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-question-btn:hover {
+  background: #7c3aed;
+}
+
+/* Step type selector */
+.step-type-selector {
+  display: flex;
+  gap: 16px;
+}
+
+.type-radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.type-radio input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Question card styles */
+.question-card {
+  background: #f5f3ff;
+  border-color: #8b5cf6;
+}
+
+.question-number {
+  background: #8b5cf6 !important;
+}
+
+/* Answer mode selector */
+.answer-mode-selector {
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.mode-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.mode-radio input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Answers section */
+.answers-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.answers-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.answer-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.answer-card.correct-answer {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+.answer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.answer-letter {
+  background: #6b7280;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.correct-answer .answer-letter {
+  background: #10b981;
+}
+
+.correct-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  margin-left: auto;
+}
+
+.correct-checkbox input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.remove-answer-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.remove-answer-btn:hover {
+  background: #dc2626;
+}
+
+.feedback-group {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border: 1px dashed #d1d5db;
+}
+
+.feedback-group .form-group {
+  margin-bottom: 12px;
+}
+
+.feedback-group .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.feedback-group label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.add-answer-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: block;
+  width: 100%;
+}
+
+.add-answer-btn:hover {
+  background: #4b5563;
 }
 
 .actions {
