@@ -387,7 +387,7 @@
           labelPart.slice(0, idxBracket + 1) +
           labelPart.slice(idxBracket + 2);
       }
-      return labelPart + " " + collapsed + " " + comment;
+      return labelPart + collapsed + " " + comment;
     }
 
     // Case D: Anything else
