@@ -29,39 +29,81 @@ const handlers = {
             document.getElementById('processors-list').appendChild(option);
         }
         // Once the processors and programs are loaded show the program in the UI
-        reloadRvcat();
+        programShow();
+        getProcessorInformation();
         closeLoadingOverlay();
     },
-  
     'prog_show': (data) => {
-      const item       = document.getElementById('rvcat-asm-code');
-      item.textContent = data;
+      let array = data.split("Through");
+      let prog = array[0];
+
+      // Split into lines
+      let lines = prog.split("\n");
+
+      // Remove leading/trailing empty lines
+      while (lines.length && lines[0].trim() === "") lines.shift();
+      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
+
+      // Join cleaned lines
+      const cleanedProg = lines.join("\n");
+
+      const item = document.getElementById('rvcat-asm-code');
+      item.textContent = cleanedProg;
+
       if (lastExecutedCommand !== null) {
         lastExecutedCommand();
       }
     },
-  
-    'prog_show_performance': (data) => {
-      let item         = document.getElementById('performance-limits');
-      item.textContent = data;
+    'prog_show_annotations': (data) => {
+
+      let array=data.split("Through");
+      let annotations = "Through"+array[1];
+      array=annotations.split("CACHE");
+      annotations = array[0];
+      let item = document.getElementById('performance-annotations');
+      item.textContent = annotations;
     },
-  
     'get_proc_settings': (data) => {
       processorInfo = JSON.parse(data);
     },
-  
     'save_processor_info': (data) => {
         processorInfo = JSON.parse(data);
+        showProcessor();
         getSchedulerAnalysis();
     },
-   
-    'generate_critical_paths_graph': (data) => {
-        let item = document.getElementById('dependence-graph');
+    'generate_dependencies_graph': (data) => {
+        let item = document.getElementById('simulation-output');
         item.innerHTML = '';
-        createGraphVizGraph(data, item);
+        // get svg element
+        let callback = () => {
+            return;
+        }
+        createGraphVizGraph(data, item, callback);
+
     },
-  
+    'generate_critical_paths_graph': (data) => {
+      const target = document.getElementById('dependence-graph') || document.getElementById('simulation-output');
+      if (!target) {
+        console.warn('Unable to render critical paths graph: target container missing');
+        return;
+      }
+      target.innerHTML = '';
+      createGraphVizGraph(data, target);
+
+    },
     'generate_scheduler_analysis': (data) => {
+        /*
+        {"total_iterations": 10, "total_instructions": 90, "total_cycles": 91,
+        "ipc": 0.989010989010989, "cycles_per_iteration": 9.1, "critical_path":
+        {"instructions": [{"instruction": 0, "percentage": 4.395604395604396},
+        {"instruction": 1, "percentage": 19.78021978021978}, {"instruction": 2,
+        "percentage": 4.395604395604396}, {"instruction": 3, "percentage":
+        21.978021978021978}, {"instruction": 4, "percentage":
+        43.956043956043956}, {"instruction": 5, "percentage":
+        3.2967032967032965}, {"instruction": 6, "percentage": 0.0},
+        {"instruction": 7, "percentage": 0.0}, {"instruction": 8, "percentage":
+        0.0}], "dispatch": 1.098901098901099, "retire": 1.098901098901099}}
+        */
         let d = JSON.parse(data);
         if (d['data_type'] === 'error') {
             alert('Error running simulation');
@@ -80,8 +122,9 @@ const handlers = {
 
         usage = {}
         usage['dispatch'] = (d["ipc"] / processorInfo.stages.dispatch) * 100;
-        usage['retire']   = (d["ipc"] / processorInfo.stages.retire) * 100;
-        usage.ports       = {}
+        usage['execute'] = (d["ipc"] / processorInfo.stages.execute) * 100;
+        usage['retire'] = (d["ipc"] / processorInfo.stages.retire) * 100;
+        usage.ports = {}
         let i = 0;
         let keys = Object.keys(processorInfo.ports);
         for (let key of keys) {
@@ -130,8 +173,18 @@ worker.onmessage = function(message) {
     if (message.data.action === 'loadedPackage') {
     }
     if (message.data.action === 'executed') {
-        if (message.data.data_type == 'error') {
-            console.log('Error:', message.data.result);
+      if (message.data.data_type == 'error') {
+        console.error('Error executing Python code:', message.data.result);
+        if (message.data.id === 'get_programs' || message.data.id === 'get_processors') {
+          closeLoadingOverlay();
+        }
+        if (message.data.id === 'generate_scheduler_analysis') {
+          document.getElementById('run-simulation-spinner').style.display = 'none';
+          document.getElementById('simulation-running').style.display = 'none';
+          document.getElementById('graph-section').style.display = 'block';
+          document.getElementById('critical-path-section').style.display = 'block';
+          document.getElementById('run-simulation-button').disabled = false;
+        }
             return;
         }
         data = message.data.result;
@@ -190,50 +243,74 @@ function currentROBSize() {
 }
 
 // Commands
-function reloadRvcat() {
-    programShow();
-    getProcessorInformation();
-}
-
 function programShow() {
-    executeCode(
-        RVCAT_HEADER() + PROG_SHOW_EXECUTION,
-        'prog_show'
-    )
+  if (!currentProgram()) {
+    return;
+  }
+  executeCode(
+    RVCAT_HEADER() + PROG_SHOW_EXECUTION,
+    'prog_show'
+  )
 }
 
-function programShowPerformanceLimits() {
+function programShowPerfAnnotations() {
+  if (!currentProgram()) {
+    return;
+  }
   executeCode(
-    RVCAT_HEADER() + PROG_SHOW_STATIC_PERFORMANCE,
-    'prog_show_performance'
+    RVCAT_HEADER() + PROG_SHOW_EXECUTION,
+    'prog_show_annotations'
   )
 }
 
 function programShowDependencies() {
-    executeCode(
-        RVCAT_HEADER() + PROG_SHOW_DEPENDENCIES,
-        'print_output'
-    )
-    lastExecutedCommand = programShowDependencies;
+  if (!currentProgram()) {
+    return;
+  }
+  executeCode(
+    RVCAT_HEADER() + PROG_SHOW_DEPENDENCIES,
+    'print_output'
+  )
+  lastExecutedCommand = programShowDependencies;
+}
+
+function programShowExecution() {
+  if (!currentProgram()) {
+    return;
+  }
+  executeCode(
+    RVCAT_HEADER() + PROG_SHOW_EXECUTION,
+    'print_output'
+  )
+  lastExecutedCommand = programShowExecution;
 }
 
 function programShowMemtrace() {
-    executeCode(
-        RVCAT_HEADER() + PROG_SHOW_MEMORY,
-        'print_output'
-    )
-    lastExecutedCommand = programShowMemtrace;
+  if (!currentProgram()) {
+    return;
+  }
+  executeCode(
+    RVCAT_HEADER() + PROG_SHOW_MEMORY,
+    'print_output'
+  )
+  lastExecutedCommand = programShowMemtrace;
 }
 
 function programShowAnalysis() {
-    executeCode(
-        RVCAT_HEADER() + PROG_SHOW_STATIC_PERFORMANCE,
-        'print_output'
-    )
-    lastExecutedCommand = programShowAnalysis;
+  if (!currentProgram()) {
+    return;
+  }
+  executeCode(
+    RVCAT_HEADER() + PROG_SHOW_STATIC_PERFORMANCE,
+    'print_output'
+  )
+  lastExecutedCommand = programShowAnalysis;
 }
 
 async function getProcessorJSON() {
+  if (!currentProcessor()) {
+    return null;
+  }
   await executeCode(
     RVCAT_HEADER() + SHOW_PROCESSOR,
     'get_proc_settings'
@@ -242,6 +319,9 @@ async function getProcessorJSON() {
 }
 
 function getProcessorInformation() {
+    if (!currentProcessor()) {
+        return;
+    }
     executeCode(
         RVCAT_HEADER() + SHOW_PROCESSOR,
         'save_processor_info'
@@ -260,18 +340,24 @@ async function executeCode(code, id=undefined){
 }
 
 // UI stuff
-function openLoadingOverlay() { 
-  document.getElementById('loading-overlay').style.display  = 'block';
+function openLoadingOverlay() {
+  document.getElementById('loading-overlay').style.display = 'block';
   document.getElementById('blur-overlay-item').style.display = 'block';
 }
 
 function closeLoadingOverlay() {
-    document.getElementById('loading-overlay').style.display   = 'none';
+    document.getElementById('loading-overlay').style.display = 'none';
     document.getElementById('blur-overlay-item').style.display = 'none';
 }
 
 function setLoadingOverlayMessage(message) {
     document.getElementById('loading-overlay-message').innerHTML = message;
+}
+
+function reloadRvcat() {
+    programShow();
+    getProcessorInformation();
+
 }
 
 function createGraphVizGraph(dotCode, targetElement, callback=null) {
@@ -297,6 +383,7 @@ function createGraphVizGraph(dotCode, targetElement, callback=null) {
 }
 
 function createProcessorGraph(dispatch, execute, retire, cache) {
+    // Define your Graphviz DOT code
     const dotCode = construct_reduced_processor_dot(dispatch, execute, retire, cache);
     createGraphVizGraph(dotCode, document.getElementById('pipeline-graph'));
 }
@@ -304,6 +391,7 @@ function createProcessorGraph(dispatch, execute, retire, cache) {
 let fullGraphDotCode;
 
 function createProcessorSimulationGraph(dispatch, execute, retire, usage=null) {
+  // Define your Graphviz DOT code
   fullGraphDotCode = construct_full_processor_dot(dispatch, execute, retire, usage);
   createGraphVizGraph(fullGraphDotCode, document.getElementById('simulation-graph'));
 }
@@ -312,49 +400,84 @@ function showFullProcessor(){
   createGraphVizGraph(fullGraphDotCode, document.getElementById('simulation-graph'));
 }
 
+
 function showProcessor() {
     if (processorInfo === null) {
         return;
     }
+
+    /*
+    {"name": "Baseline-2", "stages": {"dispatch": 6, "execute": 6, "retire": 8},
+    "resources": {"INT": 1, "FLOAT": 2, "FLOAT.SP.MUL": 4, "FLOAT.DP.MUL": 4,
+    "FLOAT.SP.FUSED": 5, "FLOAT.DP.FUSED": 5, "BRANCH": 1, "MEM.STORE": 2,
+    "MEM.LOAD": 4}, "ports": {"1": ["INT", "BRANCH", "FLOAT"], "2": ["MEM.LOAD",
+    "MEM.STORE"], "3": ["FLOAT", "INT"], "4": ["FLOAT", "INT"], "5":
+    ["MEM.LOAD", "MEM.STORE"]}, "rports": {"INT": ["1", "3", "4"], "BRANCH":
+    ["1"], "FLOAT": ["1", "3", "4"], "MEM.LOAD": ["2", "5"], "MEM.STORE": ["2",
+    "5"]}, "cache": null, "nBlocks": 0, "blkSize": 8, "mPenalty": 16,
+    "mIssueTime": 8}
+    */
+
     let dispatch_width = processorInfo.stages.dispatch;
-    let num_ports      = Object.keys(processorInfo.ports).length;
-    let retire_width   = processorInfo.stages.retire;
-    let cache = {'nBlocks':    processorInfo.nBlocks,
-                 'blkSize':    processorInfo.blkSize,
-                 'mPenalty':   processorInfo.mPenalty,
+    let num_ports = Object.keys(processorInfo.ports).length;
+    let retire_width = processorInfo.stages.retire;
+    let cache = {'nBlocks': processorInfo.nBlocks,
+                 'blkSize': processorInfo.blkSize,
+                 'mPenalty': processorInfo.mPenalty,
                  'mIssueTime': processorInfo.mIssueTime};
     createProcessorGraph(dispatch_width, num_ports, retire_width, cache);
 }
 
-function showCriticalPathsGraph(n,c,r,i,l) {
-    let constant = "True";
-    let read_only= "True";
-    let internal = "True";
-    let latency  = "True";
-    if (!c) {constant = "False"}
-    if (!r) {read_only= "False"}
-    if (!i) {internal = "False"}
-    if (!l) {latency  = "False"}
+function showDependenciesGraph() {
+  if (!currentProgram()) {
+    return;
+  }
+    programShowPerfAnnotations();
+    let controls = document.getElementById('dependencies-controls');
+    controls.style.display = 'block';
+    let num_iters = document.getElementById('dependencies-num-iters').value;
+    if (num_iters === '') {
+        num_iters = 3;
+    }
+    if (num_iters > 10) {
+        num_iters = 10;
+        document.getElementById('dependencies-num-iters').value = 10;
+    }
     executeCode(
-        RVCAT_HEADER() + get_graph(n, constant, read_only, internal, latency),
-        'generate_critical_paths_graph'
+        RVCAT_HEADER() + prog_show_dependencies_graphviz(num_iters),
+        'generate_dependencies_graph'
     )
-    lastExecutedCommand = showCriticalPathsGraph;
+    lastExecutedCommand = showDependenciesGraph;
+}
+
+function showCriticalPathsGraph(num_iters = 3, showConst = true, showReadOnly = true, showInternal = true, showLatency = true) {
+  const rerun = () => showCriticalPathsGraph(num_iters, showConst, showReadOnly, showInternal, showLatency);
+  lastExecutedCommand = rerun;
+  if (!currentProgram()) {
+    return;
+  }
+  executeCode(
+    RVCAT_HEADER() + getCriticalPathsGraph(num_iters, showConst, showReadOnly, showInternal, showLatency),
+    'generate_critical_paths_graph'
+  );
 }
 
 function getSchedulerAnalysis() {
+  if (!currentProgram() || !currentProcessor()) {
+    return;
+  }
     showProcessor();
 
     document.getElementById('instructions-output').innerHTML = '?';
-    document.getElementById('cycles-output').innerHTML       = '?';
-    document.getElementById('IPC-output').innerHTML          = '?';
+    document.getElementById('cycles-output').innerHTML = '?';
+    document.getElementById('IPC-output').innerHTML = '?';
     document.getElementById('cycles-per-iteration-output').innerHTML = '?';
 
     document.getElementById('run-simulation-spinner').style.display = 'block';
-    document.getElementById('simulation-running').style.display     = 'block';
-    document.getElementById('graph-section').style.display          = 'none';
-    document.getElementById('critical-path-section').style.display  = 'none';
-    document.getElementById('run-simulation-button').disabled       = true;
+    document.getElementById('simulation-running').style.display = 'block';
+    document.getElementById('graph-section').style.display = 'none';
+    document.getElementById('critical-path-section').style.display = 'none';
+    document.getElementById('run-simulation-button').disabled = true;
     executeCode(
         RVCAT_HEADER() + RUN_PROGRAM_ANALYSIS,
         'generate_scheduler_analysis'
@@ -362,6 +485,9 @@ function getSchedulerAnalysis() {
 }
 
 async function getTimeline() {
+  if (!currentProgram() || !currentProcessor()) {
+    return null;
+  }
     let controls = document.getElementById('dependencies-controls');
     controls.style.display = 'block';
     let num_iters = document.getElementById('dependencies-num-iters').value;
@@ -389,15 +515,14 @@ async function getTimeline() {
       };
 
       // fire off the code to the worker
-      executeCode(
-        RVCAT_HEADER() + show_timeline(num_iters), 
-        'format_timeline'
-      );
+      executeCode(RVCAT_HEADER() + show_timeline(num_iters),
+      'format_timeline');
       lastExecutedCommand = getTimeline;
     });
 }
 
 async function saveModifiedProcessor(config) {
+
   await executeCode(
     RVCAT_HEADER() + addModifiedProcessor(config),
     'save_modified_processor'
@@ -429,8 +554,10 @@ async function getProgramJSON(){
 }
 
 async function saveNewProgram(config) {
+  const payload = typeof config === 'string' ? JSON.parse(config) : config;
+
   await executeCode(
-    RVCAT_HEADER() + addNewProgram(config),
+    RVCAT_HEADER() + addNewProgram(payload),
     'add_new_program'
   );
   await executeCode(GET_AVAIL_PROGRAMS, 'get_programs');
@@ -443,9 +570,28 @@ async function showCellInfo(instrID, cycle) {
 
 function createCriticalPathList(data) {
   const color = [
-    "#ffffff",    "#fff3f3",    "#ffe7e7",    "#ffdbdb",    "#ffcece",    "#ffc2c2",    "#ffb6b6",    "#ffaaaa",
-    "#ff9e9e",    "#ff9292",    "#ff8686",    "#ff7979",    "#ff6d6d",    "#ff6161",    "#ff5555",    "#ff4949",
-    "#ff3d3d",    "#ff3131",    "#ff2424",    "#ff1818",    "#ff0c0c",    "#ff0000"
+    "#ffffff",
+    "#fff3f3",
+    "#ffe7e7",
+    "#ffdbdb",
+    "#ffcece",
+    "#ffc2c2",
+    "#ffb6b6",
+    "#ffaaaa",
+    "#ff9e9e",
+    "#ff9292",
+    "#ff8686",
+    "#ff7979",
+    "#ff6d6d",
+    "#ff6161",
+    "#ff5555",
+    "#ff4949",
+    "#ff3d3d",
+    "#ff3131",
+    "#ff2424",
+    "#ff1818",
+    "#ff0c0c",
+    "#ff0000"
   ];
 
   let out="<list>";
@@ -458,6 +604,7 @@ function createCriticalPathList(data) {
   border-top: 1px solid black;
   border-right: 1px solid black;
   border-left: 1px solid black;`;
+
 
   if(data['dispatch'].toFixed(1)!=0.0){
     lineColor=color[Math.floor(data['dispatch']/5)];

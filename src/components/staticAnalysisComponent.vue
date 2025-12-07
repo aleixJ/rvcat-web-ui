@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted, nextTick, onUnmounted } from "vue";
+  import { ref, onMounted, nextTick, onUnmounted, watch } from "vue";
   import HelpDialog from '@/components/helpDialog.vue';
 
   let processorsListHandler;
@@ -65,43 +65,65 @@
   // const iters = ref(parseInt(getCookie("graphIterations")) || 1);
   // watch(iters, (v) => setCookie("graphIterations", v));
 
-  let iters = 1
-  let showConst  = false
+  const iters = ref(1);
+  const showConst  = ref(false);
   // useBooleanCookie('showConst', true);
-  let showRdOnly = false
+  const showRdOnly = ref(false);
   // useBooleanCookie('showRdOnly', true);
-  let showIntern = true
+  const showIntern = ref(true);
   // useBooleanCookie('showIntern', true);
-  let showLaten  = false
+  const showLaten  = ref(false);
   // useBooleanCookie('showLaten', true);
-  
+
+  function showGraphWithCurrentSettings() {
+    showCriticalPathsGraph(
+      iters.value,
+      showConst.value,
+      showRdOnly.value,
+      showIntern.value,
+      showLaten.value
+    );
+  }
+
   function changeIters(delta) {
-    let v = iters + delta;
+    let v = iters.value + delta;
     if (v < 1) v = 1;
     if (v > 10) v = 10;
-    iters = v;
-    showCriticalPathsGraph(v, showConst, showRdOnly, showIntern, showLaten);
+    iters.value = v;
   }
   
   function toggleConst() {
-    showConst = !showConst;
-    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
+    showConst.value = !showConst.value;
+    showGraphWithCurrentSettings();
   }
 
   function toggleRdOnly() {
-    showRdOnly = !showRdOnly;
-    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
+    showRdOnly.value = !showRdOnly.value;
+    showGraphWithCurrentSettings();
   }
 
   function toggleIntern() {
-    showIntern = !showIntern;
-    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
+    showIntern.value = !showIntern.value;
+    showGraphWithCurrentSettings();
   }
 
   function toggleLaten() {
-    showLaten = !showLaten;
-    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
+    showLaten.value = !showLaten.value;
+    showGraphWithCurrentSettings();
   }
+
+  watch(iters, (v, oldVal) => {
+    if (typeof v !== 'number' || Number.isNaN(v)) {
+      iters.value = oldVal ?? 1;
+      return;
+    }
+    const clamped = Math.min(10, Math.max(1, v));
+    if (clamped !== v) {
+      iters.value = clamped;
+      return;
+    }
+    showGraphWithCurrentSettings();
+  });
   
   function openFullScreen() {
     showFullScreen.value = true;
@@ -133,26 +155,30 @@
       const processorsList = document.getElementById("processors-list");
       if (processorsList) {
         processorsListHandler = () => {
-          setTimeout(() => {
-            if (showPerformance.value) {
+          if (showPerformance.value) {
+            nextTick(() => {
               programShowPerformanceLimits();
-            }
-          }, 100);
+            });
+          }
+          showGraphWithCurrentSettings();
         };
         processorsList.addEventListener("change", processorsListHandler);
       }
       const programsList = document.getElementById("programs-list");
       if (programsList) {
         programsListHandler = () => {
-          setTimeout(() => {
-            if (showPerformance.value) {
+          if (showPerformance.value) {
+            nextTick(() => {
               programShowPerformanceLimits();
-            }
-          }, 100);
+            });
+          }
+          showGraphWithCurrentSettings();
         };
         programsList.addEventListener("change", programsListHandler);
       }
-    showCriticalPathsGraph(iters, showConst, showRdOnly, showIntern, showLaten);
+      nextTick(() => {
+        showGraphWithCurrentSettings();
+      });
     });
   });
 
