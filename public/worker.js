@@ -8,7 +8,7 @@ async function initialize() {
     if (self.pyodide === undefined) {
         self.pyodide = await loadPyodide();
         await loadPackage('numpy')
-        await loadPackage('rvcat-0.1-py3-none-any.whl')
+        await loadPackage('rvcat-0.1.36-py3-none-any.whl')
     }
 }
 
