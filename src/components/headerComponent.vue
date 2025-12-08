@@ -57,6 +57,15 @@ const emit = defineEmits([ 'requestSwitch' ]);
         <li>
           <button
             class="blue-button"
+            :class="{ active: activeView === 'programEditorComponent' }"
+            @click="emit('requestSwitch', 'programEditorComponent')"
+          >
+            Program
+          </button>
+        </li>
+        <li>
+          <button
+            class="blue-button"
             :class="{ active: activeView === 'procSettingsComponent' }"
             @click="emit('requestSwitch', 'procSettingsComponent')"
           >

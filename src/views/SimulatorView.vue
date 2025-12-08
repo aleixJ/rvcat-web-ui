@@ -4,6 +4,7 @@ import headerComponent         from '@/components/headerComponent.vue';
 import loadingComponent        from '@/components/loadingComponent.vue';
 import processorComponent      from '@/components/processorComponent.vue';
 import programComponent        from '@/components/programComponent.vue';
+import programEditorComponent  from '@/components/programEditorComponent.vue';
 import timelineComponent       from '@/components/timelineComponent.vue';
 import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
@@ -24,7 +25,8 @@ const components = {
   aboutComponent,
   simulationComponent,
   comparisonComponent,
-  procSettingsComponent
+  procSettingsComponent,
+  programEditorComponent
 };
 
 // Current view key & component
