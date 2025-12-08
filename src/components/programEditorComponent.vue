@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import HelpDialog from '@/components/helpDialog.vue';
 
 // Instruction type definitions with subtypes
@@ -15,6 +15,7 @@ const instructionTypes = {
 const programName = ref('');
 const instructions = ref([]);
 const originalProgramName = ref('');
+const originalProgram = ref({ name: '', instruction_list: [] });
 
 // Computed iterations based on instruction count
 const iterations = computed(() => instructions.value.length);
@@ -24,6 +25,10 @@ const showSaveModal = ref(false);
 const saveModalName = ref('');
 const saveModalError = ref('');
 const saveToFile = ref(true);
+
+// Change confirmation state (for load/clear when modified)
+const showChangeModal = ref(false);
+const pendingAction = ref(null); // 'load' | 'clear'
 
 // Help dialog state
 const showHelp = ref(false);
@@ -84,18 +89,69 @@ function getSubTypes(mainType) {
   return instructionTypes[mainType] || [];
 }
 
-// Create new program
-function createNewProgram() {
-  if (confirm('Create a new program? Any unsaved changes will be lost.')) {
-    programName.value = 'new_program';
-    originalProgramName.value = '';
-    instructions.value = [];
-    addInstruction();
-  }
+function normalizeInstruction(inst) {
+  return {
+    text: (inst.text || '').trim(),
+    type: (inst.type || '').trim(),
+    mainType: (inst.mainType || '').trim(),
+    subType: (inst.subType || '').trim(),
+    destin: (inst.destin || '').trim(),
+    source1: (inst.source1 || '').trim(),
+    source2: (inst.source2 || '').trim(),
+    source3: (inst.source3 || '').trim(),
+    constant: (inst.constant || '').trim()
+  };
 }
 
-// Load existing program
-async function loadProgram() {
+function snapshotProgram() {
+  return {
+    name: (programName.value || '').trim(),
+    instruction_list: instructions.value.map(inst => normalizeInstruction(inst))
+  };
+}
+
+const isProgramEmpty = computed(() => {
+  const snap = snapshotProgram();
+  const hasName = !!snap.name;
+  const hasInstructionContent = snap.instruction_list.some(inst =>
+    inst.text || inst.type || inst.destin || inst.source1 || inst.source2 || inst.source3 || inst.constant
+  );
+  return !hasName && !hasInstructionContent;
+});
+
+const isModified = computed(() => {
+  const current = snapshotProgram();
+  return JSON.stringify(current) !== JSON.stringify(originalProgram.value);
+});
+
+const canSave = computed(() => !isProgramEmpty.value && isModified.value);
+
+function syncOriginalWithCurrent() {
+  originalProgram.value = snapshotProgram();
+  originalProgramName.value = programName.value;
+}
+
+// Clear current program
+function clearProgram() {
+  programName.value = '';
+  instructions.value = [];
+  addInstruction();
+  syncOriginalWithCurrent();
+  localStorage.setItem('rvcat_program_local', JSON.stringify(snapshotProgram()));
+}
+
+// Handle load with modification/unsaved check
+async function requestLoadProgram() {
+  if (!isProgramEmpty.value) {
+    pendingAction.value = 'load';
+    showChangeModal.value = true;
+    return;
+  }
+  await performLoadProgram();
+}
+
+// Load existing program (actual action)
+async function performLoadProgram() {
   const selectEl = document.getElementById('programs-list');
   if (!selectEl || !selectEl.value) {
     alert('No program selected');
@@ -128,10 +184,23 @@ async function loadProgram() {
     if (instructions.value.length === 0) {
       addInstruction();
     }
+
+    syncOriginalWithCurrent();
+    localStorage.setItem('rvcat_program_local', JSON.stringify(snapshotProgram()));
   } catch (err) {
     console.error('Failed to load program:', err);
     alert('Failed to load program');
   }
+}
+
+// Handle clear with modification/unsaved check
+function requestClearProgram() {
+  if (!isProgramEmpty.value) {
+    pendingAction.value = 'clear';
+    showChangeModal.value = true;
+    return;
+  }
+  clearProgram();
 }
 
 // Save program
@@ -197,6 +266,8 @@ async function confirmSave() {
     originalProgramName.value = name;
     showSaveModal.value = false;
     saveModalError.value = '';
+    syncOriginalWithCurrent();
+    localStorage.setItem('rvcat_program_local', JSON.stringify(snapshotProgram()));
     
     // Wait for program list to update and select the new program
     if (selectEl) {
@@ -244,7 +315,13 @@ async function downloadProgram() {
 }
 
 // Upload program from JSON
-function uploadProgram() {
+function uploadProgram(force = false) {
+  if (!force && !isProgramEmpty.value) {
+    pendingAction.value = 'upload';
+    showChangeModal.value = true;
+    return;
+  }
+
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'application/json';
@@ -295,6 +372,9 @@ function uploadProgram() {
       if (instructions.value.length === 0) {
         addInstruction();
       }
+
+      syncOriginalWithCurrent();
+      localStorage.setItem('rvcat_program_local', JSON.stringify(snapshotProgram()));
     } catch (err) {
       console.error('Failed to parse JSON file:', err);
       alert('Could not load program file.');
@@ -352,12 +432,74 @@ function closeHelp() {
   showHelp.value = false;
 }
 
+function loadFromLocalStorage() {
+  const stored = localStorage.getItem('rvcat_program_local');
+  if (!stored) return;
+  try {
+    const data = JSON.parse(stored);
+    programName.value = data.name || '';
+    originalProgramName.value = programName.value;
+    instructions.value = (data.instruction_list || []).map(inst => {
+      const [mainType, ...subTypeParts] = (inst.type || '').split('.');
+      const subType = subTypeParts.join('.');
+      return {
+        text: inst.text || '',
+        type: inst.type || '',
+        mainType: mainType || '',
+        subType: subType || '',
+        destin: inst.destin || '',
+        source1: inst.source1 || '',
+        source2: inst.source2 || '',
+        source3: inst.source3 || '',
+        constant: inst.constant || ''
+      };
+    });
+    if (instructions.value.length === 0) addInstruction();
+    syncOriginalWithCurrent();
+  } catch (e) {
+    console.error('Failed to load program from localStorage:', e);
+  }
+}
+
 onMounted(() => {
   // Initialize with one empty instruction
   if (instructions.value.length === 0) {
     addInstruction();
   }
+  loadFromLocalStorage();
+  syncOriginalWithCurrent();
+  localStorage.setItem('rvcat_program_local', JSON.stringify(snapshotProgram()));
 });
+
+// Auto-save edits to localStorage
+watch(
+  () => snapshotProgram(),
+  (val) => {
+    try {
+      localStorage.setItem('rvcat_program_local', JSON.stringify(val));
+    } catch (e) {
+      console.error('Failed to persist program to localStorage:', e);
+    }
+  },
+  { deep: true }
+);
+
+async function proceedPendingAction() {
+  if (pendingAction.value === 'load') {
+    await performLoadProgram();
+  } else if (pendingAction.value === 'clear') {
+    clearProgram();
+  } else if (pendingAction.value === 'upload') {
+    uploadProgram(true);
+  }
+  showChangeModal.value = false;
+  pendingAction.value = null;
+}
+
+function cancelPendingAction() {
+  showChangeModal.value = false;
+  pendingAction.value = null;
+}
 </script>
 
 <template>
@@ -370,10 +512,10 @@ onMounted(() => {
         <h3>Program</h3>
       </div>
       <div class="header-actions">
-        <button class="blue-button" @click="createNewProgram">New</button>
-        <button class="blue-button" @click="loadProgram">Load from List</button>
+        <button class="blue-button" @click="requestLoadProgram">Load from List</button>
         <button class="blue-button" @click="uploadProgram">Upload</button>
-        <button class="blue-button" @click="openSaveModal">Save</button>
+        <button class="red-button" @click="requestClearProgram">Clear</button>
+        <button class="blue-button" :disabled="!canSave" @click="openSaveModal">Save</button>
         <button class="green-button download-btn" @click="downloadProgram">Download Program</button>
       </div>
     </div>
@@ -503,6 +645,17 @@ onMounted(() => {
         <div class="modal-actions">
           <button class="blue-button" @click="confirmSave">Save</button>
           <button class="blue-button" @click="cancelSave">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showChangeModal" class="modal-overlay">
+      <div class="modal">
+        <h4>Unsaved changes</h4>
+        <p>You may have unsaved changes. Do you want to continue?</p>
+        <div class="modal-actions">
+          <button class="blue-button" @click="proceedPendingAction">Continue</button>
+          <button class="red-button" @click="cancelPendingAction">Cancel</button>
         </div>
       </div>
     </div>
@@ -747,6 +900,27 @@ onMounted(() => {
 }
 
 .green-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.red-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.red-button:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.red-button:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.6;
