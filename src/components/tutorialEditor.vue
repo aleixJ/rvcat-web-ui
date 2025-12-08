@@ -84,7 +84,7 @@
                   <option value="switchTo:simulationComponent">Go to Simulation</option>
                   <option value="switchTo:staticAnalysisComponent">Go to Static Analysis</option>
                   <option value="switchTo:timelineComponent">Go to Timeline</option>
-                  <option value="switchTo:procSettingsComponent">Go to Settings</option>
+                  <option value="switchTo:processorEditorComponent">Go to Processor</option>
                 </select>
               </div>
 

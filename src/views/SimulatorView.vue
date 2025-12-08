@@ -8,7 +8,7 @@ import programEditorComponent  from '@/components/programEditorComponent.vue';
 import timelineComponent       from '@/components/timelineComponent.vue';
 import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
-import procSettingsComponent   from '@/components/procSettingsComponent.vue';
+import processorEditorComponent from '@/components/processorEditorComponent.vue';
 import simulationComponent     from '@/components/simulationComponent.vue';
 import comparisonComponent     from '@/components/comparisonComponent.vue';
 import tutorialComponent       from '@/components/tutorialComponent.vue';
@@ -25,7 +25,7 @@ const components = {
   aboutComponent,
   simulationComponent,
   comparisonComponent,
-  procSettingsComponent,
+  processorEditorComponent,
   programEditorComponent
 };
 
@@ -37,7 +37,7 @@ const currentComponent = shallowRef(components[currentKey.value]);
 function onRequestSwitch(key) {
   const nextComp = components[key];
   if (
-    currentKey.value === 'procSettingsComponent' &&
+    currentKey.value === 'processorEditorComponent' &&
     settingsCompInst.value?.canLeave?.()
   ) {
     pendingKey.value   = key;
