@@ -20,7 +20,7 @@
         <!-- Tutorial basic info -->
         <div class="section">
           <div class="form-group">
-            <label>Tutorial Name</label>
+            <label>Tutorial Name <span class="required">*</span></label>
             <input v-model="tutorial.name" type="text" placeholder="Enter tutorial name">
           </div>
           <div class="form-group">
@@ -49,7 +49,7 @@
             </div>
             
             <div class="form-group">
-              <label>Title</label>
+              <label>Title <span class="required">*</span></label>
               <input v-model="step.title" type="text" :placeholder="step.type === 'question' ? 'Question title' : 'Step title'">
             </div>
             
@@ -157,26 +157,26 @@
             <!-- Question-specific fields -->
             <template v-else-if="step.type === 'question'">
               <div class="form-group">
-                <label>Question Text</label>
+                <label>Question Text <span class="required">*</span></label>
                 <textarea v-model="step.questionText" placeholder="Enter your question here..."></textarea>
               </div>
               
               <div class="form-group">
-                <label>Answer Mode</label>
+                <label>Answer Mode <span class="required">*</span></label>
                 <div class="answer-mode-selector">
                   <label class="mode-radio">
                     <input type="radio" v-model="step.answerMode" value="single">
-                    <span>Single Answer</span>
+                    <span>Single-choice</span>
                   </label>
                   <label class="mode-radio">
                     <input type="radio" v-model="step.answerMode" value="multiple">
-                    <span>Multiple Answers</span>
+                    <span>Multiple-choice</span>
                   </label>
                 </div>
               </div>
               
               <div class="answers-section">
-                <h4>Answers (up to 6) - At least one must be correct</h4>
+                <h4>Answers (up to 6) <span class="required">*</span> - {{ step.answerMode === 'single' ? 'Only one must be correct' : 'At least one must be correct' }}</h4>
                 <div v-for="(answer, ansIndex) in step.answers" :key="ansIndex" class="answer-card" :class="{ 'correct-answer': answer.isCorrect }">
                   <div class="answer-header">
                     <span class="answer-letter">{{ String.fromCharCode(65 + ansIndex) }}</span>
@@ -188,7 +188,7 @@
                   </div>
                   
                   <div class="form-group">
-                    <label>Answer Text</label>
+                    <label>Answer Text <span class="required">*</span></label>
                     <input v-model="answer.text" type="text" placeholder="Answer option...">
                   </div>
                   
@@ -403,8 +403,9 @@ const getSelectableElements = () => {
 }
 
 const previewTutorial = () => {
-  if (!tutorial.name || tutorial.steps.length === 0) {
-    alert('Add at least a name and one step to preview')
+  const validationErrors = validateTutorial()
+  if (validationErrors.length > 0) {
+    alert('Please fix the following errors:\n\n' + validationErrors.join('\n'))
     return
   }
   
@@ -570,9 +571,71 @@ const uploadTutorial = () => {
   document.body.removeChild(input)
 }
 
+// Validate all mandatory fields
+const validateTutorial = () => {
+  const errors = []
+  
+  // Check tutorial name
+  if (!tutorial.name || !tutorial.name.trim()) {
+    errors.push('• Tutorial Name is required')
+  }
+  
+  // Check if there's at least one step
+  if (tutorial.steps.length === 0) {
+    errors.push('• At least one step or question is required')
+  }
+  
+  // Validate each step
+  tutorial.steps.forEach((step, index) => {
+    const stepNum = index + 1
+    
+    // Title is required for all steps/questions
+    if (!step.title || !step.title.trim()) {
+      errors.push(`• Step ${stepNum}: Title is required`)
+    }
+    
+    if (step.type === 'question') {
+      // Question-specific validations
+      if (!step.questionText || !step.questionText.trim()) {
+        errors.push(`• Step ${stepNum}: Question Text is required`)
+      }
+      
+      if (!step.answerMode) {
+        errors.push(`• Step ${stepNum}: Answer Mode is required`)
+      }
+      
+      // Check answers
+      const validAnswers = step.answers?.filter(a => a.text && a.text.trim()) || []
+      if (validAnswers.length < 2) {
+        errors.push(`• Step ${stepNum}: At least 2 answers with text are required`)
+      }
+      
+      // Check correct answers based on mode
+      const correctAnswers = step.answers?.filter(a => a.isCorrect && a.text && a.text.trim()) || []
+      if (step.answerMode === 'single') {
+        if (correctAnswers.length !== 1) {
+          errors.push(`• Step ${stepNum}: Single-choice mode requires exactly one correct answer`)
+        }
+      } else {
+        if (correctAnswers.length === 0) {
+          errors.push(`• Step ${stepNum}: At least one answer must be marked as correct`)
+        }
+      }
+    } else {
+      // Step-specific validations - selector is required for steps
+      if (!step.selector || !step.selector.trim()) {
+        errors.push(`• Step ${stepNum}: CSS Selector is required`)
+      }
+    }
+  })
+  
+  return errors
+}
+
 const finishTutorial = () => {
-  if (!tutorial.name || tutorial.steps.length === 0) {
-    alert('Add at least a name and one step before finishing')
+  const validationErrors = validateTutorial()
+  if (validationErrors.length > 0) {
+    alert('Please fix the following errors:\n\n' + validationErrors.join('\n'))
     return
   }
   
@@ -652,8 +715,9 @@ const finishTutorial = () => {
 }
 
 const downloadJSON = () => {
-  if (!tutorial.name || tutorial.steps.length === 0) {
-    alert('Add at least a name and one step before downloading')
+  const validationErrors = validateTutorial()
+  if (validationErrors.length > 0) {
+    alert('Please fix the following errors:\n\n' + validationErrors.join('\n'))
     return
   }
   
@@ -885,6 +949,11 @@ const downloadJSON = () => {
   font-size: 14px;
   font-weight: 500;
   color: #374151;
+}
+
+.required {
+  color: #ef4444;
+  font-weight: 600;
 }
 
 .form-group input,
