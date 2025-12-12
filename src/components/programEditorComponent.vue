@@ -512,11 +512,11 @@ function cancelPendingAction() {
         <h3>Program</h3>
       </div>
       <div class="header-actions">
-        <button class="blue-button" @click="requestLoadProgram">Load from List</button>
+        <button class="blue-button" @click="requestLoadProgram">Load current program</button>
         <button class="blue-button" @click="uploadProgram">Upload</button>
-        <button class="red-button" @click="requestClearProgram">Clear</button>
         <button class="blue-button" :disabled="!canSave" @click="openSaveModal">Save</button>
-        <button class="green-button download-btn" @click="downloadProgram">Download Program</button>
+        <button class="green-button" @click="downloadProgram">Download</button>
+        <button class="red-button" @click="requestClearProgram">Clear</button>
       </div>
     </div>
 
@@ -555,7 +555,7 @@ function cancelPendingAction() {
           </thead>
           <tbody>
             <tr v-for="(inst, index) in instructions" :key="index">
-              <td>{{ index + 1 }}</td>
+              <td>{{ index }}</td>
               <td>
                 <input type="text" v-model="inst.text" class="table-input" />
               </td>
@@ -718,6 +718,7 @@ function cancelPendingAction() {
 .header-actions {
   display: flex;
   gap: 8px;
+  padding-right: 20px;
 }
 
 .program-info {
