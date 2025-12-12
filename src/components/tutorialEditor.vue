@@ -165,11 +165,11 @@
                 <label>Answer Mode <span class="required">*</span></label>
                 <div class="answer-mode-selector">
                   <label class="mode-radio">
-                    <input type="radio" v-model="step.answerMode" value="single">
+                    <input type="radio" v-model="step.answerMode" value="single" @change="onAnswerModeChange(step)">
                     <span>Single-choice</span>
                   </label>
                   <label class="mode-radio">
-                    <input type="radio" v-model="step.answerMode" value="multiple">
+                    <input type="radio" v-model="step.answerMode" value="multiple" @change="onAnswerModeChange(step)">
                     <span>Multiple-choice</span>
                   </label>
                 </div>
@@ -363,6 +363,26 @@ const onCorrectAnswerChange = (step, changedIndex) => {
     })
   }
   
+  // Ensure at least one answer is correct
+  ensureOneCorrectAnswer(step)
+}
+
+const onAnswerModeChange = (step) => {
+  if (step.answerMode === 'single') {
+    // When switching to single-choice, keep only the first correct answer
+    const correctIndices = step.answers
+      .map((a, i) => a.isCorrect ? i : -1)
+      .filter(i => i !== -1)
+    
+    if (correctIndices.length > 1) {
+      // Keep only the first correct answer, uncheck the rest
+      step.answers.forEach((answer, index) => {
+        if (index !== correctIndices[0]) {
+          answer.isCorrect = false
+        }
+      })
+    }
+  }
   // Ensure at least one answer is correct
   ensureOneCorrectAnswer(step)
 }
