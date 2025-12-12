@@ -52,20 +52,20 @@
           </div>
           
           <div class="answers-list">
-            <div v-for="(answer, index) in currentStep?.answers" :key="index" class="answer-wrapper">
+            <div v-for="(answer, index) in shuffledAnswers" :key="answer.originalIndex" class="answer-wrapper">
               <button 
-                @click="selectAnswer(index)"
-                :class="getAnswerClass(index)"
+                @click="selectAnswer(answer.originalIndex)"
+                :class="getAnswerClass(answer.originalIndex)"
                 :disabled="questionAnswered && isQuestionCorrect"
               >
                 <span class="answer-letter">{{ String.fromCharCode(65 + index) }}</span>
                 <span class="answer-text">{{ answer.text }}</span>
                 <span v-if="questionAnswered && isQuestionCorrect && answer.isCorrect" class="answer-indicator correct">✓</span>
-                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(index) && !answer.isCorrect" class="answer-indicator wrong">✗</span>
-                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(index) && answer.isCorrect" class="answer-indicator partial-correct">✓</span>
+                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(answer.originalIndex) && !answer.isCorrect" class="answer-indicator wrong">✗</span>
+                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(answer.originalIndex) && answer.isCorrect" class="answer-indicator partial-correct">✓</span>
               </button>
               <!-- Inline feedback below each answer -->
-              <div v-if="questionAnswered && selectedAnswers.includes(index) && answer.explanation" 
+              <div v-if="questionAnswered && selectedAnswers.includes(answer.originalIndex) && answer.explanation" 
                    :class="['answer-feedback', answer.isCorrect ? 'feedback-correct' : 'feedback-wrong']">
                 {{ answer.explanation }}
               </div>
@@ -221,6 +221,23 @@ const validationState = ref({})
 // Question-specific state
 const selectedAnswers = ref([])
 const questionAnswered = ref(false)
+const shuffledAnswerIndices = ref([]) // Maps display index to original index
+
+// Shuffle answers using Fisher-Yates algorithm with Math.random()
+const shuffleAnswers = () => {
+  if (!currentStep.value || currentStep.value.type !== 'question') {
+    shuffledAnswerIndices.value = []
+    return
+  }
+  const answers = currentStep.value.answers || []
+  const indices = answers.map((_, i) => i)
+  // Fisher-Yates shuffle using Math.random()
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  shuffledAnswerIndices.value = indices
+}
 
 // Utility functions
 const isElementVisible = (element) => {
@@ -438,6 +455,17 @@ const isQuestionCorrect = computed(() => {
   }
 })
 
+// Shuffled answers for display
+const shuffledAnswers = computed(() => {
+  if (!currentStep.value || currentStep.value.type !== 'question') return []
+  const answers = currentStep.value.answers || []
+  if (shuffledAnswerIndices.value.length === 0) return answers.map((a, i) => ({ ...a, originalIndex: i }))
+  return shuffledAnswerIndices.value.map(originalIndex => ({
+    ...answers[originalIndex],
+    originalIndex
+  }))
+})
+
 const canProceed = computed(() => {
   if (!currentStep.value || !currentStep.value.validation) return true
   
@@ -569,6 +597,11 @@ const startTutorial = (tutorialId) => {
   isActive.value = true
   showTutorialMenu.value = false
   
+  // Shuffle answers if starting on a question step
+  nextTick(() => {
+    shuffleAnswers()
+  })
+  
   // Save current progress
   saveTutorialProgress()
   
@@ -589,6 +622,7 @@ const nextStep = async () => {
     // Reset question state for new step
     selectedAnswers.value = []
     questionAnswered.value = false
+    shuffleAnswers()
     
     // Save progress after advancing to next step
     saveTutorialProgress()
@@ -842,6 +876,7 @@ const previousStep = async () => {
     // Reset question state for new step
     selectedAnswers.value = []
     questionAnswered.value = false
+    shuffleAnswers()
     
     // Save progress after going to previous step
     saveTutorialProgress()
