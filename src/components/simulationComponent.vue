@@ -226,9 +226,7 @@
                   (lastSimulationIterations === null || lastSimulationIterations !== iterations) ? 
                   'Run simulation first to save results' : 
                   'No simulation data available to save'"
-        >
-          Save
-        </button>
+        >Save</button>
       </div>
     </div>
 

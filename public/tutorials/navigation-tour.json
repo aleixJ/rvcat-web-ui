@@ -12,9 +12,23 @@
     {
       "title": "Simulation Tab",
       "description": "Here you can run simulations of your code. This is the main tab of the application.",
-      "selector": "button[class*=\"active\"]",
+      "selector": "button:contains(\"Simulation\")",
       "position": "bottom",
       "action": "switchTo:simulationComponent"
+    },
+    {
+      "title": "Save execution",
+      "description": "Click the button 'Save' to save the current execution to the comparison tab.",
+      "selector": "button:contains(\"Save\")",
+      "position": "bottom",
+      "action": "switchTo:simulationComponent"
+    },
+    {
+      "title": "Comparison Tab",
+      "description": "Here you can compare saved executions to analyze performance differences.",
+      "selector": "button:contains(\"Comparison\")",
+      "position": "bottom",
+      "action": "switchTo:comparisonComponent"
     },
     {
       "title": "Static Analysis",
@@ -33,9 +47,16 @@
     {
       "title": "Processor Settings",
       "description": "Here you can configure processor parameters for simulations.",
-      "selector": "button:contains(\"Settings\")",
+      "selector": "button:contains(\"Processor\")",
       "position": "bottom",
-      "action": "switchTo:procSettingsComponent"
+      "action": "switchTo:processorEditorComponent"
+    },
+    {
+      "title": "Program Editor",
+      "description": "Here you can write and edit your programs for simulation.",
+      "selector": "button:contains(\"Program\")",
+      "position": "bottom",
+      "action": "switchTo:programEditorComponent"
     },
     {
       "title": "Tutorial Complete!",

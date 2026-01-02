@@ -240,6 +240,9 @@ const selectedAnswers = ref([])
 const questionAnswered = ref(false)
 const shuffledAnswerIndices = ref([]) // Maps display index to original index
 
+// Button click tracking for validation
+const clickedButtons = ref(new Set())
+
 // Lightbox state for image popup
 const lightboxImage = ref('')
 const showLightbox = ref(false)
@@ -527,8 +530,9 @@ const canProceed = computed(() => {
         return !isNaN(value) && value >= validation.minValue
       }
       case 'button_clicked': {
-        // For button validation, we assume it can proceed until clicked
-        return true
+        // Check if this specific button was clicked
+        const selector = validation.selector?.trim()
+        return selector && clickedButtons.value.has(selector)
       }
       default:
         return true
@@ -624,6 +628,10 @@ const startTutorial = (tutorialId) => {
   // Reset question state
   selectedAnswers.value = []
   questionAnswered.value = false
+  
+  // Reset button click tracking and set up listeners
+  clickedButtons.value = new Set()
+  setupButtonClickTracking()
   
   isActive.value = true
   showTutorialMenu.value = false
@@ -857,20 +865,74 @@ const validateInputValueMin = (validation) => {
 }
 
 const validateButtonClicked = (validation) => {
-  // For button validation, we'll check if the button exists and is enabled
-  // In a real implementation, you might want to track actual clicks
-  const selectors = validation.selector.split(', ')
+  // Check if the button was clicked using our tracking
+  const selector = validation.selector?.trim()
   
-  for (const selector of selectors) {
-    const element = document.querySelector(selector.trim())
-    if (element && !element.disabled) {
-      // Simulate click detection - in a real app you'd track this
-      return true
-    }
+  if (!selector) {
+    console.warn('No selector provided for button_clicked validation')
+    return true
   }
   
-  showValidationMessage(validation.message)
+  // Check if this button was clicked
+  if (clickedButtons.value.has(selector)) {
+    return true
+  }
+  
+  // Also check if button exists and try to find it
+  const element = document.querySelector(selector)
+  if (!element) {
+    console.warn(`Button not found: ${selector}`)
+    showValidationMessage(validation.message || `Button not found: ${selector}`)
+    return false
+  }
+  
+  showValidationMessage(validation.message || 'Please click the button to continue')
   return false
+}
+
+// Set up click tracking for buttons used in validation
+const setupButtonClickTracking = () => {
+  // Remove any existing listeners first
+  cleanupButtonClickTracking()
+  
+  // Find all button selectors used in current tutorial validations
+  if (!currentTutorial.value?.steps) return
+  
+  const buttonSelectors = new Set()
+  currentTutorial.value.steps.forEach(step => {
+    if (step.validation?.type === 'button_clicked' && step.validation.selector) {
+      buttonSelectors.add(step.validation.selector.trim())
+    }
+  })
+  
+  // Add click listeners to track button clicks
+  buttonSelectors.forEach(selector => {
+    try {
+      const button = document.querySelector(selector)
+      if (button) {
+        const handler = () => {
+          clickedButtons.value.add(selector)
+          // Trigger reactivity update for canProceed
+          validationState.value = { ...validationState.value, [selector]: true }
+        }
+        button.addEventListener('click', handler)
+        // Store reference for cleanup
+        button._tutorialClickHandler = handler
+      }
+    } catch (e) {
+      console.warn(`Could not set up click tracking for: ${selector}`, e)
+    }
+  })
+}
+
+// Clean up click tracking listeners
+const cleanupButtonClickTracking = () => {
+  document.querySelectorAll('[_tutorialClickHandler]').forEach(el => {
+    if (el._tutorialClickHandler) {
+      el.removeEventListener('click', el._tutorialClickHandler)
+      delete el._tutorialClickHandler
+    }
+  })
 }
 
 const showValidationMessage = (message) => {
@@ -985,6 +1047,10 @@ const completeTutorial = async () => {
   // Clean up validation listeners
   cleanupValidationListeners()
   
+  // Clean up button click tracking
+  cleanupButtonClickTracking()
+  clickedButtons.value = new Set()
+  
   // Clear progress when tutorial is completed
   clearTutorialProgress()
   
@@ -1092,6 +1158,9 @@ const closeTutorial = () => {
   // Clean up validation listeners
   cleanupValidationListeners()
   
+  // Clean up button click tracking
+  cleanupButtonClickTracking()
+  
   // Save tutorial progress when closing with X button
   saveTutorialProgress()
   
@@ -1115,6 +1184,10 @@ const stopTutorial = () => {
   
   // Clean up validation listeners
   cleanupValidationListeners()
+  
+  // Clean up button click tracking
+  cleanupButtonClickTracking()
+  clickedButtons.value = new Set()
   
   // Clear saved progress when stopping tutorial
   clearTutorialProgress()

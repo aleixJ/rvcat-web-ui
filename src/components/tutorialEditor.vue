@@ -73,8 +73,13 @@
               
               <div class="form-row">
                 <div class="form-group">
-                  <label>CSS Selector</label>
-                  <input v-model="step.selector" type="text" placeholder=".button, #element">
+                  <label>Element to Highlight <span class="required">*</span></label>
+                  <select v-model="step.selectorPreset" @change="onSelectorPresetChange(step)" class="selector-preset">
+                    <option v-for="opt in predefinedSelectors" :key="opt.label" :value="opt.value" :disabled="opt.disabled">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                  <input v-model="step.selector" type="text" placeholder="CSS selector (e.g., #my-button, .my-class)" class="selector-input">
                 </div>
                 
                 <div class="form-group">
@@ -96,6 +101,8 @@
                   <option value="switchTo:staticAnalysisComponent">Go to Static Analysis</option>
                   <option value="switchTo:timelineComponent">Go to Timeline</option>
                   <option value="switchTo:processorEditorComponent">Go to Processor</option>
+                  <option value="switchTo:programEditorComponent">Go to Program</option>
+                  <option value="switchTo:comparisonComponent">Go to Comparison</option>
                 </select>
               </div>
 
@@ -117,22 +124,27 @@
                 <div v-if="step.validationType" class="validation-details">
                   <div v-if="step.validationType === 'program_selected'" class="form-group">
                     <label>Program name</label>
-                    <input v-model="step.validationValue" type="text" placeholder="rec">
+                    <input v-model="step.validationValue" type="text" placeholder="rec, fact, sum, etc.">
                   </div>
 
                   <div v-if="step.validationType === 'architecture_selected'" class="form-group">
                     <label>Architecture name</label>
-                    <input v-model="step.validationValue" type="text" placeholder="baseline">
+                    <input v-model="step.validationValue" type="text" placeholder="baseline, base2, ooo, etc.">
                   </div>
 
                   <div v-if="step.validationType === 'input_value'" class="form-group">
                     <label>Expected value</label>
-                    <input v-model="step.validationValue" type="text" placeholder="200">
+                    <input v-model="step.validationValue" type="text" placeholder="128">
                   </div>
 
                   <div v-if="step.validationType === 'input_value' || step.validationType === 'input_value_min'" class="form-group">
-                    <label>Input selector</label>
-                    <input v-model="step.validationSelector" type="text" placeholder="input[name*='rob']">
+                    <label>Input Field</label>
+                    <select v-model="step.validationSelectorPreset" @change="onValidationSelectorPresetChange(step)" class="selector-preset">
+                      <option v-for="opt in validationInputSelectors" :key="opt.label" :value="opt.value">
+                        {{ opt.label }}
+                      </option>
+                    </select>
+                    <input v-model="step.validationSelector" type="text" placeholder="CSS selector for input field" class="selector-input">
                   </div>
 
                   <div v-if="step.validationType === 'input_value_min'" class="form-group">
@@ -141,8 +153,13 @@
                   </div>
 
                   <div v-if="step.validationType === 'button_clicked'" class="form-group">
-                    <label>Button selector</label>
-                    <input v-model="step.validationSelector" type="text" placeholder="button:contains('Run')">
+                    <label>Button to Click</label>
+                    <select v-model="step.validationSelectorPreset" @change="onValidationSelectorPresetChange(step)" class="selector-preset">
+                      <option v-for="opt in validationButtonSelectors" :key="opt.label" :value="opt.value">
+                        {{ opt.label }}
+                      </option>
+                    </select>
+                    <input v-model="step.validationSelector" type="text" placeholder="CSS selector for button (e.g., #run-btn)" class="selector-input">
                   </div>
 
                   <div class="form-group">
@@ -268,6 +285,44 @@ const tutorial = reactive({
 
 const exportedContent = ref('')
 
+// Predefined CSS selectors for highlighting elements
+const predefinedSelectors = [
+  { label: 'Custom', value: '' },
+  { label: '── Main Areas ──', value: '', disabled: true },
+  { label: 'Header / Title', value: '.header-title' },
+  { label: 'Program Area', value: '.program' },
+  { label: 'Processor Area', value: '.processor' },
+  { label: 'Results Area', value: '.results' },
+  { label: '── Program Section ──', value: '', disabled: true },
+  { label: 'Program Selector', value: '#programs-list' },
+  { label: 'Processor Selector', value: '#processors-list' },
+  { label: '── Configuration Inputs ──', value: '', disabled: true },
+  { label: 'ROB Size Input', value: '#rob-size' },
+  { label: 'Number of Iterations', value: '#num-iters' },
+  { label: '── Buttons ──', value: '', disabled: true },
+  { label: 'Run Simulation Button', value: '#run-simulation-button' },
+  { label: '── Navigation Tabs ──', value: '', disabled: true },
+  { label: 'Simulation Tab', value: 'button:contains(\"Simulation\")' },
+  { label: 'Static Analysis Tab', value: 'button:contains(\"Static Analysis\")' },
+  { label: 'Timeline Tab', value: 'button:contains(\"Timeline\")' },
+  { label: 'Comparison Tab', value: 'button:contains(\"Comparison\")' },
+  { label: 'Processor Editor Tab', value: 'button:contains(\"Processor\")' },
+  { label: 'Program Editor Tab', value: 'button:contains(\"Program\")' }
+]
+
+// Predefined selectors for validation (input fields)
+const validationInputSelectors = [
+  { label: 'Custom', value: '' },
+  { label: 'ROB Size', value: '#rob-size' },
+  { label: 'Number of Iterations', value: '#num-iters' }
+]
+
+// Predefined selectors for button click validation
+const validationButtonSelectors = [
+  { label: 'Custom', value: '' },
+  { label: 'Run Simulation', value: '#run-simulation-button' }
+]
+
 // Auto-save functionality
 const STORAGE_KEY = 'tutorial-editor-draft'
 
@@ -344,11 +399,13 @@ const addStep = (type = 'step') => {
       title: '',
       description: '',
       stepImage: '', // Optional base64 encoded image
+      selectorPreset: '', // Preset selector choice
       selector: '',
       position: 'bottom',
       action: '',
       validationType: '',
       validationValue: '',
+      validationSelectorPreset: '', // Preset for validation selector
       validationSelector: '',
       validationMinValue: '',
       validationMessage: ''
@@ -374,6 +431,20 @@ const onStepTypeChange = (step) => {
     if (!step.position) step.position = 'bottom'
     if (!step.action) step.action = ''
     if (!step.validationType) step.validationType = ''
+  }
+}
+
+// Handle selector preset selection
+const onSelectorPresetChange = (step) => {
+  if (step.selectorPreset) {
+    step.selector = step.selectorPreset
+  }
+}
+
+// Handle validation selector preset selection
+const onValidationSelectorPresetChange = (step) => {
+  if (step.validationSelectorPreset) {
+    step.validationSelector = step.validationSelectorPreset
   }
 }
 
@@ -477,11 +548,6 @@ const removeAnswer = (step, index) => {
 
 const removeStep = (index) => {
   tutorial.steps.splice(index, 1)
-}
-
-const getSelectableElements = () => {
-  // Return some common selectors users might want to use
-  return '.header-title, .processor, .program, .results, button:contains("text")'
 }
 
 const previewTutorial = () => {
@@ -1090,6 +1156,16 @@ const downloadJSON = () => {
   height: 90px;
   resize: vertical;
   line-height: 1.5;
+}
+
+/* Selector preset with text input combo */
+.selector-preset {
+  margin-bottom: 8px;
+}
+
+.selector-input {
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px !important;
 }
 
 .step-card {

@@ -41,13 +41,13 @@
     },
     {
       "title": "Exercise 2: Configure Architecture",
-      "description": "Perfect! Now change the processor architecture to 'B2' to see how it affects the simulation.",
+      "description": "Perfect! Now change the processor architecture to 'base2' to see how it affects the simulation.",
       "selector": "#processors-list",
       "position": "right",
       "validation": {
         "type": "architecture_selected",
-        "value": "B2",
-        "message": "Select the 'B2' architecture to continue"
+        "value": "base2",
+        "message": "Select the 'base2' architecture to continue"
       }
     },
     {
@@ -72,6 +72,17 @@
         "selector": "#num-iters",
         "value": "500",
         "message": "Enter the value 500 for the number of iterations"
+      }
+    },
+        {
+      "title": "Exercise 5: Run Simulation",
+      "description": "Now click the 'Run' button to start the simulation with the configured parameters.",
+      "selector": "#run-simulation-button",
+      "position": "bottom",
+      "validation": {
+        "type": "button_clicked",
+        "message": "Complete this action to continue",
+        "selector": "#run-simulation-button"
       }
     },
     {
