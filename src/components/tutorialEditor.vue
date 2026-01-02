@@ -60,6 +60,17 @@
                 <textarea v-model="step.description" placeholder="What happens in this step"></textarea>
               </div>
               
+              <div class="form-group">
+                <label>Step Image (optional)</label>
+                <div class="image-upload-section">
+                  <input type="file" accept="image/*" @change="(e) => handleStepImageUpload(e, step)" class="image-input">
+                  <div v-if="step.stepImage" class="image-preview">
+                    <img :src="step.stepImage" alt="Step image preview">
+                    <button @click="step.stepImage = ''" class="remove-image-btn" type="button">× Remove</button>
+                  </div>
+                </div>
+              </div>
+              
               <div class="form-row">
                 <div class="form-group">
                   <label>CSS Selector</label>
@@ -159,6 +170,17 @@
               <div class="form-group">
                 <label>Question Text <span class="required">*</span></label>
                 <textarea v-model="step.questionText" placeholder="Enter your question here..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Question Image (optional)</label>
+                <div class="image-upload-section">
+                  <input type="file" accept="image/*" @change="(e) => handleImageUpload(e, step)" class="image-input">
+                  <div v-if="step.questionImage" class="image-preview">
+                    <img :src="step.questionImage" alt="Question image preview">
+                    <button @click="step.questionImage = ''" class="remove-image-btn" type="button">× Remove</button>
+                  </div>
+                </div>
               </div>
               
               <div class="form-group">
@@ -309,6 +331,7 @@ const addStep = (type = 'step') => {
       type: 'question',
       title: '',
       questionText: '',
+      questionImage: '', // Optional base64 encoded image
       answerMode: 'single',
       answers: [
         { text: '', isCorrect: true, explanation: '' },
@@ -320,6 +343,7 @@ const addStep = (type = 'step') => {
       type: 'step',
       title: '',
       description: '',
+      stepImage: '', // Optional base64 encoded image
       selector: '',
       position: 'bottom',
       action: '',
@@ -395,6 +419,44 @@ const ensureOneCorrectAnswer = (step) => {
   }
 }
 
+// Handle image upload and convert to base64
+const handleImageUpload = (event, step) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Check file size (limit to 500KB to keep JSON manageable)
+  if (file.size > 500 * 1024) {
+    alert('Image is too large. Please use an image smaller than 500KB.')
+    event.target.value = ''
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    step.questionImage = e.target.result // This is the base64 encoded string
+  }
+  reader.readAsDataURL(file)
+}
+
+// Handle step image upload and convert to base64
+const handleStepImageUpload = (event, step) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Check file size (limit to 500KB to keep JSON manageable)
+  if (file.size > 500 * 1024) {
+    alert('Image is too large. Please use an image smaller than 500KB.')
+    event.target.value = ''
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    step.stepImage = e.target.result // This is the base64 encoded string
+  }
+  reader.readAsDataURL(file)
+}
+
 const addAnswer = (step) => {
   if (step.answers.length < 6) {
     step.answers.push({
@@ -436,7 +498,7 @@ const previewTutorial = () => {
     steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
       // Handle question type
       if (step.type === 'question') {
-        return {
+        const questionStep = {
           type: 'question',
           title: step.title,
           questionText: step.questionText,
@@ -447,6 +509,10 @@ const previewTutorial = () => {
             explanation: answer.explanation || ''
           }))
         }
+        if (step.questionImage) {
+          questionStep.questionImage = step.questionImage
+        }
+        return questionStep
       }
       
       // Handle step type
@@ -456,6 +522,10 @@ const previewTutorial = () => {
         description: step.description,
         selector: step.selector,
         position: step.position
+      }
+      
+      if (step.stepImage) {
+        previewStep.stepImage = step.stepImage
       }
       
       if (step.action) {
@@ -527,6 +597,7 @@ const uploadTutorial = () => {
             type: 'question',
             title: step.title || '',
             questionText: step.questionText || '',
+            questionImage: step.questionImage || '',
             answerMode: step.answerMode || 'single',
             answers: (step.answers || []).map(answer => ({
               text: answer.text || '',
@@ -556,6 +627,7 @@ const uploadTutorial = () => {
             type: 'step',
             title: step.title || '',
             description: step.description || '',
+            stepImage: step.stepImage || '',
             selector: step.selector || '',
             position: step.position || 'bottom',
             action: step.action || '',
@@ -669,7 +741,7 @@ const finishTutorial = () => {
     steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
       // Handle question type
       if (step.type === 'question') {
-        return {
+        const questionStep = {
           type: 'question',
           title: step.title,
           questionText: step.questionText,
@@ -680,6 +752,10 @@ const finishTutorial = () => {
             explanation: answer.explanation || ''
           }))
         }
+        if (step.questionImage) {
+          questionStep.questionImage = step.questionImage
+        }
+        return questionStep
       }
       
       // Handle step type
@@ -689,6 +765,10 @@ const finishTutorial = () => {
         description: step.description,
         selector: step.selector,
         position: step.position
+      }
+      
+      if (step.stepImage) {
+        finishedStep.stepImage = step.stepImage
       }
       
       if (step.action) {
@@ -748,7 +828,7 @@ const downloadJSON = () => {
     steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
       // Handle question type
       if (step.type === 'question') {
-        return {
+        const questionStep = {
           type: 'question',
           title: step.title,
           questionText: step.questionText,
@@ -759,6 +839,10 @@ const downloadJSON = () => {
             explanation: answer.explanation || ''
           }))
         }
+        if (step.questionImage) {
+          questionStep.questionImage = step.questionImage
+        }
+        return questionStep
       }
       
       // Handle step type
@@ -768,6 +852,10 @@ const downloadJSON = () => {
         description: step.description,
         selector: step.selector,
         position: step.position
+      }
+      
+      if (step.stepImage) {
+        exportStep.stepImage = step.stepImage
       }
       
       if (step.action) {
@@ -1160,6 +1248,56 @@ const downloadJSON = () => {
   width: auto;
   margin: 0;
   cursor: pointer;
+}
+
+/* Image upload section */
+.image-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-input {
+  padding: 8px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.image-input:hover {
+  border-color: #3b82f6;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+  max-width: 300px;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.remove-image-btn:hover {
+  background: #dc2626;
 }
 
 /* Answers section */

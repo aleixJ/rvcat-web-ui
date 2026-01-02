@@ -8,6 +8,10 @@
         <div class="tutorial-content">
           <h3>{{ currentStep?.title }}</h3>
           <p>{{ currentStep?.description }}</p>
+          <div v-if="currentStep?.stepImage" class="step-image" @click="openLightbox(currentStep.stepImage)">
+            <img :src="currentStep.stepImage" alt="Step image">
+            <span class="image-hint">Click to enlarge</span>
+          </div>
           <div class="tutorial-actions">
             <button @click="previousStep" :disabled="stepIndex === 0" class="tutorial-btn">
               Previous
@@ -45,6 +49,11 @@
         
         <div class="question-body">
           <p class="question-text">{{ currentStep?.questionText }}</p>
+          
+          <div v-if="currentStep?.questionImage" class="question-image" @click="openLightbox(currentStep.questionImage)">
+            <img :src="currentStep.questionImage" alt="Question image">
+            <span class="image-hint">Click to enlarge</span>
+          </div>
           
           <div class="question-mode-info">
             <span v-if="currentStep?.answerMode === 'single'">Select ONE correct answer</span>
@@ -112,6 +121,14 @@
             Finish
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Image Lightbox Popup -->
+    <div v-if="showLightbox" class="lightbox-overlay" @click="closeLightbox">
+      <div class="lightbox-content" @click.stop>
+        <button class="lightbox-close" @click="closeLightbox">&times;</button>
+        <img :src="lightboxImage" alt="Enlarged image">
       </div>
     </div>
 
@@ -222,6 +239,20 @@ const validationState = ref({})
 const selectedAnswers = ref([])
 const questionAnswered = ref(false)
 const shuffledAnswerIndices = ref([]) // Maps display index to original index
+
+// Lightbox state for image popup
+const lightboxImage = ref('')
+const showLightbox = ref(false)
+
+const openLightbox = (imageSrc) => {
+  lightboxImage.value = imageSrc
+  showLightbox.value = true
+}
+
+const closeLightbox = () => {
+  showLightbox.value = false
+  lightboxImage.value = ''
+}
 
 // Shuffle answers using Fisher-Yates algorithm with Math.random()
 const shuffleAnswers = () => {
@@ -1679,6 +1710,119 @@ onUnmounted(() => {
   line-height: 1.6;
   color: #333;
   margin: 0 0 16px 0;
+}
+
+.question-image {
+  margin-bottom: 16px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.question-image img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.question-image:hover img {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.question-image .image-hint,
+.step-image .image-hint {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.question-image:hover .image-hint,
+.step-image:hover .image-hint {
+  opacity: 1;
+}
+
+/* Step image in tooltip */
+.step-image {
+  margin: 12px 0;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.step-image img {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.step-image:hover img {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Lightbox popup */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-content img {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  min-width: 200px;
+  min-height: 200px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: white;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.lightbox-close:hover {
+  opacity: 1;
 }
 
 .question-mode-info {
