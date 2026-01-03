@@ -5,9 +5,9 @@ import HelpDialog from '@/components/helpDialog.vue';
 // Instruction type definitions with subtypes
 const instructionTypes = {
   'INT': ['ARITH', 'LOGIC', 'SHIFT'],
-  'BRANCH': ['COND', 'UNCOND'],
+  'BRANCH': [],
   'MEM': ['STR.SP', 'STR.DP', 'LOAD.SP', 'LOAD.DP', 'VLOAD', 'VSTR'],
-  'FLOAT': ['ADD.SP', 'ADD.DP', 'MUL.SP', 'MUL.DP', 'FMA', 'DIV', 'SQRT'],
+  'FLOAT': ['ADD.SP', 'ADD.DP', 'MUL.SP', 'MUL.DP', 'FMA.SP', 'FMA.DP', 'DIV.SP', 'DIV.DP', 'SQRT.SP', 'SQRT.DP'],
   'VFLOAT': ['ADD', 'MUL', 'FMA', 'DIV']
 };
 
