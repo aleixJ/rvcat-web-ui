@@ -75,12 +75,21 @@ function moveInstructionDown(index) {
 // Handle type selection
 function onMainTypeChange(instruction) {
   instruction.subType = '';
-  instruction.type = '';
+  // If the type has no subtypes (like BRANCH), set type directly
+  const subtypes = getSubTypes(instruction.mainType);
+  if (instruction.mainType && subtypes.length === 0) {
+    instruction.type = instruction.mainType;
+  } else {
+    instruction.type = '';
+  }
 }
 
 function onSubTypeChange(instruction) {
   if (instruction.mainType && instruction.subType) {
     instruction.type = `${instruction.mainType}.${instruction.subType}`;
+  } else if (instruction.mainType) {
+    // Subtype was cleared, clear the full type too
+    instruction.type = '';
   }
 }
 
@@ -571,7 +580,7 @@ function cancelPendingAction() {
                 <select 
                   v-model="inst.subType" 
                   @change="onSubTypeChange(inst)" 
-                  :disabled="!inst.mainType"
+                  :disabled="!inst.mainType || getSubTypes(inst.mainType).length === 0"
                   class="table-select"
                 >
                   <option value="">Select...</option>

@@ -16,13 +16,13 @@
     }
   });
 
-  const emit = defineEmits(['close']);
+  const emit    = defineEmits(['close']);
   const visible = ref(true);
 
   const positionStyle = computed(() => ({
     position: 'absolute',
-    top: props.position.top,
-    left: props.position.left,
+    top:      props.position.top,
+    left:     props.position.left,
   }));
 
   function close() {
@@ -32,50 +32,69 @@
 </script>
 
 <template>
-  <div v-if="visible" class="help-overlay" @click.self="close">
-    <div class="help-dialog" :style="positionStyle">
+  <div v-if="visible" class="tutorial-overlay" @click.self="close">
+    <div class="tutorial-dialog" :style="positionStyle">
       <b>Help - {{ title }}</b>
       <button class="close-button" @click="close">×</button>
-      <div class="help-content">{{ text }}</div>
+      <div class="dialog-content" v-html="text"></div>
     </div>
   </div>
 </template>
 
 <style scoped>
-  .help-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
+  .tutorial-overlay {
+    top:    0;
+    left:   0;
+    inset:  0;
+    width:  100vw;
     height: 100vh;
+    position: fixed;
+    display:  flex;
+    z-index:  10000;
     background: rgba(0,0,0,0.5);
-    display: flex;
     justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    align-items:     center;
   }
 
-  .help-dialog {
-    background: #fff;
-    padding: 20px;
-    border-radius: 0 8px 8px 8px;
-    position: relative;
-    max-width: 30%;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  .tutorial-dialog {
+    background: #ffffff;
+    padding:    24px 28px;
+    position:   relative;
+    max-width:  32rem;
+    width:      100%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
   .close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: transparent;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
+    position:   absolute;
+    top:        12px;
+    right:      12px;
+    background: none;
+    border:     none;
+    font-size:  1.2rem;
+    color:      #666;
+    cursor:     pointer;
+  }
+  
+  .close-button:hover {
+    color: #000;
+  }
+  
+  .dialog-content {
+    margin-top:  12px;
+    font-size:   0.9rem;
+    line-height: 1.6;
+    text-align:  left; 
+    color:       #333;
   }
 
-  .help-content {
-    margin-top: 10px;
-    text-align: justify;
+  .dialog-content :deep(code) {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
   }
 </style>

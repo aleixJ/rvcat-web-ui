@@ -6,8 +6,8 @@
       <!-- Tooltip -->
       <div class="tutorial-tooltip" :style="tooltipStyle">
         <div class="tutorial-content">
-          <h3>{{ currentStep?.title }}</h3>
-          <p>{{ currentStep?.description }}</p>
+          <h3 v-html="currentStep?.title"></h3>
+          <p class="step-description" v-html="currentStep?.description"></p>
           <div v-if="currentStep?.stepImage" class="step-image" @click="openLightbox(currentStep.stepImage)">
             <img :src="currentStep.stepImage" alt="Step image">
             <span class="image-hint">Click to enlarge</span>
@@ -44,11 +44,11 @@
         
         <div class="question-header">
           <span class="question-badge">Question {{ stepIndex + 1 }} / {{ currentTutorial.steps.length }}</span>
-          <h2>{{ currentStep?.title }}</h2>
+          <h2 v-html="currentStep?.title"></h2>
         </div>
         
         <div class="question-body">
-          <p class="question-text">{{ currentStep?.questionText }}</p>
+          <p class="question-text" v-html="currentStep?.questionText"></p>
           
           <div v-if="currentStep?.questionImage" class="question-image" @click="openLightbox(currentStep.questionImage)">
             <img :src="currentStep.questionImage" alt="Question image">
@@ -146,7 +146,7 @@
         <div v-if="currentTutorial" class="tutorial-paused-section">
           <div class="tutorial-paused-header">
             <h5>📚 Tutorial in Progress</h5>
-            <p class="tutorial-paused-info">{{ currentTutorial.name }}</p>
+            <p class="tutorial-paused-info" v-html="currentTutorial.name"></p>
           </div>
           
           <div class="tutorial-action-buttons">
@@ -181,8 +181,8 @@
             class="tutorial-menu-item"
           >
             <div class="tutorial-item-content">
-              <strong>{{ tutorial.name }}</strong>
-              <p>{{ tutorial.description }}</p>
+              <strong v-html="tutorial.name"></strong>
+              <p v-html="tutorial.description"></p>
             </div>
           </button>
           
@@ -1374,6 +1374,14 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
+.tutorial-content :deep(code) {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
 .tutorial-actions {
   display: flex;
   justify-content: space-between;
@@ -1783,6 +1791,13 @@ onUnmounted(() => {
   line-height: 1.6;
   color: #333;
   margin: 0 0 16px 0;
+}
+
+.question-text :deep(code) {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
 }
 
 .question-image {
