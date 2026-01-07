@@ -68,15 +68,15 @@
                 :disabled="questionAnswered && isQuestionCorrect"
               >
                 <span class="answer-letter">{{ String.fromCharCode(65 + index) }}</span>
-                <span class="answer-text">{{ answer.text }}</span>
+                <span class="answer-text" v-html="answer.text"></span>
                 <span v-if="questionAnswered && isQuestionCorrect && answer.isCorrect" class="answer-indicator correct">✓</span>
                 <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(answer.originalIndex) && !answer.isCorrect" class="answer-indicator wrong">✗</span>
                 <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(answer.originalIndex) && answer.isCorrect" class="answer-indicator partial-correct">✓</span>
               </button>
               <!-- Inline feedback below each answer -->
               <div v-if="questionAnswered && selectedAnswers.includes(answer.originalIndex) && answer.explanation" 
-                   :class="['answer-feedback', answer.isCorrect ? 'feedback-correct' : 'feedback-wrong']">
-                {{ answer.explanation }}
+                   :class="['answer-feedback', answer.isCorrect ? 'feedback-correct' : 'feedback-wrong']"
+                   v-html="answer.explanation">
               </div>
             </div>
           </div>
@@ -2014,6 +2014,13 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
+.answer-text :deep(code) {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
 .answer-indicator {
   font-size: 16px;
   font-weight: bold;
@@ -2039,6 +2046,13 @@ onUnmounted(() => {
   font-size: 13px;
   line-height: 1.4;
   animation: fadeIn 0.3s ease-out;
+}
+
+.answer-feedback :deep(code) {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
 }
 
 .answer-feedback.feedback-correct {
