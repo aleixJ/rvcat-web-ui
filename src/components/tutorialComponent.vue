@@ -1071,24 +1071,6 @@ const completeTutorial = async () => {
   // You could emit an event here to track tutorial completion
 }
 
-const toggleTutorial = () => {
-  if (isActive.value) {
-    // Close tutorial (save state)
-    closeTutorial()
-  } else if (currentTutorial.value) {
-    // Continue tutorial from where it left off
-    resumeTutorial()
-  }
-}
-
-const clearHighlight = () => {
-  // Remove highlights from all elements
-  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-  })
-  highlightElement.value = null
-}
-
 const resumeTutorial = () => {
   if (currentTutorial.value) {
     // Save current scroll position before resuming tutorial
@@ -1172,7 +1154,6 @@ const closeTutorial = () => {
   restoreScrollPosition()
   
   isActive.value = false
-  clearHighlight()
   // Don't clear currentTutorial or stepIndex to maintain state for resume
 }
 
@@ -1489,21 +1470,6 @@ onUnmounted(() => {
 .tutorial-icon {
   font-size: 24px;
   font-weight: bold;
-}
-
-.tutorial-btn-pause {
-  background: #ff6b35 !important;
-  border: none;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  min-width: auto;
-}
-
-.tutorial-btn-pause:hover {
-  background: #e5552d !important;
 }
 
 .tutorial-menu {
@@ -2099,26 +2065,6 @@ onUnmounted(() => {
 
 .feedback-wrong h4 {
   color: #dc2626;
-}
-
-.feedback-item {
-  font-size: 13px;
-  color: #374151;
-  line-height: 1.4;
-  margin-bottom: 6px;
-  padding-left: 14px;
-  position: relative;
-}
-
-.feedback-item::before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: #6b7280;
-}
-
-.feedback-item:last-child {
-  margin-bottom: 0;
 }
 
 .question-actions {
