@@ -212,18 +212,23 @@
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import tutorialEditor from './tutorialEditor.vue'
 
-// Props
-const props = defineProps({
-  activeView: String
-})
-
-// Emits
+// ============================================================================
+// PROPS & EMITS
+// ============================================================================
+const props = defineProps({ activeView: String })
 const emit = defineEmits(['requestSwitch'])
 
-// Local storage key for tutorial progress
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 const TUTORIAL_PROGRESS_KEY = 'rvcat-tutorial-progress'
+const TOOLTIP_WIDTH = 300
+const TOOLTIP_HEIGHT = 200
 
-// State
+// ============================================================================
+// STATE
+// ============================================================================
+// Core tutorial state
 const isActive = ref(false)
 const showTutorialMenu = ref(false)
 const showEditor = ref(false)
@@ -232,62 +237,154 @@ const stepIndex = ref(0)
 const highlightElement = ref(null)
 const availableTutorials = ref([])
 const isLoading = ref(false)
-const originalScrollPosition = ref({ x: 0, y: 0 })
 const validationState = ref({})
+const tooltipPositionTrigger = ref(0)
 
-// Question-specific state
+// Scroll position
+const originalScrollPosition = ref({ x: 0, y: 0 })
+
+// Question state
 const selectedAnswers = ref([])
 const questionAnswered = ref(false)
-const shuffledAnswerIndices = ref([]) // Maps display index to original index
+const shuffledAnswerIndices = ref([])
 
-// Button click tracking for validation
+// Button click tracking
 const clickedButtons = ref(new Set())
+const trackedButtonElements = ref([])
 
-// Lightbox state for image popup
+// Lightbox state
 const lightboxImage = ref('')
 const showLightbox = ref(false)
 
-const openLightbox = (imageSrc) => {
-  lightboxImage.value = imageSrc
-  showLightbox.value = true
-}
+// Event listeners storage (reactive for proper cleanup)
+const validationEventListeners = ref([])
 
-const closeLightbox = () => {
-  showLightbox.value = false
-  lightboxImage.value = ''
-}
+// ============================================================================
+// COMPUTED PROPERTIES
+// ============================================================================
+const currentStep = computed(() => 
+  currentTutorial.value?.steps?.[stepIndex.value] ?? null
+)
 
-// Shuffle answers using Fisher-Yates algorithm with Math.random()
-const shuffleAnswers = () => {
-  if (!currentStep.value || currentStep.value.type !== 'question') {
-    shuffledAnswerIndices.value = []
-    return
-  }
-  const answers = currentStep.value.answers || []
-  const indices = answers.map((_, i) => i)
-  // Fisher-Yates shuffle using Math.random()
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[indices[i], indices[j]] = [indices[j], indices[i]]
-  }
-  shuffledAnswerIndices.value = indices
-}
+const isQuestionStep = computed(() => 
+  currentStep.value?.type === 'question'
+)
 
-// Utility functions
-const isElementVisible = (element) => {
-  const rect = element.getBoundingClientRect()
-  const windowHeight = window.innerHeight || document.documentElement.clientHeight
-  const windowWidth = window.innerWidth || document.documentElement.clientWidth
+const isQuestionCorrect = computed(() => {
+  if (!currentStep.value || currentStep.value.type !== 'question') return false
   
-  // Check if element is at least partially visible
-  return (
-    rect.top < windowHeight &&
-    rect.bottom > 0 &&
-    rect.left < windowWidth &&
-    rect.right > 0
-  )
+  const answers = currentStep.value.answers || []
+  const correctIndices = answers.reduce((acc, a, i) => a.isCorrect ? [...acc, i] : acc, [])
+  
+  if (currentStep.value.answerMode === 'single') {
+    return selectedAnswers.value.length === 1 && correctIndices.includes(selectedAnswers.value[0])
+  }
+  
+  const hasAllCorrect = correctIndices.every(i => selectedAnswers.value.includes(i))
+  const hasNoWrong = selectedAnswers.value.every(i => correctIndices.includes(i))
+  return hasAllCorrect && hasNoWrong
+})
+
+const shuffledAnswers = computed(() => {
+  if (!currentStep.value || currentStep.value.type !== 'question') return []
+  const answers = currentStep.value.answers || []
+  if (!shuffledAnswerIndices.value.length) {
+    return answers.map((a, i) => ({ ...a, originalIndex: i }))
+  }
+  return shuffledAnswerIndices.value.map(i => ({ ...answers[i], originalIndex: i }))
+})
+
+const canProceed = computed(() => {
+  const validation = currentStep.value?.validation
+  if (!validation) return true
+  
+  // Force reactivity
+  validationState.value
+  
+  try {
+    const { type, selector, value, minValue } = validation
+    switch (type) {
+      case 'program_selected':
+        return document.querySelector('#programs-list')?.value === value
+      case 'architecture_selected':
+        return document.querySelector('#processors-list')?.value === value
+      case 'input_value':
+        return document.querySelector(selector)?.value === value
+      case 'input_value_min':
+        return parseInt(document.querySelector(selector)?.value) >= minValue
+      case 'button_clicked':
+        return selector && clickedButtons.value.has(selector.trim())
+      default:
+        return true
+    }
+  } catch (e) {
+    console.warn('Validation check error:', e)
+    return true
+  }
+})
+
+const tooltipStyle = computed(() => {
+  tooltipPositionTrigger.value // Force reactivity
+  if (!highlightElement.value || !currentStep.value) return { display: 'none' }
+  
+  const rect = highlightElement.value.getBoundingClientRect()
+  const pos = currentStep.value.position || 'bottom'
+  const margin = 25
+  
+  let top, left
+  const centerX = rect.left + rect.width / 2 - TOOLTIP_WIDTH / 2
+  const centerY = rect.top + rect.height / 2 - TOOLTIP_HEIGHT / 2
+  
+  switch (pos) {
+    case 'top':    top = rect.top - TOOLTIP_HEIGHT - 15; left = centerX; break
+    case 'bottom': top = rect.bottom + 15; left = centerX; break
+    case 'left':   top = centerY; left = rect.left - TOOLTIP_WIDTH - 15; break
+    case 'right':  top = centerY; left = rect.right + 15; break
+    default:       top = rect.bottom + 15; left = centerX
+  }
+  
+  // Clamp to viewport
+  left = Math.max(margin, Math.min(left, window.innerWidth - TOOLTIP_WIDTH - margin))
+  top = Math.max(margin, Math.min(top, window.innerHeight - TOOLTIP_HEIGHT - margin))
+  
+  return { top: `${top}px`, left: `${left}px` }
+})
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+const isElementVisible = (el) => {
+  const rect = el.getBoundingClientRect()
+  return rect.top < window.innerHeight && rect.bottom > 0 && 
+         rect.left < window.innerWidth && rect.right > 0
 }
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+const clearHighlights = () => {
+  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
+    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
+  })
+}
+
+const resetQuestionState = () => {
+  selectedAnswers.value = []
+  questionAnswered.value = false
+}
+
+const processStepActions = (steps) => steps.map(step => {
+  if (step.action && typeof step.action === 'string') {
+    const [actionType, param] = step.action.split(':')
+    if (actionType === 'switchTo') {
+      step.action = () => emit('requestSwitch', param)
+    }
+  }
+  return step
+})
+
+// ============================================================================
+// SCROLL MANAGEMENT
+// ============================================================================
 const saveScrollPosition = () => {
   originalScrollPosition.value = {
     x: window.pageXOffset || document.documentElement.scrollLeft,
@@ -296,1003 +393,485 @@ const saveScrollPosition = () => {
 }
 
 const restoreScrollPosition = () => {
-  window.scrollTo({
-    left: originalScrollPosition.value.x,
-    top: originalScrollPosition.value.y,
-    behavior: 'smooth'
-  })
+  window.scrollTo({ ...originalScrollPosition.value, behavior: 'smooth' })
 }
 
-// Local Storage functions
+// ============================================================================
+// LOCAL STORAGE
+// ============================================================================
 const saveTutorialProgress = () => {
-  if (currentTutorial.value) {
-    const progressData = {
+  if (!currentTutorial.value) return
+  try {
+    localStorage.setItem(TUTORIAL_PROGRESS_KEY, JSON.stringify({
       tutorialId: currentTutorial.value.id,
       tutorialName: currentTutorial.value.name,
       stepIndex: stepIndex.value,
       totalSteps: currentTutorial.value.steps.length,
       timestamp: new Date().toISOString()
-    }
-    
-    try {
-      localStorage.setItem(TUTORIAL_PROGRESS_KEY, JSON.stringify(progressData))
-      console.log('✅ Tutorial progress saved:', progressData)
-    } catch (error) {
-      console.error('❌ Error saving tutorial progress:', error)
-    }
+    }))
+  } catch (e) {
+    console.error('❌ Error saving progress:', e)
   }
 }
 
 const loadTutorialProgress = () => {
   try {
-    const savedData = localStorage.getItem(TUTORIAL_PROGRESS_KEY)
-    if (savedData) {
-      const progressData = JSON.parse(savedData)
-      console.log('Loaded tutorial progress:', progressData)
-      return progressData
-    }
-  } catch (error) {
-    console.error('❌ Error loading tutorial progress:', error)
+    const data = localStorage.getItem(TUTORIAL_PROGRESS_KEY)
+    return data ? JSON.parse(data) : null
+  } catch (e) {
+    console.error('❌ Error loading progress:', e)
+    return null
   }
-  return null
 }
 
 const clearTutorialProgress = () => {
   try {
     localStorage.removeItem(TUTORIAL_PROGRESS_KEY)
-    console.log('Tutorial progress cleared')
-  } catch (error) {
-    console.error('❌ Error clearing tutorial progress:', error)
+  } catch (e) {
+    console.error('❌ Error clearing progress:', e)
   }
 }
 
-// Load tutorials
+// ============================================================================
+// LIGHTBOX
+// ============================================================================
+const openLightbox = (src) => { lightboxImage.value = src; showLightbox.value = true }
+const closeLightbox = () => { showLightbox.value = false; lightboxImage.value = '' }
+
+// ============================================================================
+// ANSWER SHUFFLING (Fisher-Yates)
+// ============================================================================
+const shuffleAnswers = () => {
+  if (currentStep.value?.type !== 'question') {
+    shuffledAnswerIndices.value = []
+    return
+  }
+  const indices = (currentStep.value.answers || []).map((_, i) => i)
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  shuffledAnswerIndices.value = indices
+}
+
+// ============================================================================
+// TUTORIAL LOADING
+// ============================================================================
 const loadTutorials = async () => {
   console.log('🔄 Loading tutorials...')
+  isLoading.value = true
+  
   try {
-    isLoading.value = true
-    console.log('isLoading set to true')
-    
-    // Try multiple paths
     const basePaths = ['', '/rvcat-web-ui']
-    let indexData = null
-    let workingBasePath = null
+    let indexData = null, workingBasePath = null
     
     for (const basePath of basePaths) {
       try {
-        console.log(`Trying base path: "${basePath}"`)
-        const indexResponse = await fetch(`${basePath}/tutorials/index.json`)
-        console.log(`Index response status: ${indexResponse.status}`)
-        
-        if (indexResponse.ok) {
-          indexData = await indexResponse.json()
+        const res = await fetch(`${basePath}/tutorials/index.json`)
+        if (res.ok) {
+          indexData = await res.json()
           workingBasePath = basePath
-          console.log(`✅ Index loaded successfully with base path: "${basePath}"`)
           break
         }
-      } catch (e) {
-        console.log(`❌ Failed with base path "${basePath}":`, e.message)
-      }
+      } catch (e) { /* try next */ }
     }
     
-    if (!indexData) {
-      throw new Error('Could not load tutorial index from any base path')
-    }
+    if (!indexData) throw new Error('Could not load tutorial index')
     
-    console.log('Index loaded:', indexData)
-    
-    // Load each tutorial
     const tutorials = []
-    for (const tutorialFile of indexData.tutorials) {
-      console.log(`Loading tutorial file: ${tutorialFile}`)
-      
+    for (const file of indexData.tutorials) {
       try {
-        const tutorialResponse = await fetch(`${workingBasePath}/tutorials/${tutorialFile}`)
-        console.log(`Tutorial response status: ${tutorialResponse.status}`)
-        
-        if (!tutorialResponse.ok) {
-          console.error(`❌ Failed to load tutorial: ${tutorialFile}, status: ${tutorialResponse.status}`)
-          continue
+        const res = await fetch(`${workingBasePath}/tutorials/${file}`)
+        if (res.ok) {
+          const tutorial = await res.json()
+          tutorial.steps = processStepActions(tutorial.steps)
+          tutorials.push(tutorial)
         }
-        
-        const tutorial = await tutorialResponse.json()
-        console.log(`✅ Loaded tutorial: ${tutorial.name}`)
-        
-        // Process actions in steps
-        tutorial.steps = tutorial.steps.map(step => {
-          if (step.action && typeof step.action === 'string') {
-            const [actionType, param] = step.action.split(':')
-            if (actionType === 'switchTo') {
-              step.action = () => emit('requestSwitch', param)
-            }
-          }
-          return step
-        })
-        
-        tutorials.push(tutorial)
-      } catch (tutorialError) {
-        console.error('Error loading individual tutorial:', tutorialFile, tutorialError)
+      } catch (e) {
+        console.error(`❌ Failed to load: ${file}`, e)
       }
     }
     
     availableTutorials.value = tutorials
-    console.log('All tutorials loaded successfully:', tutorials.length)
-  } catch (error) {
-    console.error('Error loading tutorials:', error)
-    // Fallback tutorials
-    availableTutorials.value = [
-      {
-        id: 'fallback-tutorial',
-        name: '⚠️ Error - Fallback Tutorial',
-        description: 'Error loading tutorials. This is a test tutorial.',
-        steps: [
-          {
-            title: 'Loading Error',
-            description: 'Tutorials could not be loaded correctly, but this system works.',
-            selector: '.header-title',
-            position: 'bottom'
-          }
-        ]
-      },
-      {
-        id: 'test-basic',
-        name: 'Basic Test',
-        description: 'Test tutorial to verify functionality',
-        steps: [
-          {
-            title: 'Test OK',
-            description: 'If you see this, the tutorial system works correctly.',
-            selector: '.header-title',
-            position: 'bottom'
-          }
-        ]
-      }
-    ]
-    console.log('Using fallback tutorials')
+    console.log(`✅ Loaded ${tutorials.length} tutorials`)
+    
+  } catch (e) {
+    console.error('❌ Tutorial loading failed:', e)
+    availableTutorials.value = [{
+      id: 'fallback',
+      name: '⚠️ Fallback Tutorial',
+      description: 'Error loading tutorials',
+      steps: [{ title: 'Error', description: 'Tutorials could not load.', selector: '.header-title', position: 'bottom' }]
+    }]
   } finally {
     isLoading.value = false
-    console.log('Loading finished. isLoading:', isLoading.value)
-    console.log('Final availableTutorials count:', availableTutorials.value.length)
-    console.log('Available tutorial names:', availableTutorials.value.map(t => t.name))
   }
 }
 
-// Computed
-const currentStep = computed(() => {
-  if (!currentTutorial.value || stepIndex.value >= currentTutorial.value.steps.length) {
-    return null
-  }
-  return currentTutorial.value.steps[stepIndex.value]
-})
-
-// Check if current step is a question
-const isQuestionStep = computed(() => {
-  return currentStep.value?.type === 'question'
-})
-
-// Check if question is answered correctly
-const isQuestionCorrect = computed(() => {
-  if (!currentStep.value || currentStep.value.type !== 'question') return false
-  
-  const answers = currentStep.value.answers || []
-  const correctIndices = answers.map((a, i) => a.isCorrect ? i : -1).filter(i => i !== -1)
-  
-  if (currentStep.value.answerMode === 'single') {
-    // Single mode: exactly one correct answer must be selected
-    return selectedAnswers.value.length === 1 && 
-           correctIndices.includes(selectedAnswers.value[0])
-  } else {
-    // Multiple mode: all correct answers must be selected and no wrong ones
-    const hasAllCorrect = correctIndices.every(i => selectedAnswers.value.includes(i))
-    const hasNoWrong = selectedAnswers.value.every(i => correctIndices.includes(i))
-    return hasAllCorrect && hasNoWrong
-  }
-})
-
-// Shuffled answers for display
-const shuffledAnswers = computed(() => {
-  if (!currentStep.value || currentStep.value.type !== 'question') return []
-  const answers = currentStep.value.answers || []
-  if (shuffledAnswerIndices.value.length === 0) return answers.map((a, i) => ({ ...a, originalIndex: i }))
-  return shuffledAnswerIndices.value.map(originalIndex => ({
-    ...answers[originalIndex],
-    originalIndex
-  }))
-})
-
-const canProceed = computed(() => {
-  if (!currentStep.value || !currentStep.value.validation) return true
-  
-  // Use reactive validation state that updates in real-time
-  const validation = currentStep.value.validation
-  const stepKey = `${currentTutorial.value?.id || 'unknown'}-${stepIndex.value}`
-  
-  // Force reactivity by accessing validationState
-  validationState.value
-  
-  try {
-    switch (validation.type) {
-      case 'program_selected': {
-        const selectedProgram = document.querySelector('#programs-list')?.value
-        return selectedProgram === validation.value
-      }
-      case 'architecture_selected': {
-        const selectedArch = document.querySelector('#processors-list')?.value
-        return selectedArch === validation.value
-      }
-      case 'input_value': {
-        const input = document.querySelector(validation.selector)
-        return input?.value === validation.value
-      }
-      case 'input_value_min': {
-        const input = document.querySelector(validation.selector)
-        const value = parseInt(input?.value)
-        return !isNaN(value) && value >= validation.minValue
-      }
-      case 'button_clicked': {
-        // Check if this specific button was clicked
-        const selector = validation.selector?.trim()
-        return selector && clickedButtons.value.has(selector)
-      }
-      default:
-        return true
-    }
-  } catch (error) {
-    console.warn('Error checking validation state:', error)
-    return true // Default to allowing progression if check fails
-  }
-})
-
-const tooltipStyle = computed(() => {
-  // Force reactivity on window changes (resize, zoom, scroll)
-  tooltipPositionTrigger.value
-  
-  if (!highlightElement.value || !currentStep.value) return { display: 'none' }
-  
-  const rect = highlightElement.value.getBoundingClientRect()
-  const position = currentStep.value.position || 'bottom'
-  const tooltipWidth = 300
-  const tooltipHeight = 200 // Approx estimation
-  
-  let top, left
-  
-  // Better centering for select and input elements
-  const isSelectOrInput = highlightElement.value.tagName === 'SELECT' || 
-                         highlightElement.value.tagName === 'INPUT'
-  
-  switch (position) {
-    case 'top':
-      top = rect.top - tooltipHeight - 15
-      left = rect.left + (rect.width / 2) - (tooltipWidth / 2)
-      break
-    case 'bottom':
-      top = rect.bottom + 15
-      left = rect.left + (rect.width / 2) - (tooltipWidth / 2)
-      break
-    case 'left':
-      top = rect.top + (rect.height / 2) - (tooltipHeight / 2)
-      left = rect.left - tooltipWidth - 15
-      break
-    case 'right':
-      top = rect.top + (rect.height / 2) - (tooltipHeight / 2)
-      left = rect.right + 15
-      // For selects and inputs, slightly adjust vertical position
-      if (isSelectOrInput) {
-        top = rect.top + (rect.height / 2) - (tooltipHeight / 3)
-      }
-      break
-    default:
-      top = rect.bottom + 15
-      left = rect.left + (rect.width / 2) - (tooltipWidth / 2)
-  }
-  
-  // Ensure tooltip stays within viewport with better margins
-  const margin = 25
-  if (left < margin) left = margin
-  if (left > window.innerWidth - tooltipWidth - margin) {
-    left = window.innerWidth - tooltipWidth - margin
-  }
-  if (top < margin) top = margin
-  if (top > window.innerHeight - tooltipHeight - margin) {
-    top = window.innerHeight - tooltipHeight - margin
-  }
-  
-  return {
-    top: `${top}px`,
-    left: `${left}px`
-  }
-})
-
-// Methods
-const startTutorial = (tutorialId) => {
-  const tutorial = availableTutorials.value.find(t => t.id === tutorialId)
-  if (!tutorial) return
-  
-  // Save current scroll position before starting tutorial
-  saveScrollPosition()
-  
-  currentTutorial.value = tutorial
-  
-  // Check if there's saved progress for this tutorial
-  const savedProgress = loadTutorialProgress()
-  if (savedProgress && savedProgress.tutorialId === tutorialId) {
-    // Resume from saved step
-    stepIndex.value = savedProgress.stepIndex
-    console.log(`🔄 Auto-resuming tutorial "${tutorial.name}" from step ${savedProgress.stepIndex + 1}`)
-  } else {
-    // Start from beginning
-    stepIndex.value = 0
-    console.log(`🎯 Starting tutorial "${tutorial.name}" from the beginning`)
-  }
-  
-  // Reset question state
-  selectedAnswers.value = []
-  questionAnswered.value = false
-  
-  // Reset button click tracking and set up listeners
-  clickedButtons.value = new Set()
-  setupButtonClickTracking()
-  
-  isActive.value = true
-  showTutorialMenu.value = false
-  
-  // Shuffle answers if starting on a question step
-  nextTick(() => {
-    shuffleAnswers()
-  })
-  
-  // Save current progress
-  saveTutorialProgress()
-  
-  nextTick(async () => {
-    await highlightCurrentStep()
-  })
+// ============================================================================
+// VALIDATION
+// ============================================================================
+const showValidationMessage = (message) => {
+  const div = document.createElement('div')
+  div.textContent = message
+  div.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #ff6b6b; color: white; padding: 15px 25px; border-radius: 8px;
+    font-size: 14px; z-index: 10002; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  `
+  document.body.appendChild(div)
+  setTimeout(() => div.remove(), 3000)
 }
 
-const nextStep = async () => {
-  if (stepIndex.value < currentTutorial.value.steps.length - 1) {
-    // Check validation if exists for current step (non-question steps)
-    if (currentStep.value.type !== 'question' && currentStep.value.validation && !await validateCurrentStep()) {
-      return // Don't advance if validation fails
-    }
-    
-    stepIndex.value++
-    
-    // Reset question state for new step
-    selectedAnswers.value = []
-    questionAnswered.value = false
-    shuffleAnswers()
-    
-    // Save progress after advancing to next step
-    saveTutorialProgress()
-    
-    await nextTick()
-    await highlightCurrentStep()
-  }
-}
-
-// Question handling methods
-const selectAnswer = (index) => {
-  if (questionAnswered.value) return
-  
-  if (currentStep.value.answerMode === 'single') {
-    // Single mode: replace selection
-    selectedAnswers.value = [index]
-  } else {
-    // Multiple mode: toggle selection
-    const idx = selectedAnswers.value.indexOf(index)
-    if (idx === -1) {
-      selectedAnswers.value.push(index)
-    } else {
-      selectedAnswers.value.splice(idx, 1)
-    }
-  }
-}
-
-const submitAnswer = () => {
-  if (selectedAnswers.value.length === 0) return
-  questionAnswered.value = true
-}
-
-const retryQuestion = () => {
-  // Reset question state to allow user to try again
-  selectedAnswers.value = []
-  questionAnswered.value = false
-}
-
-const getAnswerClass = (index) => {
-  const classes = ['answer-option']
-  
-  if (selectedAnswers.value.includes(index)) {
-    classes.push('selected')
-  }
-  
-  if (questionAnswered.value) {
-    const answer = currentStep.value.answers[index]
-    if (isQuestionCorrect.value) {
-      // Fully correct - show all correct answers in green
-      if (answer.isCorrect) {
-        classes.push('correct')
-      }
-    } else {
-      // Not fully correct
-      if (selectedAnswers.value.includes(index)) {
-        if (answer.isCorrect) {
-          // Selected a correct answer (partial correct for multiple mode)
-          classes.push('partial-correct')
-        } else {
-          // Selected a wrong answer
-          classes.push('wrong')
-        }
-      }
-    }
-  }
-  
-  return classes
-}
-
-const getErrorMessage = () => {
-  if (!currentStep.value || !questionAnswered.value || isQuestionCorrect.value) return ''
-  
-  const answers = currentStep.value.answers || []
-  const correctIndices = answers.map((a, i) => a.isCorrect ? i : -1).filter(i => i !== -1)
-  
-  // Check what went wrong
-  const selectedCorrect = selectedAnswers.value.filter(i => correctIndices.includes(i))
-  const selectedWrong = selectedAnswers.value.filter(i => !correctIndices.includes(i))
-  
-  if (currentStep.value.answerMode === 'single') {
-    // Single mode - wrong answer selected
-    return 'Incorrect answer. Try again!'
-  } else {
-    // Multiple mode
-    if (selectedWrong.length > 0 && selectedCorrect.length === 0) {
-      return 'Wrong answer selected. Try again!'
-    } else if (selectedWrong.length > 0 && selectedCorrect.length > 0) {
-      return 'You selected some correct answers, but also wrong ones. Try again!'
-    } else if (selectedCorrect.length > 0 && selectedCorrect.length < correctIndices.length) {
-      return 'Not all correct answers selected. Try again!'
-    } else {
-      return 'Try again!'
-    }
-  }
-}
-
-// Validation logic
 const validateCurrentStep = async () => {
-  const validation = currentStep.value.validation
-  if (!validation) return true
+  const v = currentStep.value?.validation
+  if (!v) return true
   
-  try {
-    switch (validation.type) {
-      case 'program_selected':
-        return validateProgramSelected(validation)
-        
-      case 'architecture_selected':
-        return validateArchitectureSelected(validation)
-        
-      case 'input_value':
-        return validateInputValue(validation)
-        
-      case 'input_value_min':
-        return validateInputValueMin(validation)
-        
-      case 'button_clicked':
-        return validateButtonClicked(validation)
-        
-      default:
-        console.warn('Unknown validation type:', validation.type)
-        return true
-    }
-  } catch (error) {
-    console.error('Validation error:', error)
-    showValidationMessage(validation.message || 'Hi ha hagut un error en la validació')
-    return false
+  const getElement = (sel) => document.querySelector(sel)
+  
+  const validators = {
+    program_selected: () => getElement('#programs-list')?.value === v.value,
+    architecture_selected: () => getElement('#processors-list')?.value === v.value,
+    input_value: () => getElement(v.selector)?.value === v.value,
+    input_value_min: () => parseInt(getElement(v.selector)?.value) >= v.minValue,
+    button_clicked: () => v.selector && clickedButtons.value.has(v.selector.trim())
   }
+  
+  const isValid = validators[v.type]?.() ?? true
+  if (!isValid) showValidationMessage(v.message || 'Please complete this action')
+  return isValid
 }
 
-const validateProgramSelected = (validation) => {
-  // Utilitza l'ID específic del selector de programes
-  const element = document.querySelector('#programs-list')
+const setupValidationListeners = () => {
+  cleanupValidationListeners()
+  const v = currentStep.value?.validation
+  if (!v) return
   
-  if (!element) {
-    console.error('No s\'ha trobat l\'element #programs-list')
-    showValidationMessage(validation.message)
-    return false
+  const selectorMap = {
+    program_selected: '#programs-list',
+    architecture_selected: '#processors-list',
+    input_value: v.selector,
+    input_value_min: v.selector
   }
   
-  const currentValue = element.value
-  console.log(`Programa actual seleccionat: "${currentValue}", esperem: "${validation.value}"`)
+  const selector = selectorMap[v.type]
+  if (!selector) return
   
-  if (currentValue === validation.value) {
-    return true
-  }
+  const el = document.querySelector(selector)
+  if (!el) return
   
-  showValidationMessage(validation.message)
-  return false
+  const handler = () => { validationState.value = { t: Date.now() } }
+  
+  ;['change', 'input', 'keyup'].forEach(evt => {
+    el.addEventListener(evt, handler)
+    validationEventListeners.value.push({ element: el, eventType: evt, handler })
+  })
 }
 
-const validateArchitectureSelected = (validation) => {
-  // Utilitza l'ID específic del selector d'arquitectures
-  const element = document.querySelector('#processors-list')
-  
-  if (!element) {
-    console.error('No s\'ha trobat l\'element #processors-list')
-    showValidationMessage(validation.message)
-    return false
-  }
-  
-  const currentValue = element.value
-  console.log(`Arquitectura actual seleccionada: "${currentValue}", esperem: "${validation.value}"`)
-  
-  if (currentValue === validation.value) {
-    return true
-  }
-  
-  showValidationMessage(validation.message)
-  return false
+const cleanupValidationListeners = () => {
+  validationEventListeners.value.forEach(({ element, eventType, handler }) => {
+    element.removeEventListener(eventType, handler)
+  })
+  validationEventListeners.value = []
 }
 
-const validateInputValue = (validation) => {
-  const element = document.querySelector(validation.selector)
-  
-  if (!element) {
-    console.error(`No s'ha trobat l'element amb selector: ${validation.selector}`)
-    showValidationMessage(validation.message)
-    return false
-  }
-  
-  const currentValue = element.value
-  console.log(`Valor actual de l'input: "${currentValue}", esperem: "${validation.value}"`)
-  
-  if (currentValue === validation.value) {
-    return true
-  }
-  
-  showValidationMessage(validation.message)
-  return false
-}
-
-const validateInputValueMin = (validation) => {
-  const element = document.querySelector(validation.selector)
-  
-  if (element && parseInt(element.value) >= validation.minValue) {
-    return true
-  }
-  
-  showValidationMessage(validation.message)
-  return false
-}
-
-const validateButtonClicked = (validation) => {
-  // Check if the button was clicked using our tracking
-  const selector = validation.selector?.trim()
-  
-  if (!selector) {
-    console.warn('No selector provided for button_clicked validation')
-    return true
-  }
-  
-  // Check if this button was clicked
-  if (clickedButtons.value.has(selector)) {
-    return true
-  }
-  
-  // Also check if button exists and try to find it
-  const element = document.querySelector(selector)
-  if (!element) {
-    console.warn(`Button not found: ${selector}`)
-    showValidationMessage(validation.message || `Button not found: ${selector}`)
-    return false
-  }
-  
-  showValidationMessage(validation.message || 'Please click the button to continue')
-  return false
-}
-
-// Set up click tracking for buttons used in validation
+// ============================================================================
+// BUTTON CLICK TRACKING
+// ============================================================================
 const setupButtonClickTracking = () => {
-  // Remove any existing listeners first
   cleanupButtonClickTracking()
   
-  // Find all button selectors used in current tutorial validations
-  if (!currentTutorial.value?.steps) return
+  const v = currentStep.value?.validation
+  if (v?.type !== 'button_clicked' || !v.selector) return
   
-  const buttonSelectors = new Set()
-  currentTutorial.value.steps.forEach(step => {
-    if (step.validation?.type === 'button_clicked' && step.validation.selector) {
-      buttonSelectors.add(step.validation.selector.trim())
-    }
-  })
+  const selector = v.selector.trim()
   
-  // Add click listeners to track button clicks
-  buttonSelectors.forEach(selector => {
-    try {
-      const button = document.querySelector(selector)
-      if (button) {
-        const handler = () => {
-          clickedButtons.value.add(selector)
-          // Trigger reactivity update for canProceed
-          validationState.value = { ...validationState.value, [selector]: true }
-        }
-        button.addEventListener('click', handler)
-        // Store reference for cleanup
-        button._tutorialClickHandler = handler
-      }
-    } catch (e) {
-      console.warn(`Could not set up click tracking for: ${selector}`, e)
-    }
-  })
-}
-
-// Clean up click tracking listeners
-const cleanupButtonClickTracking = () => {
-  document.querySelectorAll('[_tutorialClickHandler]').forEach(el => {
-    if (el._tutorialClickHandler) {
-      el.removeEventListener('click', el._tutorialClickHandler)
-      delete el._tutorialClickHandler
-    }
-  })
-}
-
-const showValidationMessage = (message) => {
-  // Create a temporary message overlay
-  const messageDiv = document.createElement('div')
-  messageDiv.className = 'tutorial-validation-message'
-  messageDiv.textContent = message
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #ff6b6b;
-    color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-size: 14px;
-    z-index: 10002;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    animation: tutorial-message-appear 0.3s ease-out;
-  `
-  
-  document.body.appendChild(messageDiv)
-  
-  setTimeout(() => {
-    messageDiv.remove()
-  }, 3000)
-}
-
-const previousStep = async () => {
-  if (stepIndex.value > 0) {
-    stepIndex.value--
+  const attach = () => {
+    const btn = document.querySelector(selector)
+    if (!btn) return false
     
-    // Reset question state for new step
-    selectedAnswers.value = []
-    questionAnswered.value = false
-    shuffleAnswers()
-    
-    // Save progress after going to previous step
-    saveTutorialProgress()
-    
-    await nextTick()
-    await highlightCurrentStep()
+    const handler = () => {
+      console.log(`✅ Button clicked: ${selector}`)
+      clickedButtons.value.add(selector)
+      validationState.value = { t: Date.now() }
+    }
+    btn.addEventListener('click', handler)
+    trackedButtonElements.value.push({ element: btn, handler })
+    return true
   }
+  
+  if (!attach()) setTimeout(attach, 500)
 }
 
+const cleanupButtonClickTracking = () => {
+  trackedButtonElements.value.forEach(({ element, handler }) => {
+    try { element.removeEventListener('click', handler) } catch {}
+  })
+  trackedButtonElements.value = []
+}
+
+// ============================================================================
+// CLEANUP HELPERS
+// ============================================================================
+const cleanup = (options = {}) => {
+  clearHighlights()
+  cleanupValidationListeners()
+  cleanupButtonClickTracking()
+  
+  if (options.resetClicks) clickedButtons.value = new Set()
+  if (options.clearProgress) clearTutorialProgress()
+  if (options.saveProgress) saveTutorialProgress()
+  
+  resetQuestionState()
+  restoreScrollPosition()
+}
+
+// ============================================================================
+// HIGHLIGHTING
+// ============================================================================
 const highlightCurrentStep = async () => {
-  // Skip highlighting for question steps (they show centered overlay)
   if (currentStep.value?.type === 'question') {
-    // Clear any existing highlights
-    document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-      el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-    })
+    clearHighlights()
     highlightElement.value = null
     return
   }
   
   if (!currentStep.value?.selector) return
   
-  // Execute step action if exists (for current step)
+  // Execute step action
   if (currentStep.value.action) {
     try {
       await currentStep.value.action()
       await nextTick()
-      await new Promise(resolve => setTimeout(resolve, 300)) // Wait for transition
-    } catch (error) {
-      console.error('Error executing step action:', error)
+      await delay(300)
+    } catch (e) {
+      console.error('Step action error:', e)
     }
   }
   
-  // Remove previous highlights
-  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-  })
+  clearHighlights()
   
-  // Simple selector handling - you might want to make this more robust
+  // Find element
   let element
+  const sel = currentStep.value.selector
   
-  if (currentStep.value.selector.includes(':contains(')) {
-    // Handle :contains() pseudo-selector
-    const match = currentStep.value.selector.match(/^([^:]+):contains\("([^"]+)"\)$/)
+  if (sel.includes(':contains(')) {
+    const match = sel.match(/^([^:]+):contains\("([^"]+)"\)$/)
     if (match) {
-      const [, baseSelector, text] = match
-      const elements = document.querySelectorAll(baseSelector)
-      element = Array.from(elements).find(el => el.textContent.includes(text))
+      element = Array.from(document.querySelectorAll(match[1]))
+        .find(el => el.textContent.includes(match[2]))
     }
   } else {
-    element = document.querySelector(currentStep.value.selector)
+    element = document.querySelector(sel)
   }
   
   if (element) {
     highlightElement.value = element
     element.classList.add('tutorial-highlighted', 'tutorial-highlight-pulse')
-    
-    // Only scroll if element is not visible
     if (!isElementVisible(element)) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }
   
-  // Set up validation listeners for this step
-  await nextTick() // Wait for DOM updates
+  await nextTick()
   setupValidationListeners()
+  setupButtonClickTracking()
+}
+
+// ============================================================================
+// QUESTION HANDLING
+// ============================================================================
+const selectAnswer = (index) => {
+  if (questionAnswered.value) return
+  
+  if (currentStep.value.answerMode === 'single') {
+    selectedAnswers.value = [index]
+  } else {
+    const idx = selectedAnswers.value.indexOf(index)
+    idx === -1 ? selectedAnswers.value.push(index) : selectedAnswers.value.splice(idx, 1)
+  }
+}
+
+const submitAnswer = () => {
+  if (selectedAnswers.value.length) questionAnswered.value = true
+}
+
+const retryQuestion = () => resetQuestionState()
+
+const getAnswerClass = (index) => {
+  const classes = ['answer-option']
+  if (selectedAnswers.value.includes(index)) classes.push('selected')
+  
+  if (questionAnswered.value) {
+    const answer = currentStep.value.answers[index]
+    if (isQuestionCorrect.value && answer.isCorrect) {
+      classes.push('correct')
+    } else if (selectedAnswers.value.includes(index)) {
+      classes.push(answer.isCorrect ? 'partial-correct' : 'wrong')
+    }
+  }
+  return classes
+}
+
+const getErrorMessage = () => {
+  if (!questionAnswered.value || isQuestionCorrect.value) return ''
+  
+  const answers = currentStep.value.answers || []
+  const correctIndices = answers.reduce((acc, a, i) => a.isCorrect ? [...acc, i] : acc, [])
+  const selectedCorrect = selectedAnswers.value.filter(i => correctIndices.includes(i))
+  const selectedWrong = selectedAnswers.value.filter(i => !correctIndices.includes(i))
+  
+  if (currentStep.value.answerMode === 'single') return 'Incorrect answer. Try again!'
+  if (selectedWrong.length && !selectedCorrect.length) return 'Wrong answer selected. Try again!'
+  if (selectedWrong.length) return 'You selected some correct answers, but also wrong ones. Try again!'
+  if (selectedCorrect.length < correctIndices.length) return 'Not all correct answers selected. Try again!'
+  return 'Try again!'
+}
+
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+const startTutorial = (tutorialId) => {
+  const tutorial = availableTutorials.value.find(t => t.id === tutorialId)
+  if (!tutorial) return
+  
+  saveScrollPosition()
+  currentTutorial.value = tutorial
+  
+  const saved = loadTutorialProgress()
+  stepIndex.value = (saved?.tutorialId === tutorialId) ? saved.stepIndex : 0
+  
+  resetQuestionState()
+  clickedButtons.value = new Set()
+  trackedButtonElements.value = []
+  
+  isActive.value = true
+  showTutorialMenu.value = false
+  
+  nextTick(() => {
+    shuffleAnswers()
+    saveTutorialProgress()
+    highlightCurrentStep()
+  })
+}
+
+const goToStep = async (newIndex) => {
+  stepIndex.value = newIndex
+  resetQuestionState()
+  shuffleAnswers()
+  saveTutorialProgress()
+  await nextTick()
+  await highlightCurrentStep()
+}
+
+const nextStep = async () => {
+  if (stepIndex.value >= currentTutorial.value.steps.length - 1) return
+  if (currentStep.value.type !== 'question' && currentStep.value.validation) {
+    if (!await validateCurrentStep()) return
+  }
+  await goToStep(stepIndex.value + 1)
+}
+
+const previousStep = async () => {
+  if (stepIndex.value <= 0) return
+  await goToStep(stepIndex.value - 1)
+}
+
+const endTutorial = (fullReset = false) => {
+  cleanup({ resetClicks: fullReset, clearProgress: fullReset, saveProgress: !fullReset })
+  isActive.value = false
+  if (fullReset) {
+    currentTutorial.value = null
+    stepIndex.value = 0
+    highlightElement.value = null
+  }
 }
 
 const completeTutorial = async () => {
-  // Check validation if exists for current step (last step)
-  if (currentStep.value.validation && !await validateCurrentStep()) {
-    return // Don't complete if validation fails
-  }
-  
-  // Clean up validation listeners
-  cleanupValidationListeners()
-  
-  // Clean up button click tracking
-  cleanupButtonClickTracking()
-  clickedButtons.value = new Set()
-  
-  // Clear progress when tutorial is completed
-  clearTutorialProgress()
-  
-  // Remove highlights
-  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-  })
-  
-  // Restore original scroll position
-  restoreScrollPosition()
-  
-  // Reset tutorial state
-  isActive.value = false
-  currentTutorial.value = null
-  stepIndex.value = 0
-  highlightElement.value = null
-  
-  // You could emit an event here to track tutorial completion
+  if (currentStep.value.validation && !await validateCurrentStep()) return
+  endTutorial(true)
 }
 
+const closeTutorial = () => endTutorial(false)
+const stopTutorial = () => endTutorial(true)
+
 const resumeTutorial = () => {
-  if (currentTutorial.value) {
-    // Save current scroll position before resuming tutorial
-    saveScrollPosition()
-    
-    isActive.value = true
-    showTutorialMenu.value = false
-    nextTick(() => {
-      highlightCurrentStep()
-    })
-  }
+  if (!currentTutorial.value) return
+  saveScrollPosition()
+  isActive.value = true
+  showTutorialMenu.value = false
+  nextTick(highlightCurrentStep)
 }
 
 const toggleTutorialMenu = () => {
   showTutorialMenu.value = !showTutorialMenu.value
 }
 
-const previewCustomTutorial = (tutorialData) => {
+// ============================================================================
+// CUSTOM TUTORIALS
+// ============================================================================
+const previewCustomTutorial = (data) => {
   showEditor.value = false
   showTutorialMenu.value = false
   
-  // Process actions in the custom tutorial
-  tutorialData.steps = tutorialData.steps.map(step => {
-    if (step.action && typeof step.action === 'string') {
-      const [actionType, param] = step.action.split(':')
-      if (actionType === 'switchTo') {
-        step.action = () => emit('requestSwitch', param)
-      }
-    }
-    return step
-  })
-  
-  currentTutorial.value = tutorialData
+  data.steps = processStepActions(data.steps)
+  currentTutorial.value = data
   stepIndex.value = 0
   isActive.value = true
   
-  nextTick(() => {
-    highlightCurrentStep()
-  })
+  nextTick(highlightCurrentStep)
 }
 
-const addFinishedTutorial = (tutorialData) => {
-  // Process actions in the finished tutorial
-  tutorialData.steps = tutorialData.steps.map(step => {
-    if (step.action && typeof step.action === 'string') {
-      const [actionType, param] = step.action.split(':')
-      if (actionType === 'switchTo') {
-        step.action = () => emit('requestSwitch', param)
-      }
-    }
-    return step
-  })
-  
-  // Add the tutorial to the available tutorials list
-  availableTutorials.value.push(tutorialData)
-  
-  console.log(`Added new tutorial: ${tutorialData.name}`)
-  console.log('Available tutorials:', availableTutorials.value.map(t => t.name))
+const addFinishedTutorial = (data) => {
+  data.steps = processStepActions(data.steps)
+  availableTutorials.value.push(data)
+  console.log(`✅ Added tutorial: ${data.name}`)
 }
 
-const closeTutorial = () => {
-  // Remove highlights from all elements
-  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-  })
+// ============================================================================
+// EVENT HANDLERS
+// ============================================================================
+const handleClickOutside = (e) => {
+  if (!showTutorialMenu.value) return
   
-  // Clean up validation listeners
-  cleanupValidationListeners()
+  const menu = document.querySelector('.tutorial-menu')
+  const btn = document.querySelector('.tutorial-launcher-btn')
   
-  // Clean up button click tracking
-  cleanupButtonClickTracking()
-  
-  // Save tutorial progress when closing with X button
-  saveTutorialProgress()
-  
-  // Reset question state
-  selectedAnswers.value = []
-  questionAnswered.value = false
-  
-  // Restore original scroll position
-  restoreScrollPosition()
-  
-  isActive.value = false
-  // Don't clear currentTutorial or stepIndex to maintain state for resume
-}
-
-const stopTutorial = () => {
-  // Remove highlights from all elements
-  document.querySelectorAll('.tutorial-highlighted').forEach(el => {
-    el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse')
-  })
-  
-  // Clean up validation listeners
-  cleanupValidationListeners()
-  
-  // Clean up button click tracking
-  cleanupButtonClickTracking()
-  clickedButtons.value = new Set()
-  
-  // Clear saved progress when stopping tutorial
-  clearTutorialProgress()
-  
-  // Reset question state
-  selectedAnswers.value = []
-  questionAnswered.value = false
-  
-  // Restore original scroll position
-  restoreScrollPosition()
-  
-  // Completely stop and reset tutorial
-  isActive.value = false
-  currentTutorial.value = null
-  stepIndex.value = 0
-  highlightElement.value = null
-}
-
-// Handle clicks outside tutorial menu
-const handleClickOutside = (event) => {
-  if (showTutorialMenu.value) {
-    const tutorialMenu = document.querySelector('.tutorial-menu')
-    const launcherBtn = document.querySelector('.tutorial-launcher-btn')
-    
-    if (tutorialMenu && !tutorialMenu.contains(event.target) && 
-        launcherBtn && !launcherBtn.contains(event.target)) {
-      showTutorialMenu.value = false
-    }
+  if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+    showTutorialMenu.value = false
   }
+}
+
+const handleWindowChange = () => {
+  if (isActive.value && highlightElement.value) tooltipPositionTrigger.value++
 }
 
 const restoreTutorialProgress = async () => {
-  const savedProgress = loadTutorialProgress()
-  if (savedProgress && availableTutorials.value.length > 0) {
-    // Find the tutorial by ID
-    const tutorial = availableTutorials.value.find(t => t.id === savedProgress.tutorialId)
-    if (tutorial) {
-      console.log(`🔄 Restoring tutorial progress: ${savedProgress.tutorialName} (Step ${savedProgress.stepIndex + 1}/${savedProgress.totalSteps})`)
-      
-      currentTutorial.value = tutorial
-      stepIndex.value = savedProgress.stepIndex
-      // Don't set isActive to true - let the user decide to resume
-      
-      return true
-    } else {
-      console.log('⚠️ Saved tutorial not found in available tutorials, clearing progress')
-      clearTutorialProgress()
-    }
+  const saved = loadTutorialProgress()
+  if (!saved || !availableTutorials.value.length) return false
+  
+  const tutorial = availableTutorials.value.find(t => t.id === saved.tutorialId)
+  if (tutorial) {
+    console.log(`🔄 Restored progress: ${saved.tutorialName} (Step ${saved.stepIndex + 1})`)
+    currentTutorial.value = tutorial
+    stepIndex.value = saved.stepIndex
+    return true
   }
+  
+  clearTutorialProgress()
   return false
 }
 
-// Validation state management
-let validationEventListeners = []
-
-const setupValidationListeners = () => {
-  // Clean up existing listeners first
-  cleanupValidationListeners()
-  
-  if (!currentStep.value?.validation) return
-  
-  const validation = currentStep.value.validation
-  const triggerValidationUpdate = () => {
-    // Force reactivity by updating validationState
-    validationState.value = { ...validationState.value, timestamp: Date.now() }
-  }
-  
-  let selectors = []
-  
-  switch (validation.type) {
-    case 'program_selected':
-      selectors = ['#programs-list']
-      break
-    case 'architecture_selected':
-      selectors = ['#processors-list']
-      break
-    case 'input_value':
-    case 'input_value_min':
-      selectors = [validation.selector]
-      break
-  }
-  
-  // Add event listeners to relevant elements
-  selectors.forEach(selector => {
-    const element = document.querySelector(selector)
-    if (element) {
-      const events = ['change', 'input', 'keyup']
-      events.forEach(eventType => {
-        element.addEventListener(eventType, triggerValidationUpdate)
-        validationEventListeners.push({ element, eventType, handler: triggerValidationUpdate })
-      })
-    }
-  })
-}
-
-const cleanupValidationListeners = () => {
-  validationEventListeners.forEach(({ element, eventType, handler }) => {
-    element.removeEventListener(eventType, handler)
-  })
-  validationEventListeners = []
-}
-
-// Force tooltip position update
-const tooltipPositionTrigger = ref(0)
-const forceTooltipUpdate = () => {
-  tooltipPositionTrigger.value++
-}
-
-// Handle window resize and zoom changes
-const handleWindowChange = () => {
-  if (isActive.value && highlightElement.value) {
-    forceTooltipUpdate()
-  }
-}
-
+// ============================================================================
+// LIFECYCLE
+// ============================================================================
 onMounted(async () => {
-  console.log('🎯 TutorialComponent mounted successfully!')
+  console.log('🎯 TutorialComponent mounted')
   document.addEventListener('click', handleClickOutside)
   window.addEventListener('resize', handleWindowChange)
-  window.addEventListener('scroll', handleWindowChange, true) // Capture scroll events
+  window.addEventListener('scroll', handleWindowChange, true)
   
   await loadTutorials()
-  
-  // Restore progress after tutorials are loaded
   await restoreTutorialProgress()
 })
 
@@ -1301,6 +880,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleWindowChange)
   window.removeEventListener('scroll', handleWindowChange, true)
   cleanupValidationListeners()
+  cleanupButtonClickTracking()
 })
 </script>
 
