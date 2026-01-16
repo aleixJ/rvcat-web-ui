@@ -273,17 +273,16 @@
 <script setup>
 import { ref, reactive, watch, onMounted, computed } from 'vue'
 
-// Emits
+// ============================================================================
+// EMITS
+// ============================================================================
 const emit = defineEmits(['close', 'preview', 'tutorialFinished'])
 
-// State
-const tutorial = reactive({
-  name: '',
-  description: '',
-  steps: []
-})
-
-const exportedContent = ref('')
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const STORAGE_KEY = 'tutorial-editor-draft'
+const MAX_IMAGE_SIZE = 500 * 1024 // 500KB
 
 // Predefined CSS selectors for highlighting elements
 const predefinedSelectors = [
@@ -310,324 +309,371 @@ const predefinedSelectors = [
   { label: 'Program Editor Tab', value: 'button:contains(\"Program\")' }
 ]
 
-// Predefined selectors for validation (input fields)
 const validationInputSelectors = [
   { label: 'Custom', value: '' },
   { label: 'ROB Size', value: '#rob-size' },
   { label: 'Number of Iterations', value: '#num-iters' }
 ]
 
-// Predefined selectors for button click validation
 const validationButtonSelectors = [
   { label: 'Custom', value: '' },
   { label: 'Run Simulation', value: '#run-simulation-button' }
 ]
 
-// Auto-save functionality
-const STORAGE_KEY = 'tutorial-editor-draft'
+// ============================================================================
+// STATE
+// ============================================================================
+const tutorial = reactive({ name: '', description: '', steps: [] })
+const exportedContent = ref('')
 
-// Save tutorial data to localStorage whenever it changes
-watch(tutorial, (newTutorial) => {
-  if (newTutorial.name || newTutorial.description || newTutorial.steps.length > 0) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTutorial))
+// ============================================================================
+// COMPUTED
+// ============================================================================
+const hasSavedContent = computed(() => 
+  tutorial.name || tutorial.description || 
+  tutorial.steps.some(s => s.title || s.description || s.selector || s.questionText)
+)
+
+// ============================================================================
+// LOCAL STORAGE
+// ============================================================================
+const clearSavedData = () => localStorage.removeItem(STORAGE_KEY)
+
+watch(tutorial, (t) => {
+  if (t.name || t.description || t.steps.length > 0) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(t))
   }
 }, { deep: true })
 
-// Load saved tutorial data on mount
-onMounted(() => {
-  const savedTutorial = localStorage.getItem(STORAGE_KEY)
-  if (savedTutorial) {
-    try {
-      const parsedTutorial = JSON.parse(savedTutorial)
-      tutorial.name = parsedTutorial.name || ''
-      tutorial.description = parsedTutorial.description || ''
-      tutorial.steps = parsedTutorial.steps || []
-      
-      // If no steps exist, add an empty one
-      if (tutorial.steps.length === 0) {
-        addStep()
-      }
-    } catch (err) {
-      console.error('Failed to load saved tutorial:', err)
-      addStep() // Add empty step as fallback
-    }
-  } else {
-    addStep() // Add empty step for new tutorial
-  }
+// ============================================================================
+// STEP CREATION HELPERS
+// ============================================================================
+const createEmptyStep = () => ({
+  type: 'step',
+  title: '',
+  description: '',
+  stepImage: '',
+  selectorPreset: '',
+  selector: '',
+  position: 'bottom',
+  action: '',
+  validationType: '',
+  validationValue: '',
+  validationSelectorPreset: '',
+  validationSelector: '',
+  validationMinValue: '',
+  validationMessage: ''
 })
 
-// Clear saved data when tutorial is finished or explicitly cleared
-const clearSavedData = () => {
-  localStorage.removeItem(STORAGE_KEY)
-}
-
-// Computed property to check if there's saved content
-const hasSavedContent = computed(() => {
-  return tutorial.name || tutorial.description || tutorial.steps.some(step => 
-    step.title || step.description || step.selector || step.questionText
-  )
+const createEmptyQuestion = () => ({
+  type: 'question',
+  title: '',
+  questionText: '',
+  questionImage: '',
+  answerMode: 'single',
+  answers: [
+    { text: '', isCorrect: true, explanation: '' },
+    { text: '', isCorrect: false, explanation: '' }
+  ]
 })
 
-// Clear draft and start fresh
-const clearDraft = () => {
-  if (confirm('Are you sure you want to clear the current draft? This action cannot be undone.')) {
-    tutorial.name = ''
-    tutorial.description = ''
-    tutorial.steps = []
-    addStep() // Add one empty step
-    clearSavedData()
-  }
-}
-
-// Methods
 const addStep = (type = 'step') => {
-  if (type === 'question') {
-    tutorial.steps.push({
-      type: 'question',
-      title: '',
-      questionText: '',
-      questionImage: '', // Optional base64 encoded image
-      answerMode: 'single',
-      answers: [
-        { text: '', isCorrect: true, explanation: '' },
-        { text: '', isCorrect: false, explanation: '' }
-      ]
-    })
-  } else {
-    tutorial.steps.push({
-      type: 'step',
-      title: '',
-      description: '',
-      stepImage: '', // Optional base64 encoded image
-      selectorPreset: '', // Preset selector choice
-      selector: '',
-      position: 'bottom',
-      action: '',
-      validationType: '',
-      validationValue: '',
-      validationSelectorPreset: '', // Preset for validation selector
-      validationSelector: '',
-      validationMinValue: '',
-      validationMessage: ''
-    })
-  }
+  tutorial.steps.push(type === 'question' ? createEmptyQuestion() : createEmptyStep())
 }
 
+// ============================================================================
+// STEP TYPE & MODE CHANGES
+// ============================================================================
 const onStepTypeChange = (step) => {
   if (step.type === 'question') {
-    // Initialize question fields if not present
-    if (!step.questionText) step.questionText = ''
-    if (!step.answerMode) step.answerMode = 'single'
-    if (!step.answers || step.answers.length === 0) {
+    step.questionText = step.questionText || ''
+    step.answerMode = step.answerMode || 'single'
+    if (!step.answers?.length) {
       step.answers = [
         { text: '', isCorrect: true, explanation: '' },
         { text: '', isCorrect: false, explanation: '' }
       ]
     }
   } else {
-    // Initialize step fields if not present
-    if (!step.description) step.description = ''
-    if (!step.selector) step.selector = ''
-    if (!step.position) step.position = 'bottom'
-    if (!step.action) step.action = ''
-    if (!step.validationType) step.validationType = ''
+    step.description = step.description || ''
+    step.selector = step.selector || ''
+    step.position = step.position || 'bottom'
+    step.action = step.action || ''
+    step.validationType = step.validationType || ''
   }
 }
 
-// Handle selector preset selection
 const onSelectorPresetChange = (step) => {
-  if (step.selectorPreset) {
-    step.selector = step.selectorPreset
-  }
+  if (step.selectorPreset) step.selector = step.selectorPreset
 }
 
-// Handle validation selector preset selection
 const onValidationSelectorPresetChange = (step) => {
-  if (step.validationSelectorPreset) {
-    step.validationSelector = step.validationSelectorPreset
+  if (step.validationSelectorPreset) step.validationSelector = step.validationSelectorPreset
+}
+
+// ============================================================================
+// ANSWER HANDLING
+// ============================================================================
+const ensureOneCorrectAnswer = (step) => {
+  if (step.answers?.length && !step.answers.some(a => a.isCorrect)) {
+    step.answers[0].isCorrect = true
   }
 }
 
 const onCorrectAnswerChange = (step, changedIndex) => {
   if (step.answerMode === 'single' && step.answers[changedIndex].isCorrect) {
-    // For single answer mode, uncheck all other answers
-    step.answers.forEach((answer, index) => {
-      if (index !== changedIndex) {
-        answer.isCorrect = false
-      }
-    })
+    step.answers.forEach((a, i) => { if (i !== changedIndex) a.isCorrect = false })
   }
-  
-  // Ensure at least one answer is correct
   ensureOneCorrectAnswer(step)
 }
 
 const onAnswerModeChange = (step) => {
   if (step.answerMode === 'single') {
-    // When switching to single-choice, keep only the first correct answer
-    const correctIndices = step.answers
-      .map((a, i) => a.isCorrect ? i : -1)
-      .filter(i => i !== -1)
-    
-    if (correctIndices.length > 1) {
-      // Keep only the first correct answer, uncheck the rest
-      step.answers.forEach((answer, index) => {
-        if (index !== correctIndices[0]) {
-          answer.isCorrect = false
-        }
-      })
+    const firstCorrect = step.answers.findIndex(a => a.isCorrect)
+    if (firstCorrect >= 0) {
+      step.answers.forEach((a, i) => { if (i !== firstCorrect) a.isCorrect = false })
     }
   }
-  // Ensure at least one answer is correct
   ensureOneCorrectAnswer(step)
-}
-
-const ensureOneCorrectAnswer = (step) => {
-  const hasCorrect = step.answers.some(a => a.isCorrect)
-  if (!hasCorrect && step.answers.length > 0) {
-    // If no correct answer, make the first one correct
-    step.answers[0].isCorrect = true
-  }
-}
-
-// Handle image upload and convert to base64
-const handleImageUpload = (event, step) => {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  // Check file size (limit to 500KB to keep JSON manageable)
-  if (file.size > 500 * 1024) {
-    alert('Image is too large. Please use an image smaller than 500KB.')
-    event.target.value = ''
-    return
-  }
-  
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    step.questionImage = e.target.result // This is the base64 encoded string
-  }
-  reader.readAsDataURL(file)
-}
-
-// Handle step image upload and convert to base64
-const handleStepImageUpload = (event, step) => {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  // Check file size (limit to 500KB to keep JSON manageable)
-  if (file.size > 500 * 1024) {
-    alert('Image is too large. Please use an image smaller than 500KB.')
-    event.target.value = ''
-    return
-  }
-  
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    step.stepImage = e.target.result // This is the base64 encoded string
-  }
-  reader.readAsDataURL(file)
 }
 
 const addAnswer = (step) => {
   if (step.answers.length < 6) {
-    step.answers.push({
-      text: '',
-      isCorrect: false,
-      explanation: ''
-    })
+    step.answers.push({ text: '', isCorrect: false, explanation: '' })
   }
 }
 
 const removeAnswer = (step, index) => {
   if (step.answers.length > 2) {
     step.answers.splice(index, 1)
-    // Ensure at least one answer remains correct after removal
     ensureOneCorrectAnswer(step)
   }
 }
 
-const removeStep = (index) => {
-  tutorial.steps.splice(index, 1)
-}
+const removeStep = (index) => tutorial.steps.splice(index, 1)
 
-const previewTutorial = () => {
-  const validationErrors = validateTutorial()
-  if (validationErrors.length > 0) {
-    alert('Please fix the following errors:\n\n' + validationErrors.join('\n'))
+// ============================================================================
+// IMAGE UPLOAD (unified handler)
+// ============================================================================
+const handleImageUpload = (event, step, imageField = 'questionImage') => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  if (file.size > MAX_IMAGE_SIZE) {
+    alert('Image is too large. Please use an image smaller than 500KB.')
+    event.target.value = ''
     return
   }
   
-  const tutorialData = {
-    id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    name: tutorial.name,
-    description: tutorial.description,
-    steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
-      // Handle question type
-      if (step.type === 'question') {
-        const questionStep = {
-          type: 'question',
-          title: step.title,
-          questionText: step.questionText,
-          answerMode: step.answerMode,
-          answers: step.answers.filter(a => a.text).map(answer => ({
-            text: answer.text,
-            isCorrect: answer.isCorrect,
-            explanation: answer.explanation || ''
-          }))
-        }
-        if (step.questionImage) {
-          questionStep.questionImage = step.questionImage
-        }
-        return questionStep
-      }
-      
-      // Handle step type
-      const previewStep = {
-        type: 'step',
-        title: step.title,
-        description: step.description,
-        selector: step.selector,
-        position: step.position
-      }
-      
-      if (step.stepImage) {
-        previewStep.stepImage = step.stepImage
-      }
-      
-      if (step.action) {
-        previewStep.action = step.action
-      }
-      
-      if (step.validationType) {
-        previewStep.validation = {
-          type: step.validationType,
-          message: step.validationMessage || 'Complete this action to continue'
-        }
-        
-        switch (step.validationType) {
-          case 'program_selected':
-          case 'architecture_selected':
-            previewStep.validation.value = step.validationValue
-            break
-          case 'input_value':
-            previewStep.validation.selector = step.validationSelector
-            previewStep.validation.value = step.validationValue
-            break
-          case 'input_value_min':
-            previewStep.validation.selector = step.validationSelector
-            previewStep.validation.minValue = parseInt(step.validationMinValue)
-            break
-          case 'button_clicked':
-            previewStep.validation.selector = step.validationSelector
-            break
-        }
-      }
-      
-      return previewStep
-    })
+  const reader = new FileReader()
+  reader.onload = (e) => { step[imageField] = e.target.result }
+  reader.readAsDataURL(file)
+}
+
+const handleStepImageUpload = (event, step) => handleImageUpload(event, step, 'stepImage')
+
+// ============================================================================
+// TUTORIAL CONVERSION (shared logic)
+// ============================================================================
+const buildValidation = (step) => {
+  if (!step.validationType) return null
+  
+  const validation = {
+    type: step.validationType,
+    message: step.validationMessage || 'Complete this action to continue'
   }
   
-  emit('preview', tutorialData)
+  switch (step.validationType) {
+    case 'program_selected':
+    case 'architecture_selected':
+      validation.value = step.validationValue
+      break
+    case 'input_value':
+      validation.selector = step.validationSelector
+      validation.value = step.validationValue
+      break
+    case 'input_value_min':
+      validation.selector = step.validationSelector
+      validation.minValue = parseInt(step.validationMinValue)
+      break
+    case 'button_clicked':
+      validation.selector = step.validationSelector
+      break
+  }
+  return validation
+}
+
+const convertStepForExport = (step) => {
+  if (step.type === 'question') {
+    const q = {
+      type: 'question',
+      title: step.title,
+      questionText: step.questionText,
+      answerMode: step.answerMode,
+      answers: step.answers.filter(a => a.text).map(a => ({
+        text: a.text,
+        isCorrect: a.isCorrect,
+        explanation: a.explanation || ''
+      }))
+    }
+    if (step.questionImage) q.questionImage = step.questionImage
+    return q
+  }
+  
+  const s = {
+    type: 'step',
+    title: step.title,
+    description: step.description,
+    selector: step.selector,
+    position: step.position
+  }
+  if (step.stepImage) s.stepImage = step.stepImage
+  if (step.action) s.action = step.action
+  
+  const validation = buildValidation(step)
+  if (validation) s.validation = validation
+  
+  return s
+}
+
+const buildTutorialData = () => ({
+  id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+  name: tutorial.name,
+  description: tutorial.description,
+  steps: tutorial.steps
+    .filter(s => s.title && (s.type === 'question' || s.selector))
+    .map(convertStepForExport)
+})
+
+// ============================================================================
+// VALIDATION
+// ============================================================================
+const validateTutorial = () => {
+  const errors = []
+  
+  if (!tutorial.name?.trim()) errors.push('• Tutorial Name is required')
+  if (!tutorial.steps.length) errors.push('• At least one step or question is required')
+  
+  tutorial.steps.forEach((step, i) => {
+    const n = i + 1
+    if (!step.title?.trim()) errors.push(`• Step ${n}: Title is required`)
+    
+    if (step.type === 'question') {
+      if (!step.questionText?.trim()) errors.push(`• Step ${n}: Question Text is required`)
+      if (!step.answerMode) errors.push(`• Step ${n}: Answer Mode is required`)
+      
+      const validAnswers = step.answers?.filter(a => a.text?.trim()) || []
+      if (validAnswers.length < 2) errors.push(`• Step ${n}: At least 2 answers with text are required`)
+      
+      const correctAnswers = step.answers?.filter(a => a.isCorrect && a.text?.trim()) || []
+      if (step.answerMode === 'single' && correctAnswers.length !== 1) {
+        errors.push(`• Step ${n}: Single-choice mode requires exactly one correct answer`)
+      } else if (correctAnswers.length === 0) {
+        errors.push(`• Step ${n}: At least one answer must be marked as correct`)
+      }
+    } else if (!step.selector?.trim()) {
+      errors.push(`• Step ${n}: CSS Selector is required`)
+    }
+  })
+  
+  return errors
+}
+
+const showValidationErrors = () => {
+  const errors = validateTutorial()
+  if (errors.length) {
+    alert('Please fix the following errors:\n\n' + errors.join('\n'))
+    return false
+  }
+  return true
+}
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
+const clearDraft = () => {
+  if (confirm('Are you sure you want to clear the current draft? This action cannot be undone.')) {
+    tutorial.name = ''
+    tutorial.description = ''
+    tutorial.steps = []
+    addStep()
+    clearSavedData()
+  }
+}
+
+const previewTutorial = () => {
+  if (!showValidationErrors()) return
+  emit('preview', buildTutorialData())
+}
+
+const finishTutorial = () => {
+  if (!showValidationErrors()) return
+  downloadJSON()
+  emit('tutorialFinished', buildTutorialData())
+  clearSavedData()
+  alert('Tutorial finished! It has been added to the tutorial menu.')
+  emit('close')
+}
+
+const downloadJSON = () => {
+  if (!showValidationErrors()) return
+  
+  const data = buildTutorialData()
+  const json = JSON.stringify(data, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${data.id}.json`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+// ============================================================================
+// UPLOAD TUTORIAL
+// ============================================================================
+const convertUploadedStep = (step) => {
+  if (step.type === 'question') {
+    const q = {
+      type: 'question',
+      title: step.title || '',
+      questionText: step.questionText || '',
+      questionImage: step.questionImage || '',
+      answerMode: step.answerMode || 'single',
+      answers: (step.answers || []).map(a => ({
+        text: a.text || '',
+        isCorrect: a.isCorrect || false,
+        explanation: a.explanation || ''
+      }))
+    }
+    while (q.answers.length < 2) {
+      q.answers.push({ text: '', isCorrect: false, explanation: '' })
+    }
+    if (!q.answers.some(a => a.isCorrect)) q.answers[0].isCorrect = true
+    return q
+  }
+  
+  const s = {
+    ...createEmptyStep(),
+    title: step.title || '',
+    description: step.description || '',
+    stepImage: step.stepImage || '',
+    selector: step.selector || '',
+    position: step.position || 'bottom',
+    action: step.action || ''
+  }
+  
+  if (step.validation) {
+    s.validationType = step.validation.type || ''
+    s.validationMessage = step.validation.message || ''
+    s.validationValue = step.validation.value || ''
+    s.validationSelector = step.validation.selector || ''
+    s.validationMinValue = step.validation.minValue || ''
+  }
+  
+  return s
 }
 
 const uploadTutorial = () => {
@@ -641,81 +687,16 @@ const uploadTutorial = () => {
     if (!file) return
     
     try {
-      const text = await file.text()
-      const tutorialData = JSON.parse(text)
+      const data = JSON.parse(await file.text())
       
-      // Validate the uploaded tutorial
-      if (!tutorialData.name || !tutorialData.steps || !Array.isArray(tutorialData.steps)) {
+      if (!data.name || !data.steps?.length) {
         alert('Invalid tutorial file format')
         return
       }
       
-      // Load the tutorial data into the editor
-      tutorial.name = tutorialData.name || ''
-      tutorial.description = tutorialData.description || ''
-      tutorial.steps = []
-      
-      // Convert steps to editor format
-      tutorialData.steps.forEach(step => {
-        if (step.type === 'question') {
-          // Handle question type
-          const editorStep = {
-            type: 'question',
-            title: step.title || '',
-            questionText: step.questionText || '',
-            questionImage: step.questionImage || '',
-            answerMode: step.answerMode || 'single',
-            answers: (step.answers || []).map(answer => ({
-              text: answer.text || '',
-              isCorrect: answer.isCorrect || false,
-              explanation: answer.explanation || ''
-            }))
-          }
-          
-          // Ensure at least 2 answers
-          while (editorStep.answers.length < 2) {
-            editorStep.answers.push({
-              text: '',
-              isCorrect: false,
-              explanation: ''
-            })
-          }
-          
-          // Ensure at least one answer is correct
-          if (!editorStep.answers.some(a => a.isCorrect)) {
-            editorStep.answers[0].isCorrect = true
-          }
-          
-          tutorial.steps.push(editorStep)
-        } else {
-          // Handle step type
-          const editorStep = {
-            type: 'step',
-            title: step.title || '',
-            description: step.description || '',
-            stepImage: step.stepImage || '',
-            selector: step.selector || '',
-            position: step.position || 'bottom',
-            action: step.action || '',
-            validationType: '',
-            validationValue: '',
-            validationSelector: '',
-            validationMinValue: '',
-            validationMessage: ''
-          }
-          
-          // Handle validation if present
-          if (step.validation) {
-            editorStep.validationType = step.validation.type || ''
-            editorStep.validationMessage = step.validation.message || ''
-            editorStep.validationValue = step.validation.value || ''
-            editorStep.validationSelector = step.validation.selector || ''
-            editorStep.validationMinValue = step.validation.minValue || ''
-          }
-          
-          tutorial.steps.push(editorStep)
-        }
-      })
+      tutorial.name = data.name || ''
+      tutorial.description = data.description || ''
+      tutorial.steps = data.steps.map(convertUploadedStep)
       
       alert('Tutorial loaded successfully!')
     } catch (err) {
@@ -729,246 +710,26 @@ const uploadTutorial = () => {
   document.body.removeChild(input)
 }
 
-// Validate all mandatory fields
-const validateTutorial = () => {
-  const errors = []
-  
-  // Check tutorial name
-  if (!tutorial.name || !tutorial.name.trim()) {
-    errors.push('• Tutorial Name is required')
-  }
-  
-  // Check if there's at least one step
-  if (tutorial.steps.length === 0) {
-    errors.push('• At least one step or question is required')
-  }
-  
-  // Validate each step
-  tutorial.steps.forEach((step, index) => {
-    const stepNum = index + 1
-    
-    // Title is required for all steps/questions
-    if (!step.title || !step.title.trim()) {
-      errors.push(`• Step ${stepNum}: Title is required`)
+// ============================================================================
+// LIFECYCLE
+// ============================================================================
+onMounted(() => {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) {
+    try {
+      const data = JSON.parse(saved)
+      tutorial.name = data.name || ''
+      tutorial.description = data.description || ''
+      tutorial.steps = data.steps || []
+      if (!tutorial.steps.length) addStep()
+    } catch (err) {
+      console.error('Failed to load saved tutorial:', err)
+      addStep()
     }
-    
-    if (step.type === 'question') {
-      // Question-specific validations
-      if (!step.questionText || !step.questionText.trim()) {
-        errors.push(`• Step ${stepNum}: Question Text is required`)
-      }
-      
-      if (!step.answerMode) {
-        errors.push(`• Step ${stepNum}: Answer Mode is required`)
-      }
-      
-      // Check answers
-      const validAnswers = step.answers?.filter(a => a.text && a.text.trim()) || []
-      if (validAnswers.length < 2) {
-        errors.push(`• Step ${stepNum}: At least 2 answers with text are required`)
-      }
-      
-      // Check correct answers based on mode
-      const correctAnswers = step.answers?.filter(a => a.isCorrect && a.text && a.text.trim()) || []
-      if (step.answerMode === 'single') {
-        if (correctAnswers.length !== 1) {
-          errors.push(`• Step ${stepNum}: Single-choice mode requires exactly one correct answer`)
-        }
-      } else {
-        if (correctAnswers.length === 0) {
-          errors.push(`• Step ${stepNum}: At least one answer must be marked as correct`)
-        }
-      }
-    } else {
-      // Step-specific validations - selector is required for steps
-      if (!step.selector || !step.selector.trim()) {
-        errors.push(`• Step ${stepNum}: CSS Selector is required`)
-      }
-    }
-  })
-  
-  return errors
-}
-
-const finishTutorial = () => {
-  const validationErrors = validateTutorial()
-  if (validationErrors.length > 0) {
-    alert('Please fix the following errors:\n\n' + validationErrors.join('\n'))
-    return
+  } else {
+    addStep()
   }
-  
-  // Download the tutorial file before finishing
-  downloadJSON()
-  
-  const tutorialData = {
-    id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    name: tutorial.name,
-    description: tutorial.description,
-    steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
-      // Handle question type
-      if (step.type === 'question') {
-        const questionStep = {
-          type: 'question',
-          title: step.title,
-          questionText: step.questionText,
-          answerMode: step.answerMode,
-          answers: step.answers.filter(a => a.text).map(answer => ({
-            text: answer.text,
-            isCorrect: answer.isCorrect,
-            explanation: answer.explanation || ''
-          }))
-        }
-        if (step.questionImage) {
-          questionStep.questionImage = step.questionImage
-        }
-        return questionStep
-      }
-      
-      // Handle step type
-      const finishedStep = {
-        type: 'step',
-        title: step.title,
-        description: step.description,
-        selector: step.selector,
-        position: step.position
-      }
-      
-      if (step.stepImage) {
-        finishedStep.stepImage = step.stepImage
-      }
-      
-      if (step.action) {
-        finishedStep.action = step.action
-      }
-      
-      if (step.validationType) {
-        finishedStep.validation = {
-          type: step.validationType,
-          message: step.validationMessage || 'Complete this action to continue'
-        }
-        
-        switch (step.validationType) {
-          case 'program_selected':
-          case 'architecture_selected':
-            finishedStep.validation.value = step.validationValue
-            break
-          case 'input_value':
-            finishedStep.validation.selector = step.validationSelector
-            finishedStep.validation.value = step.validationValue
-            break
-          case 'input_value_min':
-            finishedStep.validation.selector = step.validationSelector
-            finishedStep.validation.minValue = parseInt(step.validationMinValue)
-            break
-          case 'button_clicked':
-            finishedStep.validation.selector = step.validationSelector
-            break
-        }
-      }
-      
-      return finishedStep
-    })
-  }
-  
-  // Emit the finished tutorial to add it to the menu
-  emit('tutorialFinished', tutorialData)
-  
-  // Clear saved data since tutorial is finished
-  clearSavedData()
-  
-  alert('Tutorial finished! It has been added to the tutorial menu.')
-  emit('close')
-}
-
-const downloadJSON = () => {
-  const validationErrors = validateTutorial()
-  if (validationErrors.length > 0) {
-    alert('Please fix the following errors:\n\n' + validationErrors.join('\n'))
-    return
-  }
-  
-  const tutorialData = {
-    id: tutorial.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    name: tutorial.name,
-    description: tutorial.description,
-    steps: tutorial.steps.filter(step => step.title && (step.type === 'question' || step.selector)).map(step => {
-      // Handle question type
-      if (step.type === 'question') {
-        const questionStep = {
-          type: 'question',
-          title: step.title,
-          questionText: step.questionText,
-          answerMode: step.answerMode,
-          answers: step.answers.filter(a => a.text).map(answer => ({
-            text: answer.text,
-            isCorrect: answer.isCorrect,
-            explanation: answer.explanation || ''
-          }))
-        }
-        if (step.questionImage) {
-          questionStep.questionImage = step.questionImage
-        }
-        return questionStep
-      }
-      
-      // Handle step type
-      const exportStep = {
-        type: 'step',
-        title: step.title,
-        description: step.description,
-        selector: step.selector,
-        position: step.position
-      }
-      
-      if (step.stepImage) {
-        exportStep.stepImage = step.stepImage
-      }
-      
-      if (step.action) {
-        exportStep.action = step.action
-      }
-      
-      if (step.validationType) {
-        exportStep.validation = {
-          type: step.validationType,
-          message: step.validationMessage || 'Complete this action to continue'
-        }
-        
-        switch (step.validationType) {
-          case 'program_selected':
-          case 'architecture_selected':
-            exportStep.validation.value = step.validationValue
-            break
-          case 'input_value':
-            exportStep.validation.selector = step.validationSelector
-            exportStep.validation.value = step.validationValue
-            break
-          case 'input_value_min':
-            exportStep.validation.selector = step.validationSelector
-            exportStep.validation.minValue = parseInt(step.validationMinValue)
-            break
-          case 'button_clicked':
-            exportStep.validation.selector = step.validationSelector
-            break
-        }
-      }
-      
-      return exportStep
-    })
-  }
-  
-  // Create and download JSON file
-  const jsonContent = JSON.stringify(tutorialData, null, 2)
-  const blob = new Blob([jsonContent], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${tutorialData.id}.json`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
+})
 </script>
 
 <style scoped>
