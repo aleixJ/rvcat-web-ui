@@ -1,316 +1,296 @@
 <script setup>
-  import { ref, onMounted, computed, nextTick } from 'vue';
-  import { 
-    getStoredExecutions, 
-    deleteExecution, 
-    renameExecution, 
-    clearAllExecutions,
-    getExecutionStats 
-  } from '@/utils/simulationStorage.js';
-  import HelpDialog from '@/components/helpDialog.vue';
+import { ref, onMounted, computed, nextTick } from 'vue'
+import { 
+  getStoredExecutions, 
+  deleteExecution, 
+  renameExecution, 
+  clearAllExecutions,
+  getExecutionStats 
+} from '@/utils/simulationStorage.js'
+import HelpDialog from '@/components/helpDialog.vue'
 
-  // Component state
-  const executions = ref([]);
-  const loading = ref(true);
-  const stats = ref({});
-  const sortBy = ref('timestamp');
-  const sortOrder = ref('desc');
-  const filterBy = ref('');
-  const editingNameId = ref(null);
-  const tempName = ref('');
-  const showHelp = ref(false);
-  const helpPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon = ref(null);
-  const showUploadModal = ref(false);
-  const uploadMode = ref('merge'); // 'merge' or 'replace'
+// ============================================================================
+// STATE
+// ============================================================================
+const executions = ref([])
+const loading = ref(true)
+const stats = ref({})
+const sortBy = ref('timestamp')
+const sortOrder = ref('desc')
+const filterBy = ref('')
+const editingNameId = ref(null)
+const tempName = ref('')
+const showHelp = ref(false)
+const helpPosition = ref({ top: '50%', left: '50%' })
+const infoIcon = ref(null)
+const showUploadModal = ref(false)
+const uploadMode = ref('merge')
 
-  // Computed properties
-  const filteredAndSortedExecutions = computed(() => {
-    let result = [...executions.value];
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const NUMERIC_SORT_FIELDS = ['rob', 'iterations', 'instructions', 'cycles', 'ipc', 'cyclesPerIteration']
+const STORAGE_KEY = 'rvcat_simulation_executions'
+
+// ============================================================================
+// COMPUTED
+// ============================================================================
+const filteredAndSortedExecutions = computed(() => {
+  let result = [...executions.value]
+  
+  // Apply filter
+  if (filterBy.value) {
+    const filter = filterBy.value.toLowerCase()
+    result = result.filter(e => 
+      e.name.toLowerCase().includes(filter) ||
+      e.processor.toLowerCase().includes(filter) ||
+      e.program.toLowerCase().includes(filter)
+    )
+  }
+  
+  // Apply sort
+  result.sort((a, b) => {
+    const aVal = a[sortBy.value]
+    const bVal = b[sortBy.value]
     
-    // Apply filter
-    if (filterBy.value) {
-      const filter = filterBy.value.toLowerCase();
-      result = result.filter(exec => 
-        exec.name.toLowerCase().includes(filter) ||
-        exec.processor.toLowerCase().includes(filter) ||
-        exec.program.toLowerCase().includes(filter)
-      );
-    }
-    
-    // Apply sort
-    result.sort((a, b) => {
-      const aVal = a[sortBy.value];
-      const bVal = b[sortBy.value];
-      
-      let comparison = 0;
-      
-      // Fields that should be sorted numerically even if stored as strings
-      const numericFields = ['rob', 'iterations', 'instructions', 'cycles', 'ipc', 'cyclesPerIteration'];
-      
-      if (numericFields.includes(sortBy.value)) {
-        // Parse as numbers for numeric sorting
-        const aNum = parseFloat(aVal);
-        const bNum = parseFloat(bVal);
-        comparison = aNum - bNum;
-      } else if (sortBy.value === 'timestamp') {
-        // Sort timestamps chronologically
-        comparison = new Date(aVal) - new Date(bVal);
-      } else if (typeof aVal === 'string' && typeof bVal === 'string') {
-        // String comparison for text fields
-        comparison = aVal.localeCompare(bVal);
-      } else {
-        // Default numeric comparison
-        comparison = aVal - bVal;
-      }
-      
-      return sortOrder.value === 'asc' ? comparison : -comparison;
-    });
-    
-    return result;
-  });
-
-  // Methods
-  function loadExecutions() {
-    loading.value = true;
-    try {
-      executions.value = getStoredExecutions();
-      stats.value = getExecutionStats();
-    } catch (error) {
-      console.error('Error loading executions:', error);
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function handleDelete(executionId) {
-    if (confirm('Are you sure you want to delete this execution?')) {
-      try {
-        deleteExecution(executionId);
-        loadExecutions();
-      } catch (error) {
-        console.error('Error deleting execution:', error);
-        alert('Error deleting execution. Please try again.');
-      }
-    }
-  }
-
-  function startEditName(execution) {
-    editingNameId.value = execution.id;
-    tempName.value = execution.name;
-  }
-
-  function cancelEditName() {
-    editingNameId.value = null;
-    tempName.value = '';
-  }
-
-  function saveNewName(executionId) {
-    if (tempName.value.trim()) {
-      try {
-        renameExecution(executionId, tempName.value.trim());
-        loadExecutions();
-        editingNameId.value = null;
-        tempName.value = '';
-      } catch (error) {
-        console.error('Error renaming execution:', error);
-        alert('Error renaming execution. Please try again.');
-      }
-    }
-  }
-
-  function handleClearAll() {
-    if (confirm('Are you sure you want to delete all saved executions? This action cannot be undone.')) {
-      try {
-        clearAllExecutions();
-        loadExecutions();
-      } catch (error) {
-        console.error('Error clearing executions:', error);
-        alert('Error clearing executions. Please try again.');
-      }
-    }
-  }
-
-  function setSortBy(column) {
-    if (sortBy.value === column) {
-      sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    let cmp = 0
+    if (NUMERIC_SORT_FIELDS.includes(sortBy.value)) {
+      cmp = parseFloat(aVal) - parseFloat(bVal)
+    } else if (sortBy.value === 'timestamp') {
+      cmp = new Date(aVal) - new Date(bVal)
+    } else if (typeof aVal === 'string') {
+      cmp = aVal.localeCompare(bVal)
     } else {
-      sortBy.value = column;
-      sortOrder.value = 'desc';
+      cmp = aVal - bVal
     }
-  }
+    
+    return sortOrder.value === 'asc' ? cmp : -cmp
+  })
+  
+  return result
+})
 
-  function formatDate(dateString) {
-    const executionDate = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - executionDate;
-    
-    // Check if date is in the future
-    if (diffMs < 0) {
-      return 'Future date';
-    }
-    
-    const diffSeconds = Math.floor(diffMs / 1000);
-    const diffMinutes = Math.floor(diffSeconds / 60);
-    const diffHours = Math.floor(diffMinutes / 60);
-    
-    // Less than 1 minute
-    if (diffSeconds < 60) {
-      return `${diffSeconds} sec ago`;
-    }
-    
-    // Less than 1 hour
-    if (diffMinutes < 60) {
-      return `${diffMinutes} min ago`;
-    }
-    
-    // Less than 24 hours
-    if (diffHours < 24) {
-      return `${diffHours} hr ago`;
-    }
-    
-    // 24 hours or older - show date in dd/mm/yy format
-    const day = String(executionDate.getDate()).padStart(2, '0');
-    const month = String(executionDate.getMonth() + 1).padStart(2, '0');
-    const year = String(executionDate.getFullYear()).slice(-2);
-    
-    return `${day}/${month}/${year}`;
-  }
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+const handleError = (action, error) => {
+  console.error(`Error ${action}:`, error)
+  alert(`Error ${action}. Please try again.`)
+}
 
-  function openHelp() {
-    nextTick(() => {
-      const el = infoIcon.value;
-      if (el) {
-        const r = el.getBoundingClientRect();
-        helpPosition.value = {
-          top: `${r.bottom}px`,
-          left: `${r.right}px`
-        };
-        showHelp.value = true;
-      }
-    });
-  }
+const withConfirm = (message, action) => {
+  if (confirm(message)) action()
+}
 
-  function closeHelp() {
-    showHelp.value = false;
+// ============================================================================
+// DATA MANAGEMENT
+// ============================================================================
+const loadExecutions = () => {
+  loading.value = true
+  try {
+    executions.value = getStoredExecutions()
+    stats.value = getExecutionStats()
+  } catch (error) {
+    handleError('loading executions', error)
+  } finally {
+    loading.value = false
   }
+}
 
-  async function downloadExecutions() {
+const handleDelete = (id) => withConfirm(
+  'Are you sure you want to delete this execution?',
+  () => {
     try {
-      const jsonText = JSON.stringify(executions.value, null, 2);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      const suggestedName = `executions_${timestamp}.json`;
-
-      // Use modern File System Access API if available
-      if (window.showSaveFilePicker) {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: suggestedName,
-          types: [{
-            description: 'JSON files',
-            accept: { 'application/json': ['.json'] }
-          }],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(jsonText);
-        await writable.close();
-      } else {
-        // Fallback: traditional anchor download
-        const blob = new Blob([jsonText], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = suggestedName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
+      deleteExecution(id)
+      loadExecutions()
     } catch (error) {
-      console.error('Error downloading executions:', error);
-      alert('Error downloading executions. Please try again.');
+      handleError('deleting execution', error)
     }
   }
+)
 
-  function openUploadDialog() {
-    // If there are existing executions, show the modal to choose merge/replace
-    if (executions.value.length > 0) {
-      showUploadModal.value = true;
+const handleClearAll = () => withConfirm(
+  'Are you sure you want to delete all saved executions? This action cannot be undone.',
+  () => {
+    try {
+      clearAllExecutions()
+      loadExecutions()
+    } catch (error) {
+      handleError('clearing executions', error)
+    }
+  }
+)
+
+// ============================================================================
+// NAME EDITING
+// ============================================================================
+const startEditName = (execution) => {
+  editingNameId.value = execution.id
+  tempName.value = execution.name
+}
+
+const cancelEditName = () => {
+  editingNameId.value = null
+  tempName.value = ''
+}
+
+const saveNewName = (id) => {
+  if (!tempName.value.trim()) return
+  try {
+    renameExecution(id, tempName.value.trim())
+    loadExecutions()
+    cancelEditName()
+  } catch (error) {
+    handleError('renaming execution', error)
+  }
+}
+
+// ============================================================================
+// SORTING
+// ============================================================================
+const setSortBy = (column) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = column
+    sortOrder.value = 'desc'
+  }
+}
+
+// ============================================================================
+// DATE FORMATTING
+// ============================================================================
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  const diffMs = Date.now() - date
+  
+  if (diffMs < 0) return 'Future date'
+  
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHr = Math.floor(diffMin / 60)
+  
+  if (diffSec < 60) return `${diffSec} sec ago`
+  if (diffMin < 60) return `${diffMin} min ago`
+  if (diffHr < 24) return `${diffHr} hr ago`
+  
+  const d = String(date.getDate()).padStart(2, '0')
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const y = String(date.getFullYear()).slice(-2)
+  return `${d}/${m}/${y}`
+}
+
+// ============================================================================
+// HELP DIALOG
+// ============================================================================
+const openHelp = () => {
+  nextTick(() => {
+    const el = infoIcon.value
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    helpPosition.value = { top: `${r.bottom}px`, left: `${r.right}px` }
+    showHelp.value = true
+  })
+}
+
+const closeHelp = () => { showHelp.value = false }
+
+// ============================================================================
+// DOWNLOAD / UPLOAD
+// ============================================================================
+const downloadExecutions = async () => {
+  try {
+    const json = JSON.stringify(executions.value, null, 2)
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `executions_${timestamp}.json`
+
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }]
+      })
+      const writable = await handle.createWritable()
+      await writable.write(json)
+      await writable.close()
     } else {
-      // No existing executions, just trigger file upload
-      document.getElementById('execution-file-upload').click();
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     }
+  } catch (error) {
+    handleError('downloading executions', error)
   }
+}
 
-  function confirmUpload() {
-    showUploadModal.value = false;
-    document.getElementById('execution-file-upload').click();
+const openUploadDialog = () => {
+  if (executions.value.length > 0) {
+    showUploadModal.value = true
+  } else {
+    document.getElementById('execution-file-upload').click()
   }
+}
 
-  function cancelUpload() {
-    showUploadModal.value = false;
-    uploadMode.value = 'merge';
-  }
+const confirmUpload = () => {
+  showUploadModal.value = false
+  document.getElementById('execution-file-upload').click()
+}
 
-  function uploadExecutions(event) {
-    const inputEl = event.target;
-    const file = event.target.files[0];
-    if (!file) return;
+const cancelUpload = () => {
+  showUploadModal.value = false
+  uploadMode.value = 'merge'
+}
 
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const uploadedExecutions = JSON.parse(e.target.result);
+const uploadExecutions = (event) => {
+  const inputEl = event.target
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const uploaded = JSON.parse(e.target.result)
+      
+      if (!Array.isArray(uploaded)) {
+        alert('Invalid file format. Expected an array of executions.')
+        return
+      }
+
+      if (uploadMode.value === 'replace') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(uploaded))
+      } else {
+        const existing = getStoredExecutions()
+        const existingIds = new Set(existing.map(x => x.id))
+        const newExecs = uploaded.filter(x => !existingIds.has(x.id))
+        const skipped = uploaded.length - newExecs.length
         
-        // Validate that it's an array
-        if (!Array.isArray(uploadedExecutions)) {
-          alert('Invalid file format. Expected an array of executions.');
-          return;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, ...newExecs]))
+        
+        if (skipped > 0) {
+          alert(`Merged ${newExecs.length} execution(s). Skipped ${skipped} duplicate(s).`)
         }
-
-        // Merge or replace based on user choice
-        if (uploadMode.value === 'replace') {
-          // Replace all executions
-          localStorage.setItem('rvcat_simulation_executions', JSON.stringify(uploadedExecutions));
-        } else {
-          // Merge with existing executions, checking for duplicate IDs
-          const existingExecutions = getStoredExecutions();
-          
-          // Create a Set of existing IDs for fast lookup
-          const existingIds = new Set(existingExecutions.map(exec => exec.id));
-          
-          // Filter out uploaded executions that have duplicate IDs
-          const newExecutions = uploadedExecutions.filter(exec => !existingIds.has(exec.id));
-          
-          // Count how many were skipped
-          const skippedCount = uploadedExecutions.length - newExecutions.length;
-          
-          // Merge the non-duplicate executions
-          const mergedExecutions = [...existingExecutions, ...newExecutions];
-          localStorage.setItem('rvcat_simulation_executions', JSON.stringify(mergedExecutions));
-          
-          // Show info message if some were skipped
-          if (skippedCount > 0) {
-            alert(`Merged ${newExecutions.length} execution(s). Skipped ${skippedCount} duplicate(s) with existing IDs.`);
-          }
-        }
-
-        // Reload the executions list
-        loadExecutions();
-        uploadMode.value = 'merge'; // Reset to default
-
-      } catch (err) {
-        console.error('Invalid JSON:', err);
-        alert('Failed to load executions file. Please check the file format.');
       }
-      inputEl.value = '';
-    };
-    reader.readAsText(file);
-  }
 
-  // Lifecycle
-  onMounted(() => {
-    loadExecutions();
-  });
+      loadExecutions()
+      uploadMode.value = 'merge'
+    } catch (err) {
+      console.error('Invalid JSON:', err)
+      alert('Failed to load executions file. Please check the file format.')
+    }
+    inputEl.value = ''
+  }
+  reader.readAsText(file)
+}
+
+// ============================================================================
+// LIFECYCLE
+// ============================================================================
+onMounted(loadExecutions)
 </script>
 
 <template>
