@@ -196,6 +196,46 @@ const openHelp = () => {
 const closeHelp = () => { showHelp.value = false }
 
 // ============================================================================
+// EXPORT
+// ============================================================================
+const exportToCSV = async () => {
+  try {
+    const headers = ['name', 'processor', 'program', 'rob', 'iterations', 'instructions', 'cycles', 'ipc', 'cyclesPerIteration', 'timestamp']
+    const csvRows = [
+      headers.join(','),
+      ...filteredAndSortedExecutions.value.map(e => 
+        headers.map(h => `"${String(e[h]).replace(/"/g, '""')}"`).join(',')
+      )
+    ]
+    const csv = csvRows.join('\n')
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `executions_${timestamp}.csv`
+
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'CSV files', accept: { 'text/csv': ['.csv'] } }]
+      })
+      const writable = await handle.createWritable()
+      await writable.write(csv)
+      await writable.close()
+    } else {
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  } catch (error) {
+    handleError('exporting to CSV', error)
+  }
+}
+
+// ============================================================================
 // DOWNLOAD / UPLOAD
 // ============================================================================
 const downloadExecutions = async () => {
@@ -315,6 +355,9 @@ onMounted(loadExecutions)
         </button>
         <button @click="downloadExecutions" class="green-button" :disabled="executions.length === 0">
           Download
+        </button>
+        <button @click="exportToCSV" class="purple-button" :disabled="executions.length === 0">
+          Export CSV
         </button>
         <button @click="handleClearAll" class="red-button" :disabled="executions.length === 0">
           Clear All
@@ -802,6 +845,27 @@ h3 {
 }
 
 .green-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.purple-button {
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.purple-button:hover:not(:disabled) {
+  background-color: #5a32a3;
+}
+
+.purple-button:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.6;
